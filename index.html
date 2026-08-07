@@ -223,7 +223,13 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-wid
 .calc.pos{color:var(--pos-text);}
 .calc.neg{color:var(--red-text);}
 #entradas-table th,#analises-table th{text-align:center;}
-#entradas-table td:nth-child(8){text-align:center;}
+#entradas-table td:nth-child(6),#entradas-table td:nth-child(7),#entradas-table td:nth-child(8),#entradas-table td:nth-child(9){text-align:center;}
+.calc.bare-input{
+  appearance:none;-webkit-appearance:none;-moz-appearance:textfield;
+  background:transparent;border:none;padding:0;width:100%;text-align:center;
+}
+.calc.bare-input:focus{background:transparent;border:none;}
+.calc.bare-input::-webkit-outer-spin-button,.calc.bare-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .odd-input{max-width:80px;}
 .odd-input.calc{
   appearance:none;-webkit-appearance:none;-moz-appearance:textfield;
@@ -450,6 +456,13 @@ document.addEventListener("keydown", (e)=>{
 function fmtBRL(n){
   if(n===null||n===undefined||isNaN(n)) n=0;
   return n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
+}
+function parseBRL(str){
+  if(str===undefined||str===null) return 0;
+  let s = String(str).trim().replace(/R\$\s?/gi,"").replace(/[^\d,.-]/g,"");
+  if(s.includes(",")) s = s.replace(/\./g,"").replace(",",".");
+  const n = Number(s);
+  return isNaN(n) ? 0 : n;
 }
 function fmtPct(n){
   if(n===null||n===undefined||isNaN(n)) n=0;
@@ -706,8 +719,8 @@ function renderEntradas(){
             <td><input type="text" id="new-home" list="dl-clubs" placeholder="Mandante"></td>
             <td><input type="text" id="new-away" list="dl-clubs" placeholder="Visitante"></td>
             <td><input type="text" id="new-pick" placeholder="Descrição da aposta"></td>
-            <td><input type="number" step="0.01" id="new-stake" value="${state.stakeUnit}"></td>
-            <td><input type="number" step="0.01" id="new-retorno" placeholder="0,00"></td>
+            <td><input type="text" inputmode="decimal" class="calc bare-input" id="new-stake" value="${fmtBRL(state.stakeUnit)}"></td>
+            <td><input type="text" inputmode="decimal" class="calc bare-input" id="new-retorno" placeholder="${fmtBRL(0)}"></td>
             <td colspan="2"></td>
             <td><button class="icon-add-btn" id="add-bet" title="Adicionar">+</button></td>
           </tr>
@@ -735,8 +748,8 @@ function renderEntradas(){
         <td><input type="text" data-field="home" list="dl-clubs" value="${escapeHtml(b.home)}"></td>
         <td><input type="text" data-field="away" list="dl-clubs" value="${escapeHtml(b.away)}"></td>
         <td><input type="text" data-field="pick" value="${escapeHtml(b.pick)}"></td>
-        <td><input type="number" step="0.01" data-field="stake" value="${b.stake}"></td>
-        <td><input type="number" step="0.01" data-field="retorno" value="${b.retorno}"></td>
+        <td><input type="text" inputmode="decimal" class="calc bare-input" data-field="stake" value="${fmtBRL(b.stake)}"></td>
+        <td><input type="text" inputmode="decimal" class="calc bare-input" data-field="retorno" value="${fmtBRL(b.retorno)}"></td>
         <td>${oddCell}</td>
         <td class="calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}">${fmtBRL(c.profit)}</td>
         <td><button class="del-btn" data-del="${b.id}" title="Excluir">&#10005;</button></td>
@@ -776,7 +789,7 @@ function renderEntradas(){
       const bet = state.bets.find(b=>b.id===id);
       if(!bet) return;
       const field = e.target.dataset.field;
-      if(field==="stake" || field==="retorno") bet[field] = Number(e.target.value)||0;
+      if(field==="stake" || field==="retorno") bet[field] = parseBRL(e.target.value);
       else if(field==="oddManual"){
         let raw = String(e.target.value).trim();
         if(raw==="") bet.oddManual = "";
@@ -809,8 +822,8 @@ function renderEntradas(){
       home: document.getElementById("new-home").value.trim(),
       away: document.getElementById("new-away").value.trim(),
       pick: document.getElementById("new-pick").value.trim(),
-      stake: Number(document.getElementById("new-stake").value)||0,
-      retorno: Number(document.getElementById("new-retorno").value)||0
+      stake: parseBRL(document.getElementById("new-stake").value),
+      retorno: parseBRL(document.getElementById("new-retorno").value)
     };
   }
   let submittingBet = false;
