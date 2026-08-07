@@ -75,8 +75,11 @@ nav.tabs button{
 nav.tabs button:hover{color:var(--text);}
 nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -4px rgba(59,130,246,.55);}
 
-.save-pill{
+.topbar-right{
   position:absolute;right:4px;top:50%;transform:translateY(-50%);
+  display:flex;align-items:center;gap:10px;
+}
+.save-pill{
   font-size:11px;color:var(--text-faint);display:flex;align-items:center;gap:6px;
   opacity:0;transition:opacity .25s ease;
 }
@@ -218,7 +221,7 @@ nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -
 .field-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;}
 .field{display:flex;flex-direction:column;gap:6px;}
 .field label{font-size:11px;color:var(--text-faint);font-weight:600;text-transform:uppercase;letter-spacing:.5px;}
-input[type=number],input[type=date],input[type=time],input[type=text],select{
+input[type=number],input[type=date],input[type=time],input[type=text],input[type=email],input[type=password],select{
   background:var(--bg-soft);border:1px solid var(--border);color:var(--text);
   border-radius:var(--radius-sm);padding:9px 11px;font-size:13.5px;font-family:'Inter';
   outline:none;transition:border-color .15s ease, background .15s ease;
@@ -372,10 +375,50 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-wid
 ::-webkit-scrollbar{height:8px;width:8px;}
 ::-webkit-scrollbar-thumb{background:rgba(255,255,255,.12);border-radius:8px;}
 ::-webkit-scrollbar-track{background:transparent;}
+
+/* ---------- auth screen ---------- */
+.auth-screen{
+  min-height:100vh;display:flex;align-items:center;justify-content:center;padding:20px;
+}
+.auth-card{
+  width:100%;max-width:340px;padding:28px 26px 26px;display:flex;flex-direction:column;gap:12px;
+  animation:fadeUp .42s cubic-bezier(.16,1,.3,1);
+}
+#auth-form{display:flex;flex-direction:column;gap:12px;margin:0;}
+.auth-logo{font-family:'Manrope';font-weight:800;font-size:18px;text-align:center;margin-bottom:4px;}
+.auth-card .btn-primary{width:100%;padding:11px 18px;margin-top:4px;}
+.auth-error{font-size:12px;color:var(--red-text);min-height:15px;}
+.auth-switch{font-size:12.5px;color:var(--text-faint);text-align:center;margin-top:6px;}
+.auth-switch button{
+  appearance:none;border:none;background:transparent;color:#7fb0ff;font-weight:700;cursor:pointer;font-size:12.5px;
+  padding:0 0 0 4px;font-family:'Inter';
+}
+.auth-switch button:hover{text-decoration:underline;}
+.logout-btn{
+  appearance:none;border:1px solid var(--border);background:var(--card-2);color:var(--text-faint);
+  border-radius:999px;padding:7px 13px;font-size:11.5px;font-weight:700;cursor:pointer;
+  display:flex;align-items:center;gap:6px;margin-left:8px;transition:all .15s ease;
+}
+.logout-btn:hover{color:var(--text);border-color:rgba(255,255,255,.18);}
 </style>
 </head>
 <body>
-<div id="app">
+<div id="auth-screen" class="auth-screen" style="display:none;">
+  <div class="auth-card card">
+    <div class="auth-logo">Controle</div>
+    <div class="section-title" id="auth-title" style="text-align:center;margin-bottom:2px;">Entrar</div>
+    <form id="auth-form" autocomplete="on">
+      <input type="email" id="auth-email" name="email" placeholder="Email" autocomplete="username" required>
+      <input type="password" id="auth-password" name="password" placeholder="Senha" autocomplete="current-password" required>
+      <div class="auth-error" id="auth-error"></div>
+      <button class="btn btn-primary" type="submit" id="auth-submit">Entrar</button>
+    </form>
+    <div class="auth-switch">
+      <span id="auth-switch-text">Não tem conta?</span><button type="button" id="auth-switch-btn">Criar conta</button>
+    </div>
+  </div>
+</div>
+<div id="app" style="display:none;">
   <div id="loading" class="loading-screen">
     <div class="spinner"></div>
     <div>Carregando seus dados…</div>
@@ -383,9 +426,65 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-wid
 </div>
 <div class="toast" id="toast"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <script>
 (function(){
 "use strict";
+
+/* ================= SUPABASE CONFIG =================
+   Cole aqui a URL e a chave "anon public" do seu projeto Supabase
+   (Project Settings > API no painel do Supabase). */
+const SUPABASE_URL = "https://ccxiuaqirickchmrowrz.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjeGl1YXFpcmlja2NobXJvd3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMDg2NTQsImV4cCI6MjEwMTY4NDY1NH0.TiInMdno4_yvWK-c8mg6DY7IymPaJKrtN1CwS-8dm8U";
+
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: true,     // mantém o login salvo no navegador (não pede senha de novo ao reabrir)
+    autoRefreshToken: true,   // renova o token sozinho enquanto a aba fica aberta
+    storage: window.localStorage
+  }
+});
+let currentUser = null;
+let realtimeChannel = null;
+
+/* ================= INATIVIDADE (logout automático) ================= */
+const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutos
+const LAST_ACTIVITY_KEY = "controle_apostas_last_activity";
+const ACTIVITY_EVENTS = ["mousedown","keydown","scroll","touchstart"];
+let inactivityInterval = null;
+let inactivityLogoutPending = false;
+
+function markActivity(){
+  try{ window.localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now())); }catch(e){}
+}
+function getLastActivity(){
+  const v = window.localStorage.getItem(LAST_ACTIVITY_KEY);
+  const n = v ? parseInt(v,10) : NaN;
+  return Number.isFinite(n) ? n : Date.now();
+}
+async function checkInactivity(){
+  if(!currentUser) return;
+  if(Date.now() - getLastActivity() >= INACTIVITY_LIMIT_MS){
+    inactivityLogoutPending = true;
+    await supabase.auth.signOut();
+  }
+}
+function startActivityTracking(){
+  markActivity();
+  ACTIVITY_EVENTS.forEach(evt => document.addEventListener(evt, markActivity, { passive:true }));
+  document.addEventListener("visibilitychange", onVisibilityChangeCheck);
+  clearInterval(inactivityInterval);
+  inactivityInterval = setInterval(checkInactivity, 30000); // confere a cada 30s
+}
+function stopActivityTracking(){
+  ACTIVITY_EVENTS.forEach(evt => document.removeEventListener(evt, markActivity));
+  document.removeEventListener("visibilitychange", onVisibilityChangeCheck);
+  clearInterval(inactivityInterval);
+  inactivityInterval = null;
+}
+function onVisibilityChangeCheck(){
+  if(document.visibilityState === "visible") checkInactivity();
+}
 
 /* ================= CONSTANTS ================= */
 const STORAGE_KEY = "controle_apostas_state_v2";
@@ -431,26 +530,112 @@ let analisesVisitante = false;
 let rankingScope = "month";
 let undoStack = [];
 
-/* ================= STORAGE ================= */
+/* ================= STORAGE (Supabase) ================= */
+let applyingRemote = false; // evita salvar de volta o que acabou de chegar via realtime
+
 async function loadState(){
   try{
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if(raw){
-      const parsed = JSON.parse(raw);
-      return Object.assign(defaultState(), parsed);
+    const { data, error } = await supabase
+      .from("app_state")
+      .select("data")
+      .eq("user_id", currentUser.id)
+      .maybeSingle();
+    if(error) throw error;
+    if(data && data.data){
+      return Object.assign(defaultState(), data.data);
     }
-  }catch(e){ /* primeira vez ou indisponível */ }
+  }catch(e){ console.error("Falha ao carregar:", e); showToast("Erro ao carregar dados"); }
   return defaultState();
 }
 
 let saveTimer = null;
 function persist(){
+  if(applyingRemote) return; // não reenviar dados que acabaram de chegar de outro aparelho
   showSavePill();
   clearTimeout(saveTimer);
-  saveTimer = setTimeout(() => {
-    try{ window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state)); }
-    catch(e){ console.error("Falha ao salvar:", e); }
+  saveTimer = setTimeout(async () => {
+    try{
+      const { error } = await supabase
+        .from("app_state")
+        .upsert({ user_id: currentUser.id, data: state, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
+      if(error) throw error;
+    }catch(e){ console.error("Falha ao salvar:", e); showToast("Erro ao salvar - verifique a conexão"); }
   }, 350);
+}
+
+function subscribeRealtime(){
+  if(realtimeChannel) supabase.removeChannel(realtimeChannel);
+  realtimeChannel = supabase
+    .channel("app_state_changes_" + currentUser.id)
+    .on("postgres_changes",
+      { event: "UPDATE", schema: "public", table: "app_state", filter: `user_id=eq.${currentUser.id}` },
+      (payload) => {
+        applyingRemote = true;
+        state = Object.assign(defaultState(), payload.new.data);
+        renderTabs();
+        showToast("Dados atualizados em outro aparelho");
+        applyingRemote = false;
+      }
+    )
+    .subscribe();
+}
+
+/* ================= AUTH ================= */
+function showAuthScreen(mode, message){
+  document.getElementById("auth-screen").style.display = "flex";
+  document.getElementById("app").style.display = "none";
+  setAuthMode(mode || "login");
+  if(message) document.getElementById("auth-error").textContent = message;
+}
+function hideAuthScreen(){
+  document.getElementById("auth-screen").style.display = "none";
+  document.getElementById("app").style.display = "";
+}
+let authMode = "login";
+function setAuthMode(mode){
+  authMode = mode;
+  document.getElementById("auth-error").textContent = "";
+  document.getElementById("auth-title").textContent = mode==="login" ? "Entrar" : "Criar conta";
+  document.getElementById("auth-submit").textContent = mode==="login" ? "Entrar" : "Criar conta";
+  document.getElementById("auth-switch-text").textContent = mode==="login" ? "Não tem conta?" : "Já tem conta?";
+  document.getElementById("auth-switch-btn").textContent = mode==="login" ? "Criar conta" : "Entrar";
+}
+async function handleAuthSubmit(){
+  const email = document.getElementById("auth-email").value.trim();
+  const password = document.getElementById("auth-password").value;
+  const errEl = document.getElementById("auth-error");
+  errEl.textContent = "";
+  if(!email || !password){ errEl.textContent = "Preencha email e senha."; return; }
+  const btn = document.getElementById("auth-submit");
+  btn.disabled = true;
+  try{
+    if(authMode==="login"){
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if(error) throw error;
+    } else {
+      const { error } = await supabase.auth.signUp({ email, password });
+      if(error) throw error;
+      errEl.style.color = "var(--pos-text)";
+      errEl.textContent = "Conta criada! Enviamos um email de confirmação — abra sua caixa de entrada (e o spam), clique no link e depois volte aqui para entrar.";
+      setAuthMode("login");
+      btn.disabled = false;
+      return;
+    }
+  }catch(e){
+    errEl.style.color = "";
+    errEl.textContent = traduzErroAuth(e.message);
+    btn.disabled = false;
+  }
+}
+function traduzErroAuth(msg){
+  if(/invalid login credentials/i.test(msg)) return "Email ou senha incorretos.";
+  if(/email not confirmed/i.test(msg)) return "Você ainda não confirmou seu email. Verifique sua caixa de entrada (e o spam) e clique no link de confirmação antes de entrar.";
+  if(/already registered|already exists/i.test(msg)) return "Este email já tem uma conta.";
+  if(/password.*least/i.test(msg)) return "A senha precisa ter pelo menos 6 caracteres.";
+  return msg;
+}
+async function signOut(){
+  await supabase.auth.signOut();
 }
 function showSavePill(){
   const el = document.getElementById("save-pill");
@@ -680,7 +865,10 @@ function renderShell(){
         <button data-tab="analises">Análises</button>
         <button data-tab="config">Configurações</button>
       </nav>
-      <div class="save-pill" id="save-pill"><span class="save-dot"></span>Salvo</div>
+      <div class="topbar-right">
+        <div class="save-pill" id="save-pill"><span class="save-dot"></span>Salvo</div>
+        <button class="logout-btn" id="logout-btn">Sair</button>
+      </div>
     </div>
     <div id="view-dashboard" class="view"></div>
     <div id="view-entradas" class="view"></div>
@@ -688,6 +876,7 @@ function renderShell(){
     <div id="view-config" class="view"></div>
   `;
   attachTabDrag(document.getElementById("tabs"));
+  document.getElementById("logout-btn").addEventListener("click", signOut);
   renderTabs();
 }
 
@@ -1458,10 +1647,59 @@ function escapeHtml(str){
 }
 
 /* ================= INIT ================= */
-(async function init(){
-  state = await loadState();
-  renderShell();
-})();
+document.getElementById("auth-form").addEventListener("submit", e=>{
+  e.preventDefault();
+  handleAuthSubmit();
+});
+document.getElementById("auth-switch-btn").addEventListener("click", ()=> setAuthMode(authMode==="login" ? "signup" : "login"));
+
+async function boot(){
+  const { data: { session } } = await supabase.auth.getSession();
+  if(session && session.user){
+    if(Date.now() - getLastActivity() >= INACTIVITY_LIMIT_MS){
+      // sessão salva, mas passou de 30min sem uso: desloga antes de mostrar o app
+      inactivityLogoutPending = true;
+      await supabase.auth.signOut();
+      return;
+    }
+    currentUser = session.user;
+    hideAuthScreen();
+    state = await loadState();
+    renderShell();
+    subscribeRealtime();
+    startActivityTracking();
+  } else {
+    currentUser = null;
+    showAuthScreen("login");
+  }
+}
+
+supabase.auth.onAuthStateChange((event, session) => {
+  if(event === "SIGNED_IN" && (!currentUser || currentUser.id !== session.user.id)){
+    currentUser = session.user;
+    hideAuthScreen();
+    document.getElementById("auth-email").value = "";
+    document.getElementById("auth-password").value = "";
+    startActivityTracking();
+    (async ()=>{
+      state = await loadState();
+      renderShell();
+      subscribeRealtime();
+    })();
+  } else if(event === "SIGNED_OUT"){
+    currentUser = null;
+    if(realtimeChannel){ supabase.removeChannel(realtimeChannel); realtimeChannel = null; }
+    stopActivityTracking();
+    if(inactivityLogoutPending){
+      inactivityLogoutPending = false;
+      showAuthScreen("login", "Sessão encerrada após 30 min de inatividade. Entre novamente.");
+    } else {
+      showAuthScreen("login");
+    }
+  }
+});
+
+boot();
 
 })();
 </script>
