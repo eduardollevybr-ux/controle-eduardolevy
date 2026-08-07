@@ -611,8 +611,8 @@ function teamRanking(scope){
   });
   const arr = Object.entries(map).map(([team,profit])=>({team,profit}));
   const sortedDesc = [...arr].sort((a,b)=>b.profit-a.profit);
-  const top10 = sortedDesc.slice(0,10);
-  const bottom10 = sortedDesc.slice(-10).reverse();
+  const top10 = sortedDesc.filter(x=>x.profit>0).slice(0,10);
+  const bottom10 = sortedDesc.filter(x=>x.profit<0).slice(-10).reverse();
   return {top10, bottom10};
 }
 function resolveRegistered(list, value){
@@ -848,14 +848,14 @@ function renderMonthlyChart(){
     return;
   }
   const shown = data.slice(-12); // últimos 12 meses com dados
-  const W = 900, H = 260, padL = 44, padR = 16, padT = 16, padB = 30;
+  const W = 900, H = 190, padL = 44, padR = 16, padT = 14, padB = 26;
   const innerW = W - padL - padR, innerH = H - padT - padB;
   const maxAbs = Math.max(1, ...shown.map(d=>Math.abs(d.profit)));
   const zeroY = padT + innerH/2;
   const scaleY = (innerH/2 - 6) / maxAbs;
   const n = shown.length;
   const bandW = innerW / n;
-  const barW = Math.min(38, bandW*0.5);
+  const barW = Math.min(22, bandW*0.32);
 
   let bars = "", labels = "", gridLines = "";
   gridLines += `<line x1="${padL}" y1="${zeroY}" x2="${W-padR}" y2="${zeroY}" stroke="var(--border)" stroke-width="1"/>`;
