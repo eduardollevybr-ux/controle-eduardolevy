@@ -222,7 +222,8 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-wid
 .calc{font-family:'Manrope';font-weight:700;font-size:13px;white-space:nowrap;color:var(--text);}
 .calc.pos{color:var(--pos-text);}
 .calc.neg{color:var(--red-text);}
-#entradas-table th:nth-child(8),#entradas-table td:nth-child(8){text-align:center;}
+#entradas-table th,#analises-table th{text-align:center;}
+#entradas-table td:nth-child(8){text-align:center;}
 .odd-input{max-width:80px;}
 .odd-input.calc{
   appearance:none;-webkit-appearance:none;-moz-appearance:textfield;
@@ -859,7 +860,7 @@ function renderAnalises(){
       </div>
     </div>
     <div class="table-wrap card">
-      <table>
+      <table id="analises-table">
         <colgroup>
           <col style="width:4%"><col style="width:8%"><col style="width:9%"><col style="width:15%">
           <col style="width:14%"><col style="width:14%"><col style="width:16%"><col style="width:16%">
