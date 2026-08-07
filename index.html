@@ -109,6 +109,7 @@ nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -
 
 /* ---------- dashboard layout ---------- */
 .dash-grid{display:grid;grid-template-columns:330px 1fr;gap:16px;align-items:stretch;margin-top:6px;}
+.dash-grid>*{min-width:0;}
 .dash-stats{display:flex;flex-direction:column;gap:8px;}
 .stat-block{
   background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);
@@ -139,8 +140,8 @@ nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -
 .cal-month-summary-pct{font-size:11px;font-weight:700;margin-top:2px;color:var(--text-dim);}
 .cal-month-summary-pct.pos{color:var(--pos-text);}
 .cal-month-summary-pct.neg{color:var(--red-text);}
-@media (max-width:520px){
-  .cal-month-summary{position:static;margin:0 0 12px auto;width:fit-content;}
+@media (max-width:860px){
+  .cal-month-summary{position:static;margin:0 0 12px auto;width:fit-content;max-width:100%;}
 }
 .cal-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin:2px 0 14px;}
 .cal-arrow{
@@ -301,6 +302,55 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-wid
 
 .add-row-form td{background:var(--bg-soft);padding-top:12px;padding-bottom:12px;}
 .add-row-form{position:relative;}
+
+/* ---------- tabelas em cards no mobile (entradas & análises) ---------- */
+/* No desktop a tabela rola na horizontal; no mobile isso força colunas
+   estreitas (ex.: Campeonato/Data) a se sobreporem/comprimirem de forma
+   ilegível. Abaixo de 720px cada linha vira um card com campo empilhado
+   sobre campo, na mesma ordem do cabeçalho (Data sempre antes de Campeonato). */
+@media (max-width:720px){
+  .table-wrap{overflow-x:visible;cursor:default;background:transparent;box-shadow:none;border-radius:0;}
+  #entradas-table,#analises-table{width:100%;min-width:0;table-layout:auto;}
+  #entradas-table colgroup,#analises-table colgroup{display:none;}
+  #entradas-table thead,#analises-table thead{
+    position:absolute;width:1px;height:1px;overflow:hidden;
+    clip:rect(0,0,0,0);white-space:nowrap;border:0;padding:0;margin:-1px;
+  }
+  #entradas-table tbody,#entradas-table tr,
+  #analises-table tbody,#analises-table tr{display:block;width:100%;}
+  #entradas-table tbody tr[data-id],#entradas-table tbody tr.add-row-form,
+  #analises-table tbody tr[data-id],#analises-table tbody tr.add-row-form{
+    background:var(--card-2);border:1px solid var(--border-soft);border-radius:var(--radius-md);
+    padding:10px 14px 4px;margin-bottom:10px;
+  }
+  #entradas-table tbody tr.add-row-form,#analises-table tbody tr.add-row-form{
+    background:var(--bg-soft);border-style:dashed;
+  }
+  #entradas-table td,#analises-table td{
+    display:flex;flex-direction:column;align-items:flex-start;gap:4px;
+    width:100%;padding:7px 0;border-bottom:1px solid var(--border-soft);text-align:left;
+  }
+  #entradas-table td:last-child,#analises-table td:last-child{border-bottom:none;}
+  #entradas-table td[data-label]:not([data-label=""])::before,
+  #analises-table td[data-label]:not([data-label=""])::before{
+    content:attr(data-label);font-size:10px;text-transform:uppercase;letter-spacing:.5px;
+    font-weight:700;color:var(--text-faint);
+  }
+  #entradas-table td input,#entradas-table td select,
+  #analises-table td input,#analises-table td select{width:100%;text-align:left;}
+  #entradas-table td[data-label="Check"],#analises-table td[data-label="Check"]{
+    flex-direction:row;align-items:center;gap:10px;
+  }
+  #entradas-table td[data-label="Check"] input,#analises-table td[data-label="Check"] input{width:auto;}
+  #entradas-table td[data-label=""],#analises-table td[data-label=""]{
+    flex-direction:row;justify-content:flex-end;border-bottom:none;padding-top:6px;
+  }
+  #entradas-table td.calc,#analises-table td.calc{
+    flex-direction:row;justify-content:space-between;align-items:center;
+  }
+  #entradas-table td:nth-child(6),#entradas-table td:nth-child(7),
+  #entradas-table td:nth-child(8),#entradas-table td:nth-child(9){text-align:left;}
+}
 
 .tag{display:inline-flex;align-items:center;gap:5px;padding:4px 10px;border-radius:999px;font-size:11px;font-weight:700;}
 .tag-blue{background:var(--blue-dim);color:#7fb0ff;}
@@ -1036,8 +1086,15 @@ function renderMonthlyChart(){
     box.innerHTML = `<div class="empty-state">Sem lançamentos suficientes para montar o gráfico ainda.</div>`;
     return;
   }
-  const shown = data.slice(-12); // últimos 12 meses com dados
-  const W = 900, H = 190, padL = 44, padR = 16, padT = 14, padB = 26;
+  // largura real do container: usar como unidades do viewBox mantém o texto/traços
+  // em tamanho legível em qualquer tela (em vez de um viewBox fixo de 900, que no
+  // mobile é escalado para baixo e encolhe tudo, inclusive as fontes, junto com as barras).
+  const containerW = box.clientWidth || box.parentElement?.clientWidth || window.innerWidth - 80;
+  const W = Math.max(300, Math.min(900, Math.round(containerW)));
+  const isCompact = W < 560;
+  const shown = data.slice(isCompact ? -6 : -12); // menos meses no mobile = barras mais largas e legíveis
+  const H = isCompact ? 240 : 190;
+  const padL = isCompact ? 34 : 44, padR = isCompact ? 8 : 16, padT = 14, padB = isCompact ? 30 : 26;
   const innerW = W - padL - padR, innerH = H - padT - padB;
   const maxAbs = Math.max(1, ...shown.map(d=>Math.abs(d.profit)));
   const zeroY = padT + innerH/2;
@@ -1066,6 +1123,13 @@ function renderMonthlyChart(){
     ${labels}
   </svg>`;
 }
+let _chartResizeTimer = null;
+window.addEventListener("resize", ()=>{
+  clearTimeout(_chartResizeTimer);
+  _chartResizeTimer = setTimeout(()=>{
+    if(currentTab==="dashboard") renderMonthlyChart();
+  }, 200);
+});
 
 /* ================= RANKING DE EQUIPES ================= */
 function renderRanking(){
@@ -1140,15 +1204,15 @@ function renderEntradas(){
         </tr></thead>
         <tbody id="bets-tbody">
           <tr class="add-row-form" id="add-row-entrada">
-            <td><input type="date" id="new-date" value="${todayIso()}"></td>
-            <td><input type="text" id="new-champ" list="dl-champs" placeholder="Campeonato"></td>
-            <td><input type="text" id="new-home" list="dl-clubs" placeholder="Mandante"></td>
-            <td><input type="text" id="new-away" list="dl-clubs" placeholder="Visitante"></td>
-            <td><input type="text" id="new-pick" placeholder="Descrição da aposta"></td>
-            <td><input type="text" inputmode="decimal" class="calc bare-input" id="new-stake" value="${fmtBRL(state.stakeUnit)}"></td>
-            <td><input type="text" inputmode="decimal" class="calc bare-input" id="new-retorno" placeholder="${fmtBRL(0)}"></td>
-            <td colspan="2"></td>
-            <td><button class="icon-add-btn" id="add-bet" title="Adicionar">+</button></td>
+            <td data-label="Data"><input type="date" id="new-date" value="${todayIso()}"></td>
+            <td data-label="Campeonato"><input type="text" id="new-champ" list="dl-champs" placeholder="Campeonato"></td>
+            <td data-label="Mandante"><input type="text" id="new-home" list="dl-clubs" placeholder="Mandante"></td>
+            <td data-label="Visitante"><input type="text" id="new-away" list="dl-clubs" placeholder="Visitante"></td>
+            <td data-label="Aposta"><input type="text" id="new-pick" placeholder="Descrição da aposta"></td>
+            <td data-label="Stake"><input type="text" inputmode="decimal" class="calc bare-input" id="new-stake" value="${fmtBRL(state.stakeUnit)}"></td>
+            <td data-label="Retorno"><input type="text" inputmode="decimal" class="calc bare-input" id="new-retorno" placeholder="${fmtBRL(0)}"></td>
+            <td colspan="2" data-label=""></td>
+            <td data-label=""><button class="icon-add-btn" id="add-bet" title="Adicionar">+</button></td>
           </tr>
         </tbody>
       </table>
@@ -1169,16 +1233,16 @@ function renderEntradas(){
         ? `<span class="calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}">${fmtOdd(c.odd)}</span>`
         : `<input type="text" inputmode="decimal" class="odd-input calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}" data-field="oddManual" value="${b.oddManual!==undefined&&b.oddManual!==null&&b.oddManual!==''?Number(b.oddManual).toFixed(2):''}">`;
       return `<tr data-id="${b.id}">
-        <td><input type="date" data-field="date" value="${b.date}"></td>
-        <td><input type="text" data-field="champ" list="dl-champs" value="${escapeHtml(b.champ)}"></td>
-        <td><input type="text" data-field="home" list="dl-clubs" value="${escapeHtml(b.home)}"></td>
-        <td><input type="text" data-field="away" list="dl-clubs" value="${escapeHtml(b.away)}"></td>
-        <td><input type="text" data-field="pick" value="${escapeHtml(b.pick)}"></td>
-        <td><input type="text" inputmode="decimal" class="calc bare-input" data-field="stake" value="${fmtBRL(b.stake)}"></td>
-        <td><input type="text" inputmode="decimal" class="calc bare-input" data-field="retorno" value="${fmtBRL(b.retorno)}"></td>
-        <td>${oddCell}</td>
-        <td class="calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}">${fmtBRL(c.profit)}</td>
-        <td><button class="del-btn" data-del="${b.id}" title="Excluir">&#10005;</button></td>
+        <td data-label="Data"><input type="date" data-field="date" value="${b.date}"></td>
+        <td data-label="Campeonato"><input type="text" data-field="champ" list="dl-champs" value="${escapeHtml(b.champ)}"></td>
+        <td data-label="Mandante"><input type="text" data-field="home" list="dl-clubs" value="${escapeHtml(b.home)}"></td>
+        <td data-label="Visitante"><input type="text" data-field="away" list="dl-clubs" value="${escapeHtml(b.away)}"></td>
+        <td data-label="Aposta"><input type="text" data-field="pick" value="${escapeHtml(b.pick)}"></td>
+        <td data-label="Stake"><input type="text" inputmode="decimal" class="calc bare-input" data-field="stake" value="${fmtBRL(b.stake)}"></td>
+        <td data-label="Retorno"><input type="text" inputmode="decimal" class="calc bare-input" data-field="retorno" value="${fmtBRL(b.retorno)}"></td>
+        <td data-label="Odd">${oddCell}</td>
+        <td data-label="L/P" class="calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}">${fmtBRL(c.profit)}</td>
+        <td data-label=""><button class="del-btn" data-del="${b.id}" title="Excluir">&#10005;</button></td>
       </tr>`;
     }).join(""));
   }
@@ -1331,19 +1395,19 @@ function renderAnalises(){
         </tr></thead>
         <tbody id="an-tbody">
           <tr class="add-row-form" id="add-row-analise">
-            <td></td>
-            <td><input type="time" id="an-hora" value=""></td>
-            <td><input type="date" id="an-data" value="${todayIso()}"></td>
-            <td><input type="text" id="an-champ" list="dl-champs2" placeholder="Campeonato"></td>
-            <td><input type="text" id="an-home" list="dl-clubs2" placeholder="Mandante"></td>
-            <td><input type="text" id="an-away" list="dl-clubs2" placeholder="Visitante"></td>
-            <td>
+            <td data-label="Check"></td>
+            <td data-label="Hora"><input type="time" id="an-hora" value=""></td>
+            <td data-label="Data"><input type="date" id="an-data" value="${todayIso()}"></td>
+            <td data-label="Campeonato"><input type="text" id="an-champ" list="dl-champs2" placeholder="Campeonato"></td>
+            <td data-label="Mandante"><input type="text" id="an-home" list="dl-clubs2" placeholder="Mandante"></td>
+            <td data-label="Visitante"><input type="text" id="an-away" list="dl-clubs2" placeholder="Visitante"></td>
+            <td data-label="Superioridade no jogo">
               <select id="an-sup">${optionsHtml(SUPERIORIDADE_OPTIONS, "")}</select>
             </td>
-            <td>
+            <td data-label="Leitura de mercado">
               <select id="an-leitura">${optionsHtml(LEITURA_OPTIONS, "")}</select>
             </td>
-            <td><button class="icon-add-btn" id="add-an" title="Adicionar">+</button></td>
+            <td data-label=""><button class="icon-add-btn" id="add-an" title="Adicionar">+</button></td>
           </tr>
         </tbody>
       </table>
@@ -1359,15 +1423,15 @@ function renderAnalises(){
   } else {
     tbody.insertAdjacentHTML("beforeend", rows.map(r=>`
       <tr data-id="${r.id}">
-        <td style="text-align:center;"><input type="checkbox" class="checkbox" data-field="checked" ${r.checked?"checked":""}></td>
-        <td><input type="time" data-field="hora" value="${r.hora||''}"></td>
-        <td><input type="date" data-field="date" value="${r.date||''}"></td>
-        <td><input type="text" data-field="champ" list="dl-champs2" value="${escapeHtml(r.champ||'')}"></td>
-        <td><input type="text" data-field="home" list="dl-clubs2" value="${escapeHtml(r.home||'')}"></td>
-        <td><input type="text" data-field="away" list="dl-clubs2" value="${escapeHtml(r.away||'')}"></td>
-        <td><select data-field="sup">${optionsHtml(SUPERIORIDADE_OPTIONS, r.sup)}</select></td>
-        <td><select data-field="leitura">${optionsHtml(LEITURA_OPTIONS, r.leitura)}</select></td>
-        <td><button class="del-btn" data-del="${r.id}" title="Excluir">&#10005;</button></td>
+        <td data-label="Check" style="text-align:center;"><input type="checkbox" class="checkbox" data-field="checked" ${r.checked?"checked":""}></td>
+        <td data-label="Hora"><input type="time" data-field="hora" value="${r.hora||''}"></td>
+        <td data-label="Data"><input type="date" data-field="date" value="${r.date||''}"></td>
+        <td data-label="Campeonato"><input type="text" data-field="champ" list="dl-champs2" value="${escapeHtml(r.champ||'')}"></td>
+        <td data-label="Mandante"><input type="text" data-field="home" list="dl-clubs2" value="${escapeHtml(r.home||'')}"></td>
+        <td data-label="Visitante"><input type="text" data-field="away" list="dl-clubs2" value="${escapeHtml(r.away||'')}"></td>
+        <td data-label="Superioridade"><select data-field="sup">${optionsHtml(SUPERIORIDADE_OPTIONS, r.sup)}</select></td>
+        <td data-label="Leitura"><select data-field="leitura">${optionsHtml(LEITURA_OPTIONS, r.leitura)}</select></td>
+        <td data-label=""><button class="del-btn" data-del="${r.id}" title="Excluir">&#10005;</button></td>
       </tr>
     `).join(""));
   }
