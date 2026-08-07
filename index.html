@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Controle de Apostas</title>
+<title>Controle | Eduardo Levy</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -348,13 +348,9 @@ function uid(){ return Date.now().toString(36) + Math.random().toString(36).slic
 
 function defaultState(){
   return {
-    bankrollInicial: 300,
-    stakeUnit: 55,
-    bets: [
-      { id: uid(), date:"2026-08-06", champ:"Copa Betano do Brasil", home:"Corinthians", away:"Internacional", pick:"(0-0) Corinthians AH -0.5", stake:55, retorno:88.85, oddManual:"" },
-      { id: uid(), date:"2026-08-05", champ:"Copa Betano do Brasil", home:"Fluminense", away:"Vasco da Gama", pick:"(0-0) Vasco da Gama AH 0.0 - 1º Tempo", stake:55, retorno:112.75, oddManual:"" },
-      { id: uid(), date:"2026-08-05", champ:"Copa Betano do Brasil", home:"Grêmio", away:"Mirassol", pick:"(0-0) Grêmio AH 0.0 - 1º Tempo", stake:55, retorno:88, oddManual:"" }
-    ],
+    bankrollInicial: 0,
+    stakeUnit: 0,
+    bets: [],
     analyses: [],
     championships: DEFAULT_CHAMPIONSHIPS.slice(),
     clubs: DEFAULT_CLUBS.slice()
