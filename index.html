@@ -55,6 +55,7 @@
   --radius-md:12px;
   --radius-sm:8px;
   --shadow-card:0 1px 0 rgba(255,255,255,.02) inset, 0 8px 24px -12px var(--shadow-color);
+  --input-focus-bg:#0f1319;
 }
 :root[data-theme="light"]{
   --cs: light;
@@ -88,6 +89,7 @@
   --yellow:#b45309;
   --yellow-bg:rgba(180,83,9,.1);
   --shadow-card:0 1px 0 rgba(255,255,255,.6) inset, 0 8px 24px -12px var(--shadow-color);
+  --input-focus-bg:#f5f8ff;
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;color-scheme:var(--cs, dark);}
@@ -171,15 +173,15 @@ nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -
 }
 .stat-block:hover{background:var(--card-2);}
 .stat-label{font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;color:var(--text-faint);font-weight:600;}
-.stat-value{font-size:21px;font-weight:800;margin-top:5px;letter-spacing:-.3px;}
+.stat-value{font-size:21px;font-weight:800;margin-top:5px;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .stat-value.pos{color:var(--pos-text);}
 .stat-value.neg{color:var(--red-text);}
 .stat-value.blue{color:#7fb0ff;}
 @media (max-width:860px){
   .dash-grid{grid-template-columns:1fr;}
-  .dash-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;}
+  .dash-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;}
 }
-@media (max-width:480px){.dash-stats{grid-template-columns:repeat(2,1fr);}}
+@media (max-width:480px){.dash-stats{grid-template-columns:repeat(2,minmax(0,1fr));}}
 
 /* ---------- calendar ---------- */
 .cal-card{padding:20px 22px 18px;position:relative;}
@@ -216,14 +218,14 @@ nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -
 .toggle-group button svg{width:15px;height:15px;display:block;}
 .toggle-group button.active{background:var(--blue);color:#fff;}
 
-.cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;}
+.cal-grid{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:6px;}
 .cal-dow{text-align:center;font-size:10.5px;color:var(--text-faint);font-weight:700;text-transform:uppercase;letter-spacing:.4px;padding-bottom:4px;}
 .cal-cell{
   aspect-ratio:1/0.64;border-radius:10px;padding:7px 8px;
   display:flex;flex-direction:column;justify-content:space-between;
   background:var(--card-2);border:1px solid var(--border-soft);
   transition:transform .15s ease, box-shadow .15s ease;
-  cursor:default;
+  cursor:default;min-width:0;
 }
 .cal-cell.empty{background:transparent;border-color:transparent;}
 .cal-cell.has-data{cursor:pointer;}
@@ -235,13 +237,24 @@ nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -
 .cal-daynum{font-size:12px;color:var(--text-dim);font-weight:600;}
 .cal-cell.pos .cal-daynum{color:var(--pos-text);}
 .cal-cell.neg .cal-daynum{color:var(--red-text);}
-.cal-value{font-size:14px;font-weight:800;font-family:'Manrope';color:var(--text-dim);letter-spacing:-.2px;}
+.cal-value{font-size:14px;font-weight:800;font-family:'Manrope';color:var(--text-dim);letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:clip;max-width:100%;}
 .cal-cell.pos .cal-value{color:var(--pos-text);}
 .cal-cell.neg .cal-value{color:var(--red-text);}
 @media (max-width:640px){
   .cal-cell{border-radius:8px;padding:5px 6px;}
   .cal-value{font-size:11px;}
   .cal-daynum{font-size:10px;}
+}
+@media (max-width:480px){
+  .cal-card{padding:14px 12px 14px;}
+  .cal-grid{gap:4px;}
+  .cal-cell{aspect-ratio:1/0.82;padding:4px 3px;border-radius:7px;}
+  .cal-value{font-size:9px;letter-spacing:-.2px;}
+  .cal-daynum{font-size:9px;}
+  .cal-dow{font-size:9px;padding-bottom:2px;}
+  .cal-title{min-width:0;font-size:13px;}
+  .cal-nav{gap:8px;}
+  .cal-arrow{width:24px;height:24px;font-size:12px;}
 }
 
 .today-outline{outline:1.5px solid var(--outline-strong);outline-offset:-1.5px;}
@@ -279,9 +292,9 @@ input[type=number],input[type=date],input[type=time],input[type=text],input[type
   background:var(--bg-soft);border:1px solid var(--border);color:var(--text);
   border-radius:var(--radius-sm);padding:9px 11px;font-size:13.5px;font-family:'Inter';
   outline:none;transition:border-color .15s ease, background .15s ease;
-  width:100%;color-scheme:dark;
+  width:100%;color-scheme:var(--cs);
 }
-input:focus,select:focus{border-color:var(--blue);background:#0f1319;}
+input:focus,select:focus{border-color:var(--blue);background:var(--input-focus-bg);}
 input::placeholder{color:var(--text-faint);}
 select{appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239297a1' stroke-width='2'%3e%3cpath d='M6 9l6 6 6-6'/%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right 8px center;background-size:15px;padding-right:28px;}
 input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{opacity:.6;filter:none;background:transparent;}
@@ -304,7 +317,7 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .table-wrap::-webkit-scrollbar{display:none;}
 .table-wrap.dragging{cursor:grabbing;}
 table{width:100%;border-collapse:collapse;table-layout:fixed;}
-#entradas-table{width:100%;min-width:1539px;}
+#entradas-table{width:100%;min-width:1379px;}
 #analises-table{width:100%;min-width:1336px;}
 thead th{
   text-align:left;font-size:10.2px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-faint);
@@ -969,12 +982,34 @@ function applyTeamSearch(list, term, mandante, visitante){
   });
 }
 
+function attachRestrictedTeamInput(inputEl, getList){
+  if(!inputEl || inputEl.dataset.restrictedBound) return;
+  inputEl.dataset.restrictedBound = "1";
+  let lastValid = inputEl.value || "";
+  inputEl.addEventListener("input", ()=>{
+    const val = inputEl.value;
+    if(val===""){ lastValid=""; return; }
+    const lower = val.toLowerCase();
+    const list = getList();
+    const ok = list.some(item=>item.toLowerCase().startsWith(lower));
+    if(ok){
+      lastValid = val;
+    } else {
+      const pos = Math.max(0, inputEl.selectionStart - 1);
+      inputEl.value = lastValid;
+      inputEl.setSelectionRange(pos,pos);
+    }
+  });
+}
+
 function ensureListed(list, value){
-  if(!value) return;
+  if(!value) return true;
   const v = value.trim();
-  if(!v) return;
+  if(!v) return true;
   const exists = list.some(x=>x.toLowerCase()===v.toLowerCase());
-  if(!exists){ list.push(v); list.sort((a,b)=>a.localeCompare(b,'pt-BR')); }
+  if(exists) return false;
+  list.push(v); list.sort((a,b)=>a.localeCompare(b,'pt-BR'));
+  return true;
 }
 
 /* ================= RENDER: SHELL ================= */
@@ -1273,8 +1308,8 @@ function renderEntradas(){
     <div class="table-wrap card">
       <table id="entradas-table">
         <colgroup>
-          <col style="width:110px"><col style="width:210px"><col style="width:210px"><col style="width:210px">
-          <col style="width:420px"><col style="width:80px"><col style="width:85px"><col style="width:78px">
+          <col style="width:130px"><col style="width:190px"><col style="width:190px"><col style="width:190px">
+          <col style="width:300px"><col style="width:80px"><col style="width:85px"><col style="width:78px">
           <col style="width:92px"><col style="width:44px">
         </colgroup>
         <thead><tr>
@@ -1349,6 +1384,12 @@ function renderEntradas(){
   document.getElementById("entradas-toggle-visitante").addEventListener("click", ()=>{
     entradasVisitante = !entradasVisitante; renderEntradas();
   });
+
+  attachRestrictedTeamInput(document.getElementById("new-champ"), ()=>state.championships);
+  attachRestrictedTeamInput(document.getElementById("new-home"), ()=>state.clubs);
+  attachRestrictedTeamInput(document.getElementById("new-away"), ()=>state.clubs);
+  tbody.querySelectorAll('tr[data-id] input[data-field="champ"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.championships));
+  tbody.querySelectorAll('tr[data-id] input[data-field="home"], tr[data-id] input[data-field="away"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.clubs));
 
   // linhas existentes
   tbody.querySelectorAll("tr[data-id] input, tr[data-id] select").forEach(inp=>{
@@ -1529,6 +1570,12 @@ function renderAnalises(){
     analisesVisitante = !analisesVisitante; renderAnalises();
   });
 
+  attachRestrictedTeamInput(document.getElementById("an-champ"), ()=>state.championships);
+  attachRestrictedTeamInput(document.getElementById("an-home"), ()=>state.clubs);
+  attachRestrictedTeamInput(document.getElementById("an-away"), ()=>state.clubs);
+  tbody.querySelectorAll('tr[data-id] input[data-field="champ"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.championships));
+  tbody.querySelectorAll('tr[data-id] input[data-field="home"], tr[data-id] input[data-field="away"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.clubs));
+
   tbody.querySelectorAll("tr[data-id] input, tr[data-id] select").forEach(inp=>{
     inp.addEventListener("change", e=>{
       const tr = e.target.closest("tr");
@@ -1659,12 +1706,18 @@ function renderConfig(){
 
   document.getElementById("add-champ-btn").addEventListener("click", ()=>{
     const inp = document.getElementById("add-champ-input");
-    ensureListed(state.championships, inp.value);
+    const v = inp.value.trim();
+    if(!v) return;
+    const added = ensureListed(state.championships, v);
+    if(!added){ showToast(`O campeonato "${v}" já está cadastrado.`); return; }
     inp.value=""; persist(); renderChampChips();
   });
   document.getElementById("add-club-btn").addEventListener("click", ()=>{
     const inp = document.getElementById("add-club-input");
-    ensureListed(state.clubs, inp.value);
+    const v = inp.value.trim();
+    if(!v) return;
+    const added = ensureListed(state.clubs, v);
+    if(!added){ showToast(`O clube "${v}" já está cadastrado.`); return; }
     inp.value=""; persist(); renderClubChips();
   });
   document.getElementById("champ-search").addEventListener("input", e=>{ champSearch=e.target.value; renderChampChips(); });
