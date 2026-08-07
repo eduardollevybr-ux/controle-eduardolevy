@@ -208,20 +208,30 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .table-wrap::-webkit-scrollbar{display:none;}
 .table-wrap.dragging{cursor:grabbing;}
 table{width:100%;border-collapse:collapse;table-layout:fixed;}
+#entradas-table{width:auto;min-width:100%;}
 thead th{
   text-align:left;font-size:10.2px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-faint);
-  padding:12px 12px;font-weight:700;border-bottom:1px solid var(--border-soft);white-space:nowrap;
+  padding:12px 8px;font-weight:700;border-bottom:1px solid var(--border-soft);white-space:nowrap;
 }
-tbody td{padding:8px 10px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
+tbody td{padding:8px 6px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
 tbody tr{transition:background .12s ease;}
 tbody tr:hover{background:rgba(255,255,255,.015);}
 tbody tr:last-child td{border-bottom:none;}
 td input,td select{padding:7px 9px;font-size:13px;width:100%;min-width:0;}
 td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-width:86px;}
-td.calc{font-family:'Manrope';font-weight:700;font-size:13px;white-space:nowrap;}
-td.calc.pos{color:var(--pos-text);}
-td.calc.neg{color:var(--red-text);}
+.calc{font-family:'Manrope';font-weight:700;font-size:13px;white-space:nowrap;color:var(--text);}
+.calc.pos{color:var(--pos-text);}
+.calc.neg{color:var(--red-text);}
+#entradas-table th:nth-child(8),#entradas-table td:nth-child(8){text-align:center;}
 .odd-input{max-width:80px;}
+.odd-input.calc{
+  appearance:none;-webkit-appearance:none;-moz-appearance:textfield;
+  background:transparent;border:none;padding:0;width:100%;
+  font-family:'Manrope';font-weight:700;font-size:13px;text-align:center;
+}
+.odd-input.calc:focus{background:transparent;border:none;}
+.odd-input.calc:hover{cursor:text;}
+.odd-input.calc::-webkit-outer-spin-button,.odd-input.calc::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .del-btn{
   width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--card-2);
   color:var(--text-faint);cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -678,11 +688,11 @@ function renderEntradas(){
       </div>
     </div>
     <div class="table-wrap card">
-      <table>
+      <table id="entradas-table">
         <colgroup>
-          <col style="width:9%"><col style="width:16%"><col style="width:15%"><col style="width:15%">
-          <col style="width:15%"><col style="width:7%"><col style="width:7%"><col style="width:6%">
-          <col style="width:6%"><col style="width:4%">
+          <col style="width:110px"><col style="width:210px"><col style="width:210px"><col style="width:210px">
+          <col style="width:420px"><col style="width:80px"><col style="width:85px"><col style="width:78px">
+          <col style="width:92px"><col style="width:44px">
         </colgroup>
         <thead><tr>
           <th>Data</th><th>Campeonato</th><th>Mandante</th><th>Visitante</th><th>Aposta</th>
@@ -717,7 +727,7 @@ function renderEntradas(){
       const c = betCalc(b);
       const oddCell = c.autoOdd
         ? `<span class="calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}">${fmtOdd(c.odd)}</span>`
-        : `<input type="number" step="0.01" class="odd-input" data-field="oddManual" value="${b.oddManual!==undefined&&b.oddManual!==null?b.oddManual:''}">`;
+        : `<input type="text" inputmode="decimal" class="odd-input calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}" data-field="oddManual" value="${b.oddManual!==undefined&&b.oddManual!==null&&b.oddManual!==''?Number(b.oddManual).toFixed(2):''}">`;
       return `<tr data-id="${b.id}">
         <td><input type="date" data-field="date" value="${b.date}"></td>
         <td><input type="text" data-field="champ" list="dl-champs" value="${escapeHtml(b.champ)}"></td>
@@ -766,7 +776,14 @@ function renderEntradas(){
       if(!bet) return;
       const field = e.target.dataset.field;
       if(field==="stake" || field==="retorno") bet[field] = Number(e.target.value)||0;
-      else if(field==="oddManual") bet.oddManual = e.target.value===""?"":Number(e.target.value);
+      else if(field==="oddManual"){
+        let raw = String(e.target.value).trim();
+        if(raw==="") bet.oddManual = "";
+        else{
+          if(raw.includes(",")) raw = raw.replace(/\./g,"").replace(",",".");
+          bet.oddManual = Number(raw);
+        }
+      }
       else bet[field] = e.target.value;
       if(field==="champ") ensureListed(state.championships, bet.champ);
       if(field==="home"||field==="away") ensureListed(state.clubs, e.target.value);
