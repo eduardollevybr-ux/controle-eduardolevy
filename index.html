@@ -507,9 +507,16 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-wid
 .date-filter-wrap.active .date-filter-icon{color:#fff;}
 .date-filter-hidden-input{
   position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;border:0;
-  opacity:0;cursor:pointer;-webkit-appearance:none;appearance:none;background:transparent;color:transparent;
+  opacity:1;cursor:pointer;background:transparent;color:transparent;caret-color:transparent;
+  font-size:12px;
 }
-.date-filter-hidden-input::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;cursor:pointer;}
+.date-filter-hidden-input::-webkit-calendar-picker-indicator{position:absolute;inset:0;width:100%;height:100%;margin:0;padding:0;opacity:0;cursor:pointer;background:transparent;}
+.date-filter-hidden-input::-webkit-datetime-edit,
+.date-filter-hidden-input::-webkit-datetime-edit-fields-wrapper,
+.date-filter-hidden-input::-webkit-datetime-edit-text,
+.date-filter-hidden-input::-webkit-datetime-edit-month-field,
+.date-filter-hidden-input::-webkit-datetime-edit-day-field,
+.date-filter-hidden-input::-webkit-datetime-edit-year-field{color:transparent;}
 .date-filter-icon{
   position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
   color:var(--text-dim);pointer-events:none;
