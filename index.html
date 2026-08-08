@@ -792,6 +792,20 @@ let undoStack = [];
 /* ================= STORAGE (Supabase) ================= */
 let applyingRemote = false; // evita salvar de volta o que acabou de chegar via realtime
 
+function repairOrphanChecks(s){
+  // corrige análises cujo lançamento vinculado em Entradas não existe mais
+  // (ex: entrada apagada manualmente na aba Entradas): desmarca o check
+  if(!s || !Array.isArray(s.analyses) || !Array.isArray(s.bets)) return s;
+  const betIds = new Set(s.bets.map(b=>b.id));
+  s.analyses.forEach(a=>{
+    if(a.linkedBetId && !betIds.has(a.linkedBetId)){
+      a.checked = false;
+      a.linkedBetId = null;
+    }
+  });
+  return s;
+}
+
 async function loadState(){
   try{
     const { data, error } = await supabase
@@ -801,7 +815,7 @@ async function loadState(){
       .maybeSingle();
     if(error) throw error;
     if(data && data.data){
-      return Object.assign(defaultState(), data.data);
+      return repairOrphanChecks(Object.assign(defaultState(), data.data));
     }
   }catch(e){ console.error("Falha ao carregar:", e); showToast("Erro ao carregar dados"); }
   return defaultState();
@@ -1659,7 +1673,13 @@ function renderEntradas(){
   tbody.querySelectorAll("[data-del]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       snapshotForUndo();
-      state.bets = state.bets.filter(b=>b.id!==btn.dataset.del);
+      const delId = btn.dataset.del;
+      state.bets = state.bets.filter(b=>b.id!==delId);
+      const linkedAnalysis = state.analyses.find(a=>a.linkedBetId===delId);
+      if(linkedAnalysis){
+        linkedAnalysis.checked = false;
+        linkedAnalysis.linkedBetId = null;
+      }
       persist(); renderEntradas();
       showToast("Lançamento excluído — Ctrl+Z para desfazer");
     });
@@ -1887,21 +1907,30 @@ function renderAnalises(){
       }
       if(field==="checked"){
         item.checked = e.target.checked;
-        if(item.checked && !item.linkedBetId){
-          const newBet = {
-            id: uid(),
-            date: item.date || todayIso(),
-            champ: item.champ || "",
-            home: item.home || "",
-            away: item.away || "",
-            pick: "",
-            stake: state.stakeUnit,
-            retorno: 0,
-            oddManual: ""
-          };
-          state.bets.unshift(newBet);
-          item.linkedBetId = newBet.id;
-          showToast("Enviado para Entradas");
+        if(item.checked){
+          if(!item.linkedBetId){
+            const newBet = {
+              id: uid(),
+              date: item.date || todayIso(),
+              champ: item.champ || "",
+              home: item.home || "",
+              away: item.away || "",
+              pick: "",
+              stake: state.stakeUnit,
+              retorno: 0,
+              oddManual: ""
+            };
+            state.bets.unshift(newBet);
+            item.linkedBetId = newBet.id;
+            showToast("Enviado para Entradas");
+          }
+        } else {
+          if(item.linkedBetId){
+            const existiaEmEntradas = state.bets.some(b=>b.id===item.linkedBetId);
+            state.bets = state.bets.filter(b=>b.id!==item.linkedBetId);
+            item.linkedBetId = null;
+            if(existiaEmEntradas) showToast("Removido de Entradas");
+          }
         }
       }
       else item[field] = e.target.value;
