@@ -508,17 +508,42 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-wid
 }
 .date-filter-icon-btn:hover{color:var(--text);border-color:var(--hover-border);}
 .date-filter-icon-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
-.date-filter-hidden-input{position:absolute;opacity:0;width:0;height:0;pointer-events:none;border:0;padding:0;}
 .date-filter-wrap{position:relative;display:inline-flex;}
+
+/* Calendario proprio (sem input type=date nativo), para nao depender do seletor
+   do sistema operacional, que no Safari/iOS se mostrou instavel quando aberto via
+   JavaScript/overlay. Aqui todo o toque e um clique comum em botao, controlado
+   inteiramente por nos. */
+.mini-cal-popover{
+  position:absolute;top:calc(100% + 6px);left:0;z-index:50;width:246px;
+  background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);
+  box-shadow:0 10px 28px rgba(0,0,0,.28);padding:10px;
+}
+.mini-cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:6px;}
+.mini-cal-label{font-family:'Inter';font-weight:700;font-size:12px;color:var(--text);text-transform:capitalize;}
+.mini-cal-nav{
+  appearance:none;border:1px solid var(--border);background:var(--card-2);color:var(--text-dim);
+  width:26px;height:26px;min-width:26px;border-radius:8px;cursor:pointer;font-size:14px;line-height:1;
+  display:flex;align-items:center;justify-content:center;transition:all .15s ease;
+}
+.mini-cal-nav:hover{color:var(--text);border-color:var(--hover-border);}
+.mini-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
+.mini-cal-dow{font-family:'Inter';font-weight:700;font-size:10px;color:var(--text-dim);text-align:center;padding:4px 0;}
+.mini-cal-day{
+  appearance:none;border:1px solid transparent;background:transparent;color:var(--text);
+  font-family:'Inter';font-size:12px;padding:7px 0;border-radius:8px;cursor:pointer;text-align:center;
+}
+.mini-cal-day:hover{background:var(--card-2);}
+.mini-cal-day-muted{visibility:hidden;pointer-events:none;}
+.mini-cal-day-today{border-color:var(--blue);}
+.mini-cal-day-selected{background:var(--blue);color:#fff;}
+.mini-cal-footer{margin-top:8px;text-align:center;}
+.mini-cal-today-link{
+  appearance:none;border:0;background:transparent;color:var(--blue);font-family:'Inter';
+  font-weight:700;font-size:11px;cursor:pointer;padding:4px;
+}
 @media (max-width:700px){
-  /* no celular, o input de data fica sobreposto ao botão para receber o toque diretamente,
-     já que o showPicker()/click() programático é pouco confiável em navegadores mobile.
-     opacity quase-zero (em vez de 0) porque o Safari iOS não abre o seletor nativo em
-     inputs com opacity:0 — 0.01 é visualmente idêntico a invisível. */
-  .date-filter-wrap .date-filter-hidden-input{
-    inset:0;width:100%;height:100%;min-width:0;opacity:.01;pointer-events:auto;z-index:2;
-    font-size:16px;-webkit-tap-highlight-color:transparent;
-  }
+  .mini-cal-popover{left:auto;right:0;}
 }
 .today-btn{
   appearance:none;border:1px solid var(--border);background:var(--card-2);color:var(--text-dim);
@@ -743,6 +768,12 @@ let calMonth = new Date(2026,7,1);
 let calView = "brl"; // 'brl' | 'pct'
 let entradasFilterDate = null;
 let analisesFilterDate = null;
+let entradasCalendarOpen = false;
+let entradasCalendarViewY = null;
+let entradasCalendarViewM = null;
+let analisesCalendarOpen = false;
+let analisesCalendarViewY = null;
+let analisesCalendarViewM = null;
 let clubSearch = "";
 let champSearch = "";
 let entradasTeamSearch = "";
@@ -1061,6 +1092,40 @@ function validateTeamFields(data){
 function pad2(n){ return n<10 ? "0"+n : ""+n; }
 function isoDate(y,m,d){ return `${y}-${pad2(m+1)}-${pad2(d)}`; }
 function todayIso(){ const t=new Date(); return isoDate(t.getFullYear(),t.getMonth(),t.getDate()); }
+
+/* ================= MINI CALENDARIO (proprio, sem input type=date nativo) ================= */
+function buildCalendarCells(year, month){
+  // month e 0-indexado (0=janeiro)
+  const firstDow = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month+1, 0).getDate();
+  const cells = [];
+  for(let i=0;i<firstDow;i++) cells.push(null);
+  for(let d=1; d<=daysInMonth; d++) cells.push({day:d, iso: isoDate(year, month, d)});
+  while(cells.length % 7 !== 0) cells.push(null);
+  return cells;
+}
+function renderMiniCalendarHtml(idPrefix, viewY, viewM, selectedIso){
+  const cells = buildCalendarCells(viewY, viewM);
+  const todayStr = todayIso();
+  let dowRow = DOW.map(d=>`<div class="mini-cal-dow">${d}</div>`).join("");
+  let dayCells = cells.map(c=>{
+    if(!c) return `<div class="mini-cal-day mini-cal-day-muted">.</div>`;
+    const isSel = c.iso===selectedIso;
+    const isToday = c.iso===todayStr;
+    return `<button type="button" class="mini-cal-day ${isSel?'mini-cal-day-selected':''} ${isToday?'mini-cal-day-today':''}" data-iso="${c.iso}">${c.day}</button>`;
+  }).join("");
+  return `
+    <div class="mini-cal-popover" id="${idPrefix}-popover">
+      <div class="mini-cal-header">
+        <button type="button" class="mini-cal-nav" id="${idPrefix}-prev" title="Mês anterior">&#8249;</button>
+        <span class="mini-cal-label">${MONTHS[viewM]} de ${viewY}</span>
+        <button type="button" class="mini-cal-nav" id="${idPrefix}-next" title="Próximo mês">&#8250;</button>
+      </div>
+      <div class="mini-cal-grid">${dowRow}${dayCells}</div>
+      <div class="mini-cal-footer"><button type="button" class="mini-cal-today-link" id="${idPrefix}-today">Ir para hoje</button></div>
+    </div>
+  `;
+}
 
 function optionsHtml(options, selected){
   const blank = `<option value="" ${!selected?"selected":""}>Selecione</option>`;
@@ -1395,11 +1460,11 @@ function renderEntradas(){
       <div class="section-title" style="margin-bottom:0;">Lançamentos</div>
     </div>
     <div class="search-bar">
-      <div class="date-filter-wrap">
+      <div class="date-filter-wrap" id="entradas-date-filter-wrap">
         <button class="date-filter-icon-btn ${entradasFilterDate?'active':''}" id="entradas-date-btn" type="button" title="Filtrar por data">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
         </button>
-        <input type="date" class="date-filter-hidden-input" id="entradas-date-input" value="${entradasFilterDate || ''}">
+        ${entradasCalendarOpen ? renderMiniCalendarHtml("entradas-cal", entradasCalendarViewY, entradasCalendarViewM, entradasFilterDate) : ""}
       </div>
       <button class="today-btn ${entradasFilterDate===todayIso()?'active':''}" id="entradas-today-btn" type="button">Hoje</button>
       <div class="search-input-wrap">
@@ -1478,28 +1543,47 @@ function renderEntradas(){
   if(clearBtn) clearBtn.addEventListener("click", ()=>{ entradasFilterDate=null; renderEntradas(); });
 
   {
-    const dateInput = document.getElementById("entradas-date-input");
-    let realPickHappened = false;
-    // No Safari/iOS, o input de data que acabou de ser inserido no DOM às vezes dispara
-    // um "change" sozinho no primeiro toque, com a data atual, antes do usuário conseguir
-    // ver ou escolher algo no seletor (bug conhecido do WebKit). Uma escolha real sempre
-    // gera um evento "input" durante a rolagem, antes do "change". Então só aceitamos o
-    // "change" se um "input" real veio antes; caso contrário, ignoramos e reabrimos o
-    // seletor para o usuário escolher de verdade.
-    dateInput.addEventListener("input", ()=>{ realPickHappened = true; });
-    document.getElementById("entradas-date-btn").addEventListener("click", ()=>{
-      if(isNarrowScreen()) return; // no celular o próprio input (sobreposto ao botão) já abre o calendário ao toque nativo
-      try{ if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); } }catch(err){ dateInput.focus(); dateInput.click(); }
-    });
-    dateInput.addEventListener("change", e=>{
-      if(isNarrowScreen() && !realPickHappened){
-        e.target.value = entradasFilterDate || "";
-        setTimeout(()=>{ try{ dateInput.showPicker && dateInput.showPicker(); }catch(err){} }, 50);
-        return;
+    document.getElementById("entradas-date-btn").addEventListener("click", e=>{
+      e.stopPropagation(); // impede que o clique feche o calendário no mesmo instante em que o abre
+      if(entradasCalendarOpen){
+        entradasCalendarOpen = false;
+      } else {
+        const base = entradasFilterDate || todayIso();
+        const [y,m] = base.split("-").map(Number);
+        entradasCalendarViewY = y; entradasCalendarViewM = m-1;
+        entradasCalendarOpen = true;
       }
-      entradasFilterDate = e.target.value || null;
       renderEntradas();
     });
+    if(entradasCalendarOpen){
+      const popover = document.getElementById("entradas-cal-popover");
+      if(popover) popover.addEventListener("click", e=> e.stopPropagation());
+      document.getElementById("entradas-cal-prev").addEventListener("click", ()=>{
+        entradasCalendarViewM--;
+        if(entradasCalendarViewM<0){ entradasCalendarViewM=11; entradasCalendarViewY--; }
+        renderEntradas();
+      });
+      document.getElementById("entradas-cal-next").addEventListener("click", ()=>{
+        entradasCalendarViewM++;
+        if(entradasCalendarViewM>11){ entradasCalendarViewM=0; entradasCalendarViewY++; }
+        renderEntradas();
+      });
+      document.getElementById("entradas-cal-today").addEventListener("click", ()=>{
+        const t = todayIso();
+        const [y,m] = t.split("-").map(Number);
+        entradasCalendarViewY = y; entradasCalendarViewM = m-1;
+        entradasFilterDate = t;
+        entradasCalendarOpen = false;
+        renderEntradas();
+      });
+      document.querySelectorAll("#entradas-cal-popover .mini-cal-day[data-iso]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          entradasFilterDate = btn.dataset.iso;
+          entradasCalendarOpen = false;
+          renderEntradas();
+        });
+      });
+    }
   }
   document.getElementById("entradas-today-btn").addEventListener("click", ()=>{
     entradasFilterDate = entradasFilterDate===todayIso() ? null : todayIso();
@@ -1630,11 +1714,11 @@ function renderAnalises(){
     </div>
     ${analisesFilterDate ? `<div class="filter-banner"><span>Mostrando análises de ${analisesFilterDate.split('-').reverse().join('/')}</span><button id="clear-filter-analises">limpar filtro</button></div>` : ""}
     <div class="search-bar">
-      <div class="date-filter-wrap">
+      <div class="date-filter-wrap" id="analises-date-filter-wrap">
         <button class="date-filter-icon-btn ${analisesFilterDate?'active':''}" id="analises-date-btn" type="button" title="Filtrar por data">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
         </button>
-        <input type="date" class="date-filter-hidden-input" id="analises-date-input" value="${analisesFilterDate || ''}">
+        ${analisesCalendarOpen ? renderMiniCalendarHtml("analises-cal", analisesCalendarViewY, analisesCalendarViewM, analisesFilterDate) : ""}
       </div>
       <button class="today-btn ${analisesFilterDate===todayIso()?'active':''}" id="analises-today-btn" type="button">Hoje</button>
       <div class="search-input-wrap">
@@ -1704,25 +1788,47 @@ function renderAnalises(){
   if(clearBtnAn) clearBtnAn.addEventListener("click", ()=>{ analisesFilterDate=null; renderAnalises(); });
 
   {
-    const dateInput = document.getElementById("analises-date-input");
-    let realPickHappened = false;
-    // Mesma correção aplicada em Entradas: só aceita o "change" se um "input" real
-    // veio antes (rolagem do seletor). Sem isso, ignora a confirmação fantasma do
-    // Safari/iOS e reabre o seletor para o usuário escolher de verdade.
-    dateInput.addEventListener("input", ()=>{ realPickHappened = true; });
-    document.getElementById("analises-date-btn").addEventListener("click", ()=>{
-      if(isNarrowScreen()) return; // no celular o próprio input (sobreposto ao botão) já abre o calendário ao toque nativo
-      try{ if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); } }catch(err){ dateInput.focus(); dateInput.click(); }
-    });
-    dateInput.addEventListener("change", e=>{
-      if(isNarrowScreen() && !realPickHappened){
-        e.target.value = analisesFilterDate || "";
-        setTimeout(()=>{ try{ dateInput.showPicker && dateInput.showPicker(); }catch(err){} }, 50);
-        return;
+    document.getElementById("analises-date-btn").addEventListener("click", e=>{
+      e.stopPropagation(); // impede que o clique feche o calendário no mesmo instante em que o abre
+      if(analisesCalendarOpen){
+        analisesCalendarOpen = false;
+      } else {
+        const base = analisesFilterDate || todayIso();
+        const [y,m] = base.split("-").map(Number);
+        analisesCalendarViewY = y; analisesCalendarViewM = m-1;
+        analisesCalendarOpen = true;
       }
-      analisesFilterDate = e.target.value || null;
       renderAnalises();
     });
+    if(analisesCalendarOpen){
+      const popover = document.getElementById("analises-cal-popover");
+      if(popover) popover.addEventListener("click", e=> e.stopPropagation());
+      document.getElementById("analises-cal-prev").addEventListener("click", ()=>{
+        analisesCalendarViewM--;
+        if(analisesCalendarViewM<0){ analisesCalendarViewM=11; analisesCalendarViewY--; }
+        renderAnalises();
+      });
+      document.getElementById("analises-cal-next").addEventListener("click", ()=>{
+        analisesCalendarViewM++;
+        if(analisesCalendarViewM>11){ analisesCalendarViewM=0; analisesCalendarViewY++; }
+        renderAnalises();
+      });
+      document.getElementById("analises-cal-today").addEventListener("click", ()=>{
+        const t = todayIso();
+        const [y,m] = t.split("-").map(Number);
+        analisesCalendarViewY = y; analisesCalendarViewM = m-1;
+        analisesFilterDate = t;
+        analisesCalendarOpen = false;
+        renderAnalises();
+      });
+      document.querySelectorAll("#analises-cal-popover .mini-cal-day[data-iso]").forEach(btn=>{
+        btn.addEventListener("click", ()=>{
+          analisesFilterDate = btn.dataset.iso;
+          analisesCalendarOpen = false;
+          renderAnalises();
+        });
+      });
+    }
   }
   document.getElementById("analises-today-btn").addEventListener("click", ()=>{
     analisesFilterDate = analisesFilterDate===todayIso() ? null : todayIso();
@@ -1991,6 +2097,19 @@ function attachTabDrag(navEl){
     if(!navEl.contains(e.target)) navEl.classList.remove("tabs-open");
   });
 }
+
+// Fecha os mini calendarios de Entradas/Analises ao clicar fora deles.
+// Registrado uma unica vez (fora das funcoes de render, que rodam a cada clique).
+document.addEventListener("click", ()=>{
+  if(entradasCalendarOpen){
+    entradasCalendarOpen = false;
+    if(document.getElementById("entradas-date-btn")) renderEntradas();
+  }
+  if(analisesCalendarOpen){
+    analisesCalendarOpen = false;
+    if(document.getElementById("analises-date-btn")) renderAnalises();
+  }
+});
 
 /* ================= DRAG TO ADJUST TIME (segurar e arrastar p/ cima ou baixo) ================= */
 function attachTimeDrag(input){
