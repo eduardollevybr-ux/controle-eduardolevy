@@ -497,11 +497,12 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-wid
 .search-toggle:hover{color:var(--text);border-color:var(--hover-border);}
 .search-toggle.active{background:var(--blue);color:#fff;border-color:var(--blue);}
 
+.date-filter-wrap{display:block;flex:none;}
 .date-filter-input{
-  appearance:auto;-webkit-appearance:auto;
+  display:block;appearance:auto;-webkit-appearance:auto;
   border:1px solid var(--border);background:var(--card-2);color:var(--text-dim);
   border-radius:var(--radius-md);cursor:pointer;padding:8px 10px;font-size:12.3px;font-family:'Inter';
-  transition:all .15s ease;color-scheme:var(--cs);width:118px;min-width:118px;
+  transition:all .15s ease;color-scheme:var(--cs);width:112px;min-width:0;
 }
 .date-filter-input:hover{color:var(--text);border-color:var(--hover-border);}
 .date-filter-input.active{background:var(--blue);color:#fff;border-color:var(--blue);}
@@ -1371,7 +1372,7 @@ function renderEntradas(){
       <div class="section-title" style="margin-bottom:0;">Lançamentos</div>
     </div>
     <div class="search-bar">
-      <input type="date" class="date-filter-input ${entradasFilterDate?'active':''}" id="entradas-date-input" title="Filtrar por data" value="${entradasFilterDate||''}">
+      <div class="date-filter-wrap"><input type="date" class="date-filter-input ${entradasFilterDate?'active':''}" id="entradas-date-input" title="Filtrar por data" value="${entradasFilterDate||''}"></div>
       <button class="today-btn ${entradasFilterDate===todayIso()?'active':''}" id="entradas-today-btn" type="button">Hoje</button>
       <div class="search-input-wrap">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -1582,7 +1583,7 @@ function renderAnalises(){
     </div>
     ${analisesFilterDate ? `<div class="filter-banner"><span>Mostrando análises de ${analisesFilterDate.split('-').reverse().join('/')}</span><button id="clear-filter-analises">limpar filtro</button></div>` : ""}
     <div class="search-bar">
-      <input type="date" class="date-filter-input ${analisesFilterDate?'active':''}" id="analises-date-input" title="Filtrar por data" value="${analisesFilterDate||''}">
+      <div class="date-filter-wrap"><input type="date" class="date-filter-input ${analisesFilterDate?'active':''}" id="analises-date-input" title="Filtrar por data" value="${analisesFilterDate||''}"></div>
       <button class="today-btn ${analisesFilterDate===todayIso()?'active':''}" id="analises-today-btn" type="button">Hoje</button>
       <div class="search-input-wrap">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
