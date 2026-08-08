@@ -1475,6 +1475,8 @@ function renderEntradas(){
   if(clearBtn) clearBtn.addEventListener("click", ()=>{ entradasFilterDate=null; renderEntradas(); });
 
   document.getElementById("entradas-date-btn").addEventListener("click", ()=>{
+    const isMobile = window.matchMedia && window.matchMedia("(max-width:700px)").matches;
+    if(isMobile) return; // no celular o próprio input (sobreposto ao botão) já abre o calendário ao toque nativo
     const dateInput = document.getElementById("entradas-date-input");
     try{ if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); } }catch(err){ dateInput.focus(); dateInput.click(); }
   });
@@ -1685,6 +1687,8 @@ function renderAnalises(){
   if(clearBtnAn) clearBtnAn.addEventListener("click", ()=>{ analisesFilterDate=null; renderAnalises(); });
 
   document.getElementById("analises-date-btn").addEventListener("click", ()=>{
+    const isMobile = window.matchMedia && window.matchMedia("(max-width:700px)").matches;
+    if(isMobile) return; // no celular o próprio input (sobreposto ao botão) já abre o calendário ao toque nativo
     const dateInput = document.getElementById("analises-date-input");
     try{ if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); } }catch(err){ dateInput.focus(); dateInput.click(); }
   });
