@@ -101,6 +101,10 @@
 }
 *{box-sizing:border-box;}
 html,body{margin:0;padding:0;color-scheme:var(--cs, dark);}
+@media (max-width:700px){
+  /* evita que uma barra em branco apareça à direita ao fazer o gesto de pinça (zoom out) no celular */
+  html,body{overflow-x:hidden;max-width:100vw;}
+}
 body{
   background:radial-gradient(1200px 600px at 50% -10%, var(--bg-grad) 0%, var(--bg) 55%) fixed;
   color:var(--text);
@@ -505,6 +509,14 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-wid
 .date-filter-icon-btn:hover{color:var(--text);border-color:var(--hover-border);}
 .date-filter-icon-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
 .date-filter-hidden-input{position:absolute;opacity:0;width:0;height:0;pointer-events:none;border:0;padding:0;}
+.date-filter-wrap{position:relative;display:inline-flex;}
+@media (max-width:700px){
+  /* no celular, o input de data fica sobreposto ao botão para receber o toque diretamente,
+     já que o showPicker()/click() programático é pouco confiável em navegadores mobile */
+  .date-filter-wrap .date-filter-hidden-input{
+    inset:0;width:100%;height:100%;min-width:0;opacity:0;pointer-events:auto;z-index:1;
+  }
+}
 .today-btn{
   appearance:none;border:1px solid var(--border);background:var(--card-2);color:var(--text-dim);
   font-family:'Inter';font-weight:700;font-size:12px;padding:8px 14px;border-radius:999px;cursor:pointer;
@@ -891,6 +903,13 @@ function fmtBRL(n){
   if(n===null||n===undefined||isNaN(n)) n=0;
   return n.toLocaleString("pt-BR",{style:"currency",currency:"BRL"});
 }
+function fmtBRLCalMobile(n){
+  if(n===null||n===undefined||isNaN(n)) n=0;
+  return Math.round(n).toLocaleString("pt-BR");
+}
+function isMobileViewport(){
+  return typeof window!=="undefined" && window.matchMedia && window.matchMedia("(max-width:640px)").matches;
+}
 function parseBRL(str){
   if(str===undefined||str===null) return 0;
   let s = String(str).trim().replace(/R\$\s?/gi,"").replace(/[^\d,.-]/g,"");
@@ -1246,7 +1265,7 @@ function renderCalendar(){
     let valueHtml = "";
     if(hasData){
       const banca = bankrollBeforeDate(iso);
-      const val = calView==="brl" ? fmtBRL(profit) : fmtPct(banca>0 ? profit/banca : 0);
+      const val = calView==="brl" ? (isMobileViewport() ? fmtBRLCalMobile(profit) : fmtBRL(profit)) : fmtPct(banca>0 ? profit/banca : 0);
       valueHtml = `<div class="cal-value">${val}</div>`;
     }
     html += `<div class="${cls}" data-iso="${hasData?iso:''}"><div class="cal-daynum">${d}</div>${valueHtml}</div>`;
@@ -1370,10 +1389,12 @@ function renderEntradas(){
       <div class="section-title" style="margin-bottom:0;">Lançamentos</div>
     </div>
     <div class="search-bar">
-      <button class="date-filter-icon-btn ${entradasFilterDate?'active':''}" id="entradas-date-btn" type="button" title="Filtrar por data">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-      </button>
-      <input type="date" class="date-filter-hidden-input" id="entradas-date-input" value="${entradasFilterDate||''}">
+      <div class="date-filter-wrap">
+        <button class="date-filter-icon-btn ${entradasFilterDate?'active':''}" id="entradas-date-btn" type="button" title="Filtrar por data">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </button>
+        <input type="date" class="date-filter-hidden-input" id="entradas-date-input" value="${entradasFilterDate||''}">
+      </div>
       <button class="today-btn ${entradasFilterDate===todayIso()?'active':''}" id="entradas-today-btn" type="button">Hoje</button>
       <div class="search-input-wrap">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -1452,7 +1473,7 @@ function renderEntradas(){
 
   document.getElementById("entradas-date-btn").addEventListener("click", ()=>{
     const dateInput = document.getElementById("entradas-date-input");
-    if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); }
+    try{ if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); } }catch(err){ dateInput.focus(); dateInput.click(); }
   });
   document.getElementById("entradas-date-input").addEventListener("change", e=>{
     entradasFilterDate = e.target.value || null;
@@ -1587,10 +1608,12 @@ function renderAnalises(){
     </div>
     ${analisesFilterDate ? `<div class="filter-banner"><span>Mostrando análises de ${analisesFilterDate.split('-').reverse().join('/')}</span><button id="clear-filter-analises">limpar filtro</button></div>` : ""}
     <div class="search-bar">
-      <button class="date-filter-icon-btn ${analisesFilterDate?'active':''}" id="analises-date-btn" type="button" title="Filtrar por data">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
-      </button>
-      <input type="date" class="date-filter-hidden-input" id="analises-date-input" value="${analisesFilterDate||''}">
+      <div class="date-filter-wrap">
+        <button class="date-filter-icon-btn ${analisesFilterDate?'active':''}" id="analises-date-btn" type="button" title="Filtrar por data">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+        </button>
+        <input type="date" class="date-filter-hidden-input" id="analises-date-input" value="${analisesFilterDate||''}">
+      </div>
       <button class="today-btn ${analisesFilterDate===todayIso()?'active':''}" id="analises-today-btn" type="button">Hoje</button>
       <div class="search-input-wrap">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -1660,7 +1683,7 @@ function renderAnalises(){
 
   document.getElementById("analises-date-btn").addEventListener("click", ()=>{
     const dateInput = document.getElementById("analises-date-input");
-    if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); }
+    try{ if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); } }catch(err){ dateInput.focus(); dateInput.click(); }
   });
   document.getElementById("analises-date-input").addEventListener("change", e=>{
     analisesFilterDate = e.target.value || null;
