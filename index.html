@@ -844,7 +844,7 @@ function subscribeRealtime(){
       { event: "UPDATE", schema: "public", table: "app_state", filter: `user_id=eq.${currentUser.id}` },
       (payload) => {
         applyingRemote = true;
-        state = Object.assign(defaultState(), payload.new.data);
+        state = repairOrphanChecks(Object.assign(defaultState(), payload.new.data));
         renderTabs();
         applyingRemote = false;
       }
