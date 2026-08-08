@@ -497,16 +497,14 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-wid
 .search-toggle:hover{color:var(--text);border-color:var(--hover-border);}
 .search-toggle.active{background:var(--blue);color:#fff;border-color:var(--blue);}
 
-.date-filter-wrap{display:block;flex:none;}
-.date-filter-input{
-  display:block;appearance:auto;-webkit-appearance:auto;
-  border:1px solid var(--border);background:var(--card-2);color:var(--text-dim);
-  border-radius:var(--radius-md);cursor:pointer;padding:8px 10px;font-size:12.3px;font-family:'Inter';
-  transition:all .15s ease;color-scheme:var(--cs);width:112px;min-width:0;
+.date-filter-icon-btn{
+  appearance:none;border:1px solid var(--border);background:var(--card-2);color:var(--text-dim);
+  width:34px;height:34px;min-width:34px;border-radius:var(--radius-md);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s ease;position:relative;
 }
-.date-filter-input:hover{color:var(--text);border-color:var(--hover-border);}
-.date-filter-input.active{background:var(--blue);color:#fff;border-color:var(--blue);}
-.date-filter-input.active::-webkit-calendar-picker-indicator{filter:invert(1) brightness(2);}
+.date-filter-icon-btn:hover{color:var(--text);border-color:var(--hover-border);}
+.date-filter-icon-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+.date-filter-hidden-input{position:absolute;opacity:0;width:0;height:0;pointer-events:none;border:0;padding:0;}
 .today-btn{
   appearance:none;border:1px solid var(--border);background:var(--card-2);color:var(--text-dim);
   font-family:'Inter';font-weight:700;font-size:12px;padding:8px 14px;border-radius:999px;cursor:pointer;
@@ -1372,7 +1370,10 @@ function renderEntradas(){
       <div class="section-title" style="margin-bottom:0;">Lançamentos</div>
     </div>
     <div class="search-bar">
-      <div class="date-filter-wrap"><input type="date" class="date-filter-input ${entradasFilterDate?'active':''}" id="entradas-date-input" title="Filtrar por data" value="${entradasFilterDate||''}"></div>
+      <button class="date-filter-icon-btn ${entradasFilterDate?'active':''}" id="entradas-date-btn" type="button" title="Filtrar por data">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      </button>
+      <input type="date" class="date-filter-hidden-input" id="entradas-date-input" value="${entradasFilterDate||''}">
       <button class="today-btn ${entradasFilterDate===todayIso()?'active':''}" id="entradas-today-btn" type="button">Hoje</button>
       <div class="search-input-wrap">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -1449,7 +1450,10 @@ function renderEntradas(){
   const clearBtn = document.getElementById("clear-filter");
   if(clearBtn) clearBtn.addEventListener("click", ()=>{ entradasFilterDate=null; renderEntradas(); });
 
-
+  document.getElementById("entradas-date-btn").addEventListener("click", ()=>{
+    const dateInput = document.getElementById("entradas-date-input");
+    if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); }
+  });
   document.getElementById("entradas-date-input").addEventListener("change", e=>{
     entradasFilterDate = e.target.value || null;
     renderEntradas();
@@ -1583,7 +1587,10 @@ function renderAnalises(){
     </div>
     ${analisesFilterDate ? `<div class="filter-banner"><span>Mostrando análises de ${analisesFilterDate.split('-').reverse().join('/')}</span><button id="clear-filter-analises">limpar filtro</button></div>` : ""}
     <div class="search-bar">
-      <div class="date-filter-wrap"><input type="date" class="date-filter-input ${analisesFilterDate?'active':''}" id="analises-date-input" title="Filtrar por data" value="${analisesFilterDate||''}"></div>
+      <button class="date-filter-icon-btn ${analisesFilterDate?'active':''}" id="analises-date-btn" type="button" title="Filtrar por data">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
+      </button>
+      <input type="date" class="date-filter-hidden-input" id="analises-date-input" value="${analisesFilterDate||''}">
       <button class="today-btn ${analisesFilterDate===todayIso()?'active':''}" id="analises-today-btn" type="button">Hoje</button>
       <div class="search-input-wrap">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="M21 21l-4.3-4.3"/></svg>
@@ -1651,6 +1658,10 @@ function renderAnalises(){
   const clearBtnAn = document.getElementById("clear-filter-analises");
   if(clearBtnAn) clearBtnAn.addEventListener("click", ()=>{ analisesFilterDate=null; renderAnalises(); });
 
+  document.getElementById("analises-date-btn").addEventListener("click", ()=>{
+    const dateInput = document.getElementById("analises-date-input");
+    if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); }
+  });
   document.getElementById("analises-date-input").addEventListener("change", e=>{
     analisesFilterDate = e.target.value || null;
     renderAnalises();
