@@ -1399,7 +1399,7 @@ function renderEntradas(){
         <button class="date-filter-icon-btn ${entradasFilterDate?'active':''}" id="entradas-date-btn" type="button" title="Filtrar por data">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
         </button>
-        <input type="date" class="date-filter-hidden-input" id="entradas-date-input" value="${entradasFilterDate || (isNarrowScreen() ? todayIso() : '')}">
+        <input type="date" class="date-filter-hidden-input" id="entradas-date-input" value="${entradasFilterDate || ''}">
       </div>
       <button class="today-btn ${entradasFilterDate===todayIso()?'active':''}" id="entradas-today-btn" type="button">Hoje</button>
       <div class="search-input-wrap">
@@ -1477,15 +1477,30 @@ function renderEntradas(){
   const clearBtn = document.getElementById("clear-filter");
   if(clearBtn) clearBtn.addEventListener("click", ()=>{ entradasFilterDate=null; renderEntradas(); });
 
-  document.getElementById("entradas-date-btn").addEventListener("click", ()=>{
-    if(isNarrowScreen()) return; // no celular o próprio input (sobreposto ao botão) já abre o calendário ao toque nativo
+  {
     const dateInput = document.getElementById("entradas-date-input");
-    try{ if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); } }catch(err){ dateInput.focus(); dateInput.click(); }
-  });
-  document.getElementById("entradas-date-input").addEventListener("change", e=>{
-    entradasFilterDate = e.target.value || null;
-    renderEntradas();
-  });
+    let realPickHappened = false;
+    // No Safari/iOS, o input de data que acabou de ser inserido no DOM às vezes dispara
+    // um "change" sozinho no primeiro toque, com a data atual, antes do usuário conseguir
+    // ver ou escolher algo no seletor (bug conhecido do WebKit). Uma escolha real sempre
+    // gera um evento "input" durante a rolagem, antes do "change". Então só aceitamos o
+    // "change" se um "input" real veio antes; caso contrário, ignoramos e reabrimos o
+    // seletor para o usuário escolher de verdade.
+    dateInput.addEventListener("input", ()=>{ realPickHappened = true; });
+    document.getElementById("entradas-date-btn").addEventListener("click", ()=>{
+      if(isNarrowScreen()) return; // no celular o próprio input (sobreposto ao botão) já abre o calendário ao toque nativo
+      try{ if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); } }catch(err){ dateInput.focus(); dateInput.click(); }
+    });
+    dateInput.addEventListener("change", e=>{
+      if(isNarrowScreen() && !realPickHappened){
+        e.target.value = entradasFilterDate || "";
+        setTimeout(()=>{ try{ dateInput.showPicker && dateInput.showPicker(); }catch(err){} }, 50);
+        return;
+      }
+      entradasFilterDate = e.target.value || null;
+      renderEntradas();
+    });
+  }
   document.getElementById("entradas-today-btn").addEventListener("click", ()=>{
     entradasFilterDate = entradasFilterDate===todayIso() ? null : todayIso();
     renderEntradas();
@@ -1619,7 +1634,7 @@ function renderAnalises(){
         <button class="date-filter-icon-btn ${analisesFilterDate?'active':''}" id="analises-date-btn" type="button" title="Filtrar por data">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
         </button>
-        <input type="date" class="date-filter-hidden-input" id="analises-date-input" value="${analisesFilterDate || (isNarrowScreen() ? todayIso() : '')}">
+        <input type="date" class="date-filter-hidden-input" id="analises-date-input" value="${analisesFilterDate || ''}">
       </div>
       <button class="today-btn ${analisesFilterDate===todayIso()?'active':''}" id="analises-today-btn" type="button">Hoje</button>
       <div class="search-input-wrap">
@@ -1688,15 +1703,27 @@ function renderAnalises(){
   const clearBtnAn = document.getElementById("clear-filter-analises");
   if(clearBtnAn) clearBtnAn.addEventListener("click", ()=>{ analisesFilterDate=null; renderAnalises(); });
 
-  document.getElementById("analises-date-btn").addEventListener("click", ()=>{
-    if(isNarrowScreen()) return; // no celular o próprio input (sobreposto ao botão) já abre o calendário ao toque nativo
+  {
     const dateInput = document.getElementById("analises-date-input");
-    try{ if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); } }catch(err){ dateInput.focus(); dateInput.click(); }
-  });
-  document.getElementById("analises-date-input").addEventListener("change", e=>{
-    analisesFilterDate = e.target.value || null;
-    renderAnalises();
-  });
+    let realPickHappened = false;
+    // Mesma correção aplicada em Entradas: só aceita o "change" se um "input" real
+    // veio antes (rolagem do seletor). Sem isso, ignora a confirmação fantasma do
+    // Safari/iOS e reabre o seletor para o usuário escolher de verdade.
+    dateInput.addEventListener("input", ()=>{ realPickHappened = true; });
+    document.getElementById("analises-date-btn").addEventListener("click", ()=>{
+      if(isNarrowScreen()) return; // no celular o próprio input (sobreposto ao botão) já abre o calendário ao toque nativo
+      try{ if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); } }catch(err){ dateInput.focus(); dateInput.click(); }
+    });
+    dateInput.addEventListener("change", e=>{
+      if(isNarrowScreen() && !realPickHappened){
+        e.target.value = analisesFilterDate || "";
+        setTimeout(()=>{ try{ dateInput.showPicker && dateInput.showPicker(); }catch(err){} }, 50);
+        return;
+      }
+      analisesFilterDate = e.target.value || null;
+      renderAnalises();
+    });
+  }
   document.getElementById("analises-today-btn").addEventListener("click", ()=>{
     analisesFilterDate = analisesFilterDate===todayIso() ? null : todayIso();
     renderAnalises();
