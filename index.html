@@ -913,6 +913,9 @@ function fmtBRLCalMobile(n){
 function isMobileViewport(){
   return typeof window!=="undefined" && window.matchMedia && window.matchMedia("(max-width:640px)").matches;
 }
+function isNarrowScreen(){
+  return typeof window!=="undefined" && window.matchMedia && window.matchMedia("(max-width:700px)").matches;
+}
 function parseBRL(str){
   if(str===undefined||str===null) return 0;
   let s = String(str).trim().replace(/R\$\s?/gi,"").replace(/[^\d,.-]/g,"");
@@ -1396,7 +1399,7 @@ function renderEntradas(){
         <button class="date-filter-icon-btn ${entradasFilterDate?'active':''}" id="entradas-date-btn" type="button" title="Filtrar por data">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
         </button>
-        <input type="date" class="date-filter-hidden-input" id="entradas-date-input" value="${entradasFilterDate||''}">
+        <input type="date" class="date-filter-hidden-input" id="entradas-date-input" value="${entradasFilterDate || (isNarrowScreen() ? todayIso() : '')}">
       </div>
       <button class="today-btn ${entradasFilterDate===todayIso()?'active':''}" id="entradas-today-btn" type="button">Hoje</button>
       <div class="search-input-wrap">
@@ -1475,8 +1478,7 @@ function renderEntradas(){
   if(clearBtn) clearBtn.addEventListener("click", ()=>{ entradasFilterDate=null; renderEntradas(); });
 
   document.getElementById("entradas-date-btn").addEventListener("click", ()=>{
-    const isMobile = window.matchMedia && window.matchMedia("(max-width:700px)").matches;
-    if(isMobile) return; // no celular o próprio input (sobreposto ao botão) já abre o calendário ao toque nativo
+    if(isNarrowScreen()) return; // no celular o próprio input (sobreposto ao botão) já abre o calendário ao toque nativo
     const dateInput = document.getElementById("entradas-date-input");
     try{ if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); } }catch(err){ dateInput.focus(); dateInput.click(); }
   });
@@ -1617,7 +1619,7 @@ function renderAnalises(){
         <button class="date-filter-icon-btn ${analisesFilterDate?'active':''}" id="analises-date-btn" type="button" title="Filtrar por data">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
         </button>
-        <input type="date" class="date-filter-hidden-input" id="analises-date-input" value="${analisesFilterDate||''}">
+        <input type="date" class="date-filter-hidden-input" id="analises-date-input" value="${analisesFilterDate || (isNarrowScreen() ? todayIso() : '')}">
       </div>
       <button class="today-btn ${analisesFilterDate===todayIso()?'active':''}" id="analises-today-btn" type="button">Hoje</button>
       <div class="search-input-wrap">
@@ -1687,8 +1689,7 @@ function renderAnalises(){
   if(clearBtnAn) clearBtnAn.addEventListener("click", ()=>{ analisesFilterDate=null; renderAnalises(); });
 
   document.getElementById("analises-date-btn").addEventListener("click", ()=>{
-    const isMobile = window.matchMedia && window.matchMedia("(max-width:700px)").matches;
-    if(isMobile) return; // no celular o próprio input (sobreposto ao botão) já abre o calendário ao toque nativo
+    if(isNarrowScreen()) return; // no celular o próprio input (sobreposto ao botão) já abre o calendário ao toque nativo
     const dateInput = document.getElementById("analises-date-input");
     try{ if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); } }catch(err){ dateInput.focus(); dateInput.click(); }
   });
