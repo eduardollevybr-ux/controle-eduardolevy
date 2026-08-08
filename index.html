@@ -543,7 +543,11 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-wid
   font-weight:700;font-size:11px;cursor:pointer;padding:4px;
 }
 @media (max-width:700px){
-  .mini-cal-popover{left:auto;right:0;}
+  /* mantém ancorado à esquerda do botão (não à direita), senão o painel,
+     que é mais largo que o próprio botão, é empurrado para fora da tela
+     à esquerda e fica invisível. Só limita a largura para não estourar
+     a borda direita em telas bem estreitas. */
+  .mini-cal-popover{left:0;right:auto;width:min(246px, calc(100vw - 32px));}
 }
 .today-btn{
   appearance:none;border:1px solid var(--border);background:var(--card-2);color:var(--text-dim);
