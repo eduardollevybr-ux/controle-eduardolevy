@@ -1478,9 +1478,6 @@ function renderEntradas(){
     const dateInput = document.getElementById("entradas-date-input");
     try{ if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); } }catch(err){ dateInput.focus(); dateInput.click(); }
   });
-  document.getElementById("entradas-date-input").addEventListener("click", e=>{
-    try{ if(e.target.showPicker) e.target.showPicker(); }catch(err){}
-  });
   document.getElementById("entradas-date-input").addEventListener("change", e=>{
     entradasFilterDate = e.target.value || null;
     renderEntradas();
@@ -1690,9 +1687,6 @@ function renderAnalises(){
   document.getElementById("analises-date-btn").addEventListener("click", ()=>{
     const dateInput = document.getElementById("analises-date-input");
     try{ if(dateInput.showPicker){ dateInput.showPicker(); } else { dateInput.focus(); dateInput.click(); } }catch(err){ dateInput.focus(); dateInput.click(); }
-  });
-  document.getElementById("analises-date-input").addEventListener("click", e=>{
-    try{ if(e.target.showPicker) e.target.showPicker(); }catch(err){}
   });
   document.getElementById("analises-date-input").addEventListener("change", e=>{
     analisesFilterDate = e.target.value || null;
