@@ -947,8 +947,63 @@ document.addEventListener("keydown", (e)=>{
       e.preventDefault();
       undo();
     }
+    return;
+  }
+  if(e.key === "Escape"){
+    handleEscapeKey();
+    return;
+  }
+  if(e.key === "Enter"){
+    handleEnterKey(e);
   }
 });
+
+// Esc: fecha calendários/menu abertos e cancela o foco do campo em edição
+// (sem salvar uma alteração que ainda não tenha sido confirmada).
+function handleEscapeKey(){
+  if(entradasCalendarOpen){
+    entradasCalendarOpen = false;
+    if(currentTab==="entradas" && document.getElementById("entradas-date-btn")) renderEntradas();
+  }
+  if(analisesCalendarOpen){
+    analisesCalendarOpen = false;
+    if(currentTab==="analises" && document.getElementById("analises-date-btn")) renderAnalises();
+  }
+  const navEl = document.getElementById("tabs");
+  if(navEl && navEl.classList.contains("tabs-open")) navEl.classList.remove("tabs-open");
+  const active = document.activeElement;
+  if(active && (active.tagName==="INPUT"||active.tagName==="SELECT"||active.tagName==="TEXTAREA")){
+    active.blur();
+  }
+}
+
+// Enter: dentro da linha de "adicionar", envia o lançamento/análise (igual ao botão "+").
+// Em um campo de uma linha já existente, confirma a edição (dispara o "change") e tira o foco.
+function handleEnterKey(e){
+  const active = document.activeElement;
+  if(!active) return;
+  const tag = active.tagName;
+  if(tag!=="INPUT" && tag!=="SELECT") return;
+
+  const addRowEntrada = active.closest && active.closest("#add-row-entrada");
+  if(addRowEntrada){
+    e.preventDefault();
+    const btn = document.getElementById("add-bet");
+    if(btn) btn.click();
+    return;
+  }
+  const addRowAnalise = active.closest && active.closest("#add-row-analise");
+  if(addRowAnalise){
+    e.preventDefault();
+    const btn = document.getElementById("add-an");
+    if(btn) btn.click();
+    return;
+  }
+  if(active.dataset && active.dataset.field){
+    e.preventDefault();
+    active.blur();
+  }
+}
 
 /* ================= HELPERS ================= */
 function fmtBRL(n){
@@ -1148,6 +1203,42 @@ function renderMiniCalendarHtml(idPrefix, viewY, viewM, selectedIso){
 function optionsHtml(options, selected){
   const blank = `<option value="" ${!selected?"selected":""}>Selecione</option>`;
   return blank + options.map(o=>`<option ${o===selected?"selected":""}>${o}</option>`).join("");
+}
+
+// Comparador de data (string ISO "YYYY-MM-DD"): mais recente primeiro.
+function dateDescCompare(a,b){
+  const da = a.date || "";
+  const db = b.date || "";
+  if(da === db) return 0;
+  return da > db ? -1 : 1;
+}
+
+// Comparador de data+hora (Análises tem campo "hora"; sem hora definida entra
+// como 00:00, ficando por último dentro do próprio dia). Mais recente primeiro
+// — ou seja, dentro do mesmo dia, o horário mais tarde fica no topo.
+function dateTimeDescCompare(a,b){
+  const ka = (a.date || "") + "T" + (a.hora || "00:00");
+  const kb = (b.date || "") + "T" + (b.hora || "00:00");
+  if(ka === kb) return 0;
+  return ka > kb ? -1 : 1;
+}
+
+// Reordena o próprio array (em memória) por data (e hora, quando existir), mais recente primeiro.
+// Chamado sempre que um lançamento/análise é criado ou tem a data/hora alterada,
+// para que a posição correta já fique gravada no estado (e sobreviva a undo,
+// sincronização remota etc.), e não dependa só da ordenação feita na hora de renderizar.
+function sortByDateDescInPlace(arr, useHora){
+  arr.sort(useHora ? dateTimeDescCompare : dateDescCompare);
+  return arr;
+}
+
+// Ordena por data para exibição: sem filtro ativo -> mais recente no topo, mais antigo no final
+// (dentro do mesmo dia, usa a hora quando existir; sem hora, mantém quem entrou por último no
+// topo, via sort estável). Com filtro de um dia específico ativo -> inverte, mais antigo no
+// topo, mais recente no final.
+function sortRowsByDate(list, filterActive, useHora){
+  const sorted = [...list].sort(useHora ? dateTimeDescCompare : dateDescCompare);
+  return filterActive ? sorted.reverse() : sorted;
 }
 
 function applyTeamSearch(list, term, mandante, visitante){
@@ -1460,6 +1551,7 @@ function renderEntradas(){
   const bets = state.bets; // ordem de inserção: mais novos primeiro
   let filtered = entradasFilterDate ? bets.filter(b=>b.date===entradasFilterDate) : bets;
   filtered = applyTeamSearch(filtered, entradasTeamSearch, entradasMandante, entradasVisitante);
+  filtered = sortRowsByDate(filtered, !!entradasFilterDate);
 
   el.innerHTML = `
     <div class="card panel">
@@ -1666,6 +1758,7 @@ function renderEntradas(){
         }
       }
       else bet[field] = e.target.value;
+      if(field==="date") sortByDateDescInPlace(state.bets);
       persist();
       renderEntradas();
     });
@@ -1712,6 +1805,7 @@ function renderEntradas(){
     }
     submittingBet = true;
     state.bets.unshift({ id: uid(), ...data, oddManual:"" });
+    sortByDateDescInPlace(state.bets);
     persist();
     renderEntradas();
   }
@@ -1727,7 +1821,8 @@ function renderEntradas(){
 function renderAnalises(){
   const el = document.getElementById("view-analises");
   let baseRows = analisesFilterDate ? state.analyses.filter(r=>r.date===analisesFilterDate) : state.analyses;
-  const rows = applyTeamSearch(baseRows, analisesTeamSearch, analisesMandante, analisesVisitante); // ordem de inserção: mais novos primeiro
+  let rows = applyTeamSearch(baseRows, analisesTeamSearch, analisesMandante, analisesVisitante);
+  rows = sortRowsByDate(rows, !!analisesFilterDate, true);
 
   el.innerHTML = `
     <div class="top-row">
@@ -1921,6 +2016,7 @@ function renderAnalises(){
               oddManual: ""
             };
             state.bets.unshift(newBet);
+            sortByDateDescInPlace(state.bets);
             item.linkedBetId = newBet.id;
             showToast("Enviado para Entradas");
           }
@@ -1934,6 +2030,7 @@ function renderAnalises(){
         }
       }
       else item[field] = e.target.value;
+      if(field==="date" || field==="hora") sortByDateDescInPlace(state.analyses, true);
       persist();
       renderAnalises();
     });
@@ -1974,6 +2071,7 @@ function renderAnalises(){
     }
     submittingAn = true;
     state.analyses.unshift({ id: uid(), checked:false, ...data });
+    sortByDateDescInPlace(state.analyses, true);
     persist();
     renderAnalises();
   }
