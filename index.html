@@ -2151,6 +2151,16 @@ function renderAnalises(){
 /* ================= CONFIGURAÇÕES ================= */
 function renderConfig(){
   const el = document.getElementById("view-config");
+
+  // Preserva o que estiver sendo digitado/focado (ex.: um re-render disparado
+  // por eco do Supabase Realtime enquanto o usuário ainda está digitando).
+  const active = document.activeElement;
+  const focusedId = active && active.id;
+  const pendingChamp = document.getElementById("add-champ-input")?.value ?? "";
+  const pendingClub = document.getElementById("add-club-input")?.value ?? "";
+  const selStart = active && typeof active.selectionStart === "number" ? active.selectionStart : null;
+  const selEnd = active && typeof active.selectionEnd === "number" ? active.selectionEnd : null;
+
   el.innerHTML = `
     <div class="config-grid">
       <div class="card panel">
@@ -2159,7 +2169,7 @@ function renderConfig(){
           <button class="clear-all-btn" id="clear-champs-btn" type="button">Limpar tudo</button>
         </div>
         <div class="add-inline">
-          <input type="text" id="add-champ-input" placeholder="Novo campeonato…">
+          <input type="text" id="add-champ-input" placeholder="Novo campeonato…" value="${escapeHtml(pendingChamp)}">
           <button class="btn btn-primary btn-sm" id="add-champ-btn">Adicionar</button>
         </div>
         <input type="text" class="chip-search" id="champ-search" placeholder="Buscar campeonato…" value="${escapeHtml(champSearch)}">
@@ -2171,7 +2181,7 @@ function renderConfig(){
           <button class="clear-all-btn" id="clear-clubs-btn" type="button">Limpar tudo</button>
         </div>
         <div class="add-inline">
-          <input type="text" id="add-club-input" placeholder="Novo clube…">
+          <input type="text" id="add-club-input" placeholder="Novo clube…" value="${escapeHtml(pendingClub)}">
           <button class="btn btn-primary btn-sm" id="add-club-btn">Adicionar</button>
         </div>
         <input type="text" class="chip-search" id="club-search" placeholder="Buscar clube…" value="${escapeHtml(clubSearch)}">
@@ -2182,22 +2192,35 @@ function renderConfig(){
   renderChampChips();
   renderClubChips();
 
-  document.getElementById("add-champ-btn").addEventListener("click", ()=>{
+  if(focusedId==="add-champ-input" || focusedId==="add-club-input" || focusedId==="champ-search" || focusedId==="club-search"){
+    const toFocus = document.getElementById(focusedId);
+    if(toFocus){
+      toFocus.focus();
+      if(selStart!==null) toFocus.setSelectionRange(selStart, selEnd);
+    }
+  }
+
+  const addChamp = ()=>{
+
     const inp = document.getElementById("add-champ-input");
     const v = inp.value.trim();
     if(!v) return;
     const added = ensureListed(state.championships, v);
     if(!added){ showToast(`O campeonato "${v}" já está cadastrado.`); return; }
     inp.value=""; persist(); renderChampChips();
-  });
-  document.getElementById("add-club-btn").addEventListener("click", ()=>{
+  };
+  const addClub = ()=>{
     const inp = document.getElementById("add-club-input");
     const v = inp.value.trim();
     if(!v) return;
     const added = ensureListed(state.clubs, v);
     if(!added){ showToast(`O clube "${v}" já está cadastrado.`); return; }
     inp.value=""; persist(); renderClubChips();
-  });
+  };
+  document.getElementById("add-champ-btn").addEventListener("click", addChamp);
+  document.getElementById("add-club-btn").addEventListener("click", addClub);
+  document.getElementById("add-champ-input").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addChamp(); } });
+  document.getElementById("add-club-input").addEventListener("keydown", e=>{ if(e.key==="Enter"){ e.preventDefault(); addClub(); } });
   document.getElementById("champ-search").addEventListener("input", e=>{ champSearch=e.target.value; renderChampChips(); });
   document.getElementById("club-search").addEventListener("input", e=>{ clubSearch=e.target.value; renderClubChips(); });
 
