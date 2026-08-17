@@ -714,11 +714,26 @@ function toggleTheme(){
 const SUPABASE_URL = "https://ccxiuaqirickchmrowrz.supabase.co";
 const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImNjeGl1YXFpcmlja2NobXJvd3J6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODYxMDg2NTQsImV4cCI6MjEwMTY4NDY1NH0.TiInMdno4_yvWK-c8mg6DY7IymPaJKrtN1CwS-8dm8U";
 
+/* A lib do Supabase usa por padrão a Web Locks API do navegador (navigator.locks) para
+   evitar chamadas de auth concorrentes. Esse "cadeado" tem um bug conhecido: às vezes fica
+   preso (ex: depois de um signOut automático por inatividade) e nunca é liberado, fazendo
+   qualquer signInWithPassword() seguinte travar para sempre, mesmo clicando em "Entrar" -
+   só um reload completo da página resolve. Como este app roda numa única aba por vez,
+   substituímos por uma fila simples em memória, que nunca fica presa. */
+let authLockChain = Promise.resolve();
+function simpleAuthLock(name, acquireTimeout, fn){
+  const run = () => Promise.resolve().then(fn);
+  const result = authLockChain.then(run, run);
+  authLockChain = result.then(()=>{}, ()=>{});
+  return result;
+}
+
 const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: true,     // mantém o login salvo no navegador (não pede senha de novo ao reabrir)
     autoRefreshToken: true,   // renova o token sozinho enquanto a aba fica aberta
-    storage: window.localStorage
+    storage: window.localStorage,
+    lock: simpleAuthLock
   }
 });
 let currentUser = null;
@@ -1914,7 +1929,7 @@ function renderAnalises(){
     <div class="table-wrap card">
       <table id="analises-table">
         <colgroup>
-          <col style="width:52px"><col style="width:100px"><col style="width:130px"><col style="width:190px">
+          <col style="width:52px"><col style="width:90px"><col style="width:120px"><col style="width:210px">
           <col style="width:190px"><col style="width:190px"><col style="width:220px"><col style="width:220px">
           <col style="width:44px">
         </colgroup>
