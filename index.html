@@ -394,18 +394,60 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .table-wrap::-webkit-scrollbar{display:none;}
 .table-wrap.dragging{cursor:grabbing;}
 table{width:100%;border-collapse:collapse;table-layout:fixed;}
-#entradas-table{width:100%;min-width:1379px;}
-#analises-table{width:100%;min-width:1336px;}
+#entradas-table{width:100%;min-width:1474px;}
+#analises-table{width:100%;min-width:1500px;}
 thead th{
   text-align:left;font-size:10.2px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-faint);
-  padding:12px 8px;font-weight:700;border-bottom:1px solid var(--border-soft);white-space:nowrap;
+  padding:12px 10px;font-weight:700;border-bottom:1px solid var(--border-soft);white-space:nowrap;
 }
-tbody td{padding:8px 6px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
+tbody td{padding:10px 8px;border-bottom:1px solid var(--border-soft);vertical-align:middle;}
+/* Células mais compactas em Entradas pra a tabela caber numa visualização só,
+   sem precisar do scroll horizontal. Escopado só pra #entradas-table: Análises
+   continua com o padding original (regra própria logo abaixo, inalterada). */
+#entradas-table tbody td{padding:8px 6px;}
+#analises-table tbody td{padding:10px 8px;}
+#analises-table tbody td:first-child{padding-left:16px;}
+#entradas-table tbody td:last-child,#analises-table tbody td:last-child{padding-right:16px;}
+#analises-table thead th:first-child{padding-left:16px;}
+#entradas-table thead th:last-child,#analises-table thead th:last-child{padding-right:16px;}
+/* Data é a 1ª coluna em Entradas. O padding não é simétrico (10/6) de propósito:
+   a 2ª coluna (Campeonato) tem padding-left:8px próprio, então um padding simétrico
+   aqui deixava o botão de data visivelmente puxado pra esquerda (mais espaço sobrando
+   do lado direito, antes do campo Campeonato, do que do lado esquerdo, antes da borda
+   da tabela). Somando esse 8px do vizinho, 10/6 fica com os dois vãos praticamente
+   iguais e o botão centralizado no bloco visual da coluna. A coluna e o padding interno
+   do botão (abaixo) foram enxugados pra caber tudo sem scroll horizontal em 100% de
+   zoom numa tela de notebook comum, sem herdar largura do texto "DD/MM". */
+#entradas-table tbody td:first-child,#entradas-table thead th:first-child{padding-left:10px;padding-right:6px;}
+/* Mesma lógica acima, mas pra coluna Data de Análises (3ª coluna), que não tem
+   padding padrão diferenciado (era 10px 8px, herdado de #analises-table tbody td). */
+#analises-table tbody td:nth-child(3){padding-left:6px;padding-right:6px;}
 tbody tr{transition:background .12s ease;}
 tbody tr:hover{background:var(--row-hover-bg);}
 tbody tr:last-child td{border-bottom:none;}
 td input,td select{padding:7px 9px;font-size:13px;width:100%;min-width:0;}
-td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-width:86px;}
+/* Inputs mais compactos em Entradas, mesma lógica acima (exceto Stake/Retorno/Odd,
+   que já têm padding próprio em .calc.bare-input / .odd-input.calc). */
+#entradas-table td input:not(.bare-input):not(.odd-input),#entradas-table td select{padding:7px 7px;}
+#analises-table td input,#analises-table td select{padding:7px 6px;}
+td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width:86px;}
+/* Aba Análises: todos os campos usam a mesma fonte (13px), sem exceção. As colunas
+   foram redimensionadas (com aumento na largura total da tabela) para que Hora, Data,
+   Campeonato, Mandante e Visitante caibam por completo com esse tamanho de fonte,
+   tomando como base o nome de time e de campeonato mais longos cadastrados (ex.:
+   "CONMEBOL Sudamericana", "Olympique de Marseille"), mantendo Superioridade no jogo
+   larga o bastante para mostrar o texto completo. */
+#analises-table td input[type="time"]{min-width:52px;padding:6px 2px;font-size:13px;text-align:center;}
+#analises-table td input[type="time"]::-webkit-calendar-picker-indicator{display:none;-webkit-appearance:none;margin:0;}
+#analises-table td input[type="date"]{min-width:96px;padding:6px 3px;font-size:13px;text-align:center;}
+#analises-table td select[data-field="leitura"],#an-leitura{
+  font-size:13px;padding:7px 26px 7px 9px;
+}
+#analises-table td select[data-field="sup"],#an-sup{
+  font-size:13px;padding:7px 28px 7px 9px;
+}
+
+
 .calc{font-family:'Manrope';font-weight:700;font-size:13px;white-space:nowrap;color:var(--text);}
 .calc.pos{color:var(--pos-text);}
 .calc.neg{color:var(--red-text);}
@@ -473,6 +515,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-wid
     display:flex;flex-direction:column;align-items:flex-start;gap:4px;
     width:100%;padding:7px 0;border-bottom:1px solid var(--border-soft);text-align:left;
   }
+  .date-cell-btn{text-align:left;}
   #entradas-table td:last-child,#analises-table td:last-child{border-bottom:none;}
   #entradas-table td[data-label]:not([data-label=""])::before,
   #analises-table td[data-label]:not([data-label=""])::before{
@@ -560,12 +603,46 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-wid
   appearance:none;border:0;background:transparent;color:var(--blue);font-family:'Inter';
   font-weight:700;font-size:11px;cursor:pointer;padding:4px;
 }
+
+/* Botão compacto de data por linha (coluna Data de Entradas/Análises), que abre o
+   mesmo mini-calendário usado no filtro do topo. Substitui o input type="date"
+   nativo dentro da célula da tabela, mostrando só "DD/MM" pra economizar espaço.
+   Mantém a mesma "caixa" (borda e fundo) dos outros campos da linha, sem
+   negrito, só centralizado. */
+.date-cell-wrap{position:relative;display:block;width:100%;}
+/* A coluna Data fica dentro do .table-wrap com scroll horizontal, que por padrão
+   recorta (clip) qualquer conteúdo posicionado fora da área visível. Enquanto um
+   mini-calendário de linha está aberto, soltamos esse recorte para o popover não
+   ser cortado nas linhas de baixo ou nas colunas mais à direita. */
+.table-wrap.rowcal-open{overflow:visible;}
+.date-cell-btn{
+  appearance:none;border:1px solid var(--border);background:var(--bg-soft);color:var(--text);
+  font-family:'Inter';font-weight:400;font-size:13px;padding:7px 9px;border-radius:var(--radius-sm);cursor:pointer;
+  transition:border-color .15s ease;white-space:nowrap;text-align:center;width:100%;
+}
+/* Padding interno do botão de data enxugado nas duas tabelas (era 7px 12px em
+   Entradas e o padrão 7px 9px em Análises) pra caber dentro da coluna Data mais
+   estreita sem o texto "DD/MM" estourar a caixa do botão, sem precisar reduzir
+   o font-size (13px, inalterado). */
+#entradas-table .date-cell-btn{padding:7px 6px;}
+#analises-table .date-cell-btn{padding:7px 6px;}
+.date-cell-btn:hover{border-color:var(--hover-border);}
+.date-cell-btn:focus{border-color:var(--blue);}
+/* Abre ao lado (à direita) da célula, em vez de embaixo centralizado: a coluna
+   Data costuma ficar perto da borda esquerda da tabela, e um popover largo
+   centralizado embaixo acaba saindo da área visível do scroll horizontal,
+   impedindo selecionar datas do lado esquerdo do calendário. */
+.date-cell-wrap .mini-cal-popover{top:0;left:calc(100% + 8px);right:auto;}
+
 @media (max-width:700px){
   /* mantém ancorado à esquerda do botão (não à direita), senão o painel,
      que é mais largo que o próprio botão, é empurrado para fora da tela
      à esquerda e fica invisível. Só limita a largura para não estourar
      a borda direita em telas bem estreitas. */
   .mini-cal-popover{left:0;right:auto;width:min(246px, calc(100vw - 32px));}
+  /* No mobile a tabela vira cards empilhados (linha ocupa a largura toda), então
+     não há "lado" pra abrir — volta a abrir embaixo, ancorado à esquerda. */
+  .date-cell-wrap .mini-cal-popover{top:calc(100% + 6px);left:0;}
 }
 .today-btn{
   appearance:none;border:1px solid var(--border);background:var(--card-2);color:var(--text-dim);
@@ -574,6 +651,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:12.3px;min-wid
 }
 .today-btn:hover{color:var(--text);border-color:var(--hover-border);}
 .today-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+
 
 .filter-banner{
   display:flex;align-items:center;justify-content:space-between;gap:12px;
@@ -818,6 +896,10 @@ let entradasCalendarViewM = null;
 let analisesCalendarOpen = false;
 let analisesCalendarViewY = null;
 let analisesCalendarViewM = null;
+// Mini-calendário compacto por linha (coluna Data de Entradas/Análises, tanto nas
+// linhas existentes quanto na linha de novo lançamento). Só um pode ficar aberto
+// por vez: { scope: 'entradas'|'analises', id: '<id da linha>'|'new', viewY, viewM }
+let rowDatePicker = null;
 let clubSearch = "";
 let champSearch = "";
 let entradasTeamSearch = "";
@@ -1045,6 +1127,12 @@ function handleEscapeKey(){
   if(analisesCalendarOpen){
     analisesCalendarOpen = false;
     if(currentTab==="analises" && document.getElementById("analises-date-btn")) renderAnalises();
+  }
+  if(rowDatePicker){
+    const scope = rowDatePicker.scope;
+    rowDatePicker = null;
+    if(scope==="entradas" && currentTab==="entradas" && document.getElementById("bets-tbody")) renderEntradas();
+    if(scope==="analises" && currentTab==="analises" && document.getElementById("an-tbody")) renderAnalises();
   }
   const navEl = document.getElementById("tabs");
   if(navEl && navEl.classList.contains("tabs-open")) navEl.classList.remove("tabs-open");
@@ -1277,9 +1365,138 @@ function renderMiniCalendarHtml(idPrefix, viewY, viewM, selectedIso){
   `;
 }
 
+// Formata uma data ISO ("YYYY-MM-DD") como "DD/MM" (sem ano) para exibir no botão
+// compacto da célula de Data. Sem valor, mostra um placeholder neutro.
+function fmtDateShort(iso){
+  if(!iso) return "--/--";
+  const parts = iso.split("-");
+  if(parts.length<3) return "--/--";
+  return `${parts[2]}/${parts[1]}`;
+}
+
+// Célula de Data compacta usada nas linhas de Entradas/Análises (existentes e na
+// linha de novo lançamento): um botão mostrando "DD/MM" que abre o mesmo
+// mini-calendário do filtro do topo, mais um input escondido que carrega o valor
+// real. O input escondido mantém o mesmo id/data-field de sempre, então toda a
+// lógica existente de change-listener, ordenação e submissão continua funcionando
+// sem alteração — só dispara um evento "change" nele quando um dia é escolhido.
+function renderDateCellHtml(scope, idHint, fieldName, dateValue, inputId){
+  const isOpen = !!(rowDatePicker && rowDatePicker.scope===scope && rowDatePicker.id===idHint);
+  const idPrefix = `${scope}-rc-${idHint}`;
+  const fullDate = dateValue ? dateValue.split("-").reverse().join("/") : "";
+  return `
+    <div class="date-cell-wrap">
+      <input type="hidden" ${inputId?`id="${inputId}"`:""} data-field="${fieldName}" value="${dateValue||''}">
+      <button type="button" class="date-cell-btn" data-date-scope="${scope}" data-date-id="${idHint}" title="${fullDate}">${fmtDateShort(dateValue)}</button>
+      ${isOpen ? renderMiniCalendarHtml(idPrefix, rowDatePicker.viewY, rowDatePicker.viewM, dateValue) : ""}
+    </div>
+  `;
+}
+
+// Aplica a data escolhida no mini-calendário de uma linha: atualiza o input
+// escondido correspondente e dispara "change" nele, deixando toda a lógica já
+// existente (persistência, ordenação, submissão de nova linha) rodar sem mudanças.
+function pickRowDate(scope, iso, idHint){
+  rowDatePicker = null;
+  let hidden = null;
+  if(scope==="entradas"){
+    hidden = idHint==="new"
+      ? document.getElementById("new-date")
+      : document.querySelector(`#bets-tbody tr[data-id="${CSS.escape(idHint)}"] input[data-field="date"]`);
+  } else {
+    hidden = idHint==="new"
+      ? document.getElementById("an-data")
+      : document.querySelector(`#an-tbody tr[data-id="${CSS.escape(idHint)}"] input[data-field="date"]`);
+  }
+  if(hidden){
+    hidden.value = iso;
+    hidden.dispatchEvent(new Event("change", {bubbles:true}));
+  }
+  // Garante o fechamento visual do popover e a atualização do rótulo do botão
+  // mesmo quando o listener acima não re-renderiza (ex.: linha de novo lançamento
+  // com campos obrigatórios ainda vazios) — vale a re-renderização redundante.
+  if(scope==="entradas") renderEntradas(); else renderAnalises();
+}
+
+// Liga os cliques dos botões de data compactos de uma tabela (Entradas ou
+// Análises) e, se o popover dessa tabela estiver aberto, os controles internos
+// dele (navegação de mês, "ir para hoje" e clique num dia). Chamado no fim de
+// renderEntradas()/renderAnalises(), seguindo o mesmo padrão de "religar tudo a
+// cada render" já usado no resto do app.
+function wireRowDatePickers(scope, rerenderFn){
+  const tableEl = document.getElementById(scope==="entradas" ? "entradas-table" : "analises-table");
+  const wrapEl = tableEl ? tableEl.closest(".table-wrap") : null;
+  if(wrapEl) wrapEl.classList.toggle("rowcal-open", !!(rowDatePicker && rowDatePicker.scope===scope));
+
+  document.querySelectorAll(`.date-cell-btn[data-date-scope="${scope}"]`).forEach(btn=>{
+    btn.addEventListener("click", e=>{
+      e.stopPropagation();
+      const idHint = btn.dataset.dateId;
+      if(rowDatePicker && rowDatePicker.scope===scope && rowDatePicker.id===idHint){
+        rowDatePicker = null;
+      } else {
+        const wrap = btn.closest(".date-cell-wrap");
+        const hidden = wrap ? wrap.querySelector('input[type="hidden"]') : null;
+        const base = (hidden && hidden.value) || todayIso();
+        const [y,m] = base.split("-").map(Number);
+        rowDatePicker = { scope, id: idHint, viewY: y, viewM: m-1 };
+      }
+      rerenderFn();
+    });
+  });
+
+  if(!(rowDatePicker && rowDatePicker.scope===scope)) return;
+  const idPrefix = `${scope}-rc-${rowDatePicker.id}`;
+  const popover = document.getElementById(`${idPrefix}-popover`);
+  if(!popover) return;
+  popover.addEventListener("click", e=> e.stopPropagation());
+  const prevBtn = document.getElementById(`${idPrefix}-prev`);
+  const nextBtn = document.getElementById(`${idPrefix}-next`);
+  const todayBtn = document.getElementById(`${idPrefix}-today`);
+  if(prevBtn) prevBtn.addEventListener("click", ()=>{
+    rowDatePicker.viewM--;
+    if(rowDatePicker.viewM<0){ rowDatePicker.viewM=11; rowDatePicker.viewY--; }
+    rerenderFn();
+  });
+  if(nextBtn) nextBtn.addEventListener("click", ()=>{
+    rowDatePicker.viewM++;
+    if(rowDatePicker.viewM>11){ rowDatePicker.viewM=0; rowDatePicker.viewY++; }
+    rerenderFn();
+  });
+  if(todayBtn) todayBtn.addEventListener("click", ()=> pickRowDate(scope, todayIso(), rowDatePicker.id));
+  document.querySelectorAll(`#${idPrefix}-popover .mini-cal-day[data-iso]`).forEach(dayBtn=>{
+    dayBtn.addEventListener("click", ()=> pickRowDate(scope, dayBtn.dataset.iso, rowDatePicker.id));
+  });
+}
+
 function optionsHtml(options, selected){
   const blank = `<option value="" ${!selected?"selected":""}>Selecione</option>`;
   return blank + options.map(o=>`<option ${o===selected?"selected":""}>${o}</option>`).join("");
+}
+
+// Opções de "Superioridade no jogo": o VALOR salvo continua fixo ("Mandante HT" etc,
+// compatível com dados já existentes), mas o TEXTO exibido troca "Mandante"/"Visitante"
+// pelo nome dos times preenchidos na mesma linha (Mandante/Visitante).
+function superioridadeLabel(optionValue, home, away){
+  const h = (home||"").trim() || "Mandante";
+  const a = (away||"").trim() || "Visitante";
+  return optionValue.replace(/Mandante/g, h).replace(/Visitante/g, a);
+}
+function superioridadeOptionsHtml(selected, home, away){
+  const blank = `<option value="" ${!selected?"selected":""}>Selecione</option>`;
+  return blank + SUPERIORIDADE_OPTIONS.map(o=>{
+    const label = superioridadeLabel(o, home, away);
+    return `<option value="${escapeHtml(o)}" ${o===selected?"selected":""}>${escapeHtml(label)}</option>`;
+  }).join("");
+}
+// Reconstrói as opções do select de superioridade in-place, preservando o valor selecionado,
+// e atualiza o title (tooltip) com o texto completo, como reforço caso o nome dos times seja
+// excepcionalmente longo e não caiba por completo na coluna.
+function refreshSupSelect(selectEl, home, away){
+  if(!selectEl) return;
+  const current = selectEl.value;
+  selectEl.innerHTML = superioridadeOptionsHtml(current, home, away);
+  selectEl.title = current ? superioridadeLabel(current, home, away) : "";
 }
 
 // Comparador de data (string ISO "YYYY-MM-DD"): mais recente primeiro.
@@ -1642,10 +1859,6 @@ function renderEntradas(){
     </div>
 
     ${entradasFilterDate ? `<div class="filter-banner"><span>Mostrando entradas de ${entradasFilterDate.split('-').reverse().join('/')}</span><button id="clear-filter">limpar filtro</button></div>` : ""}
-
-    <div class="top-row">
-      <div class="section-title" style="margin-bottom:0;">Lançamentos</div>
-    </div>
     <div class="search-bar">
       <div class="date-filter-wrap" id="entradas-date-filter-wrap">
         <button class="date-filter-icon-btn ${entradasFilterDate?'active':''}" id="entradas-date-btn" type="button" title="Filtrar por data">
@@ -1666,9 +1879,9 @@ function renderEntradas(){
     <div class="table-wrap card">
       <table id="entradas-table">
         <colgroup>
-          <col style="width:130px"><col style="width:190px"><col style="width:190px"><col style="width:190px">
-          <col style="width:300px"><col style="width:80px"><col style="width:85px"><col style="width:78px">
-          <col style="width:92px"><col style="width:44px">
+          <col style="width:74px"><col style="width:230px"><col style="width:220px"><col style="width:220px">
+          <col style="width:390px"><col style="width:82px"><col style="width:86px"><col style="width:56px">
+          <col style="width:72px"><col style="width:44px">
         </colgroup>
         <thead><tr>
           <th>Data</th><th>Campeonato</th><th>Mandante</th><th>Visitante</th><th>Aposta</th>
@@ -1676,7 +1889,7 @@ function renderEntradas(){
         </tr></thead>
         <tbody id="bets-tbody">
           <tr class="add-row-form" id="add-row-entrada">
-            <td data-label="Data"><input type="date" id="new-date" value="${todayIso()}"></td>
+            <td data-label="Data">${renderDateCellHtml("entradas","new","date",todayIso(),"new-date")}</td>
             <td data-label="Campeonato"><input type="text" id="new-champ" list="dl-champs" placeholder="Campeonato"></td>
             <td data-label="Mandante"><input type="text" id="new-home" list="dl-clubs" placeholder="Mandante"></td>
             <td data-label="Visitante"><input type="text" id="new-away" list="dl-clubs" placeholder="Visitante"></td>
@@ -1705,7 +1918,7 @@ function renderEntradas(){
         ? `<span class="calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}">${fmtOdd(c.odd)}</span>`
         : `<input type="text" inputmode="decimal" class="odd-input calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}" data-field="oddManual" value="${b.oddManual!==undefined&&b.oddManual!==null&&b.oddManual!==''?Number(b.oddManual).toFixed(2):''}">`;
       return `<tr data-id="${b.id}">
-        <td data-label="Data"><input type="date" data-field="date" value="${b.date}"></td>
+        <td data-label="Data">${renderDateCellHtml("entradas", b.id, "date", b.date, null)}</td>
         <td data-label="Campeonato"><input type="text" data-field="champ" list="dl-champs" value="${escapeHtml(b.champ)}"></td>
         <td data-label="Mandante"><input type="text" data-field="home" list="dl-clubs" value="${escapeHtml(b.home)}"></td>
         <td data-label="Visitante"><input type="text" data-field="away" list="dl-clubs" value="${escapeHtml(b.away)}"></td>
@@ -1891,6 +2104,8 @@ function renderEntradas(){
     inp.addEventListener("change", ()=> submitNewBet(false));
   });
 
+  wireRowDatePickers("entradas", renderEntradas);
+
   attachDragScroll(el.querySelector(".table-wrap"));
 }
 
@@ -1902,12 +2117,6 @@ function renderAnalises(){
   rows = sortRowsByDate(rows, !!analisesFilterDate, true);
 
   el.innerHTML = `
-    <div class="top-row">
-      <div>
-        <div class="section-title" style="margin-bottom:4px;">Watchlist de pré-jogo</div>
-        <p class="hint">Marque o check quando a leitura for confirmada. O campeonato e as equipes são enviados automaticamente para Entradas.</p>
-      </div>
-    </div>
     ${analisesFilterDate ? `<div class="filter-banner"><span>Mostrando análises de ${analisesFilterDate.split('-').reverse().join('/')}</span><button id="clear-filter-analises">limpar filtro</button></div>` : ""}
     <div class="search-bar">
       <div class="date-filter-wrap" id="analises-date-filter-wrap">
@@ -1929,24 +2138,24 @@ function renderAnalises(){
     <div class="table-wrap card">
       <table id="analises-table">
         <colgroup>
-          <col style="width:52px"><col style="width:90px"><col style="width:120px"><col style="width:210px">
-          <col style="width:190px"><col style="width:190px"><col style="width:220px"><col style="width:220px">
-          <col style="width:44px">
+          <col style="width:46px"><col style="width:74px"><col style="width:74px"><col style="width:216px">
+          <col style="width:220px"><col style="width:220px"><col style="width:414px"><col style="width:178px">
+          <col style="width:58px">
         </colgroup>
         <thead><tr>
-          <th>Check</th><th>Hora</th><th>Data</th><th>Campeonato</th><th>Mandante</th><th>Visitante</th>
+          <th title="Check">&#10003;</th><th>Hora</th><th>Data</th><th>Campeonato</th><th>Mandante</th><th>Visitante</th>
           <th>Superioridade no jogo</th><th>Leitura de mercado</th><th></th>
         </tr></thead>
         <tbody id="an-tbody">
           <tr class="add-row-form" id="add-row-analise">
             <td data-label="Check"></td>
             <td data-label="Hora"><input type="time" id="an-hora" value=""></td>
-            <td data-label="Data"><input type="date" id="an-data" value="${todayIso()}"></td>
+            <td data-label="Data">${renderDateCellHtml("analises","new","date",todayIso(),"an-data")}</td>
             <td data-label="Campeonato"><input type="text" id="an-champ" list="dl-champs2" placeholder="Campeonato"></td>
             <td data-label="Mandante"><input type="text" id="an-home" list="dl-clubs2" placeholder="Mandante"></td>
             <td data-label="Visitante"><input type="text" id="an-away" list="dl-clubs2" placeholder="Visitante"></td>
             <td data-label="Superioridade no jogo">
-              <select id="an-sup">${optionsHtml(SUPERIORIDADE_OPTIONS, "")}</select>
+              <select id="an-sup">${superioridadeOptionsHtml("", "", "")}</select>
             </td>
             <td data-label="Leitura de mercado">
               <select id="an-leitura">${optionsHtml(LEITURA_OPTIONS, "")}</select>
@@ -1969,11 +2178,11 @@ function renderAnalises(){
       <tr data-id="${r.id}">
         <td data-label="Check" style="text-align:center;"><input type="checkbox" class="checkbox" data-field="checked" ${r.checked?"checked":""}></td>
         <td data-label="Hora"><input type="time" data-field="hora" value="${r.hora||''}"></td>
-        <td data-label="Data"><input type="date" data-field="date" value="${r.date||''}"></td>
+        <td data-label="Data">${renderDateCellHtml("analises", r.id, "date", r.date||'', null)}</td>
         <td data-label="Campeonato"><input type="text" data-field="champ" list="dl-champs2" value="${escapeHtml(r.champ||'')}"></td>
         <td data-label="Mandante"><input type="text" data-field="home" list="dl-clubs2" value="${escapeHtml(r.home||'')}"></td>
         <td data-label="Visitante"><input type="text" data-field="away" list="dl-clubs2" value="${escapeHtml(r.away||'')}"></td>
-        <td data-label="Superioridade"><select data-field="sup">${optionsHtml(SUPERIORIDADE_OPTIONS, r.sup)}</select></td>
+        <td data-label="Superioridade"><select data-field="sup" title="${escapeHtml(r.sup?superioridadeLabel(r.sup,r.home,r.away):'')}">${superioridadeOptionsHtml(r.sup, r.home, r.away)}</select></td>
         <td data-label="Leitura"><select data-field="leitura">${optionsHtml(LEITURA_OPTIONS, r.leitura)}</select></td>
         <td data-label=""><button class="del-btn" data-del="${r.id}" title="Excluir">&#10005;</button></td>
       </tr>
@@ -2050,6 +2259,18 @@ function renderAnalises(){
   attachRestrictedTeamInput(document.getElementById("an-away"), ()=>state.clubs);
   tbody.querySelectorAll('tr[data-id] input[data-field="champ"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.championships));
   tbody.querySelectorAll('tr[data-id] input[data-field="home"], tr[data-id] input[data-field="away"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.clubs));
+
+  // atualiza as opções de "Superioridade no jogo" em tempo real enquanto Mandante/Visitante
+  // são editados na mesma linha, sem esperar o campo perder o foco.
+  tbody.querySelectorAll('tr[data-id]').forEach(tr=>{
+    const homeInp = tr.querySelector('input[data-field="home"]');
+    const awayInp = tr.querySelector('input[data-field="away"]');
+    const supSel = tr.querySelector('select[data-field="sup"]');
+    if(!homeInp || !awayInp || !supSel) return;
+    const refresh = ()=> refreshSupSelect(supSel, homeInp.value, awayInp.value);
+    homeInp.addEventListener("input", refresh);
+    awayInp.addEventListener("input", refresh);
+  });
 
   tbody.querySelectorAll("tr[data-id] input, tr[data-id] select").forEach(inp=>{
     inp.addEventListener("change", e=>{
@@ -2159,6 +2380,17 @@ function renderAnalises(){
 
   attachTimeDrag(document.getElementById("an-hora"));
   tbody.querySelectorAll('input[type="time"][data-field="hora"]').forEach(attachTimeDrag);
+
+  // atualiza as opções de "Superioridade no jogo" em tempo real, conforme o Mandante/Visitante
+  // são digitados na linha de nova análise (antes mesmo de confirmar o lançamento)
+  const anHomeInput = document.getElementById("an-home");
+  const anAwayInput = document.getElementById("an-away");
+  const anSupSelect = document.getElementById("an-sup");
+  const refreshAnSup = ()=> refreshSupSelect(anSupSelect, anHomeInput.value, anAwayInput.value);
+  anHomeInput.addEventListener("input", refreshAnSup);
+  anAwayInput.addEventListener("input", refreshAnSup);
+
+  wireRowDatePickers("analises", renderAnalises);
 
   attachDragScroll(el.querySelector(".table-wrap"));
 }
@@ -2377,6 +2609,12 @@ document.addEventListener("click", ()=>{
   if(analisesCalendarOpen){
     analisesCalendarOpen = false;
     if(document.getElementById("analises-date-btn")) renderAnalises();
+  }
+  if(rowDatePicker){
+    const scope = rowDatePicker.scope;
+    rowDatePicker = null;
+    if(scope==="entradas" && document.getElementById("bets-tbody")) renderEntradas();
+    if(scope==="analises" && document.getElementById("an-tbody")) renderAnalises();
   }
 });
 
