@@ -590,14 +590,45 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
   #entradas-table td:nth-child(6),#entradas-table td:nth-child(7),
   #entradas-table td:nth-child(8),#entradas-table td:nth-child(9){text-align:left;}
 
-  /* Hora (Análises) e Data (Entradas/Análises): no desktop esses campos são
-     mais compactos e centralizados pra caber na largura estreita da coluna;
-     em card no mobile não há mais essa restrição, então alinhamos e
-     igualamos ao tamanho/padding dos demais campos da linha. */
-  #entradas-table td .date-cell-btn{padding:7px 7px;text-align:left;}
-  #analises-table td .date-cell-btn{padding:7px 6px;text-align:left;}
-  #analises-table td input[type="time"]{
-    padding:7px 6px;text-align:left;min-width:0;
+  /* Uniformização mobile — Entradas e Análises.
+     No desktop, o padding de cada célula (td) é definido por regras fora de
+     qualquer media query, escopadas por #id-da-tabela + tbody td (e variações
+     :first-child/:last-child/:nth-child pra compensar colunas estreitas da
+     tabela com scroll horizontal — ex.: linhas 447-468). Essas regras têm
+     especificidade igual ou maior que a tentativa original de "achatar" o
+     padding aqui dentro (só "#tabela td"), então venciam a cascata e vazavam
+     pro card do mobile: cada coluna ficava com um padding interno diferente
+     (6px/8px/10px/16px conforme a coluna), o que descolava o campo Hora pra
+     direita e deixava a margem interna do card diferente de campo pra campo.
+     As regras abaixo repetem os MESMOS seletores (mesma especificidade) pra
+     vencer por ordem de declaração (vêm depois no arquivo) e zeram o padding
+     lateral da célula em todas as colunas das duas tabelas, não só Hora/Data. */
+  #entradas-table tbody td,#analises-table tbody td,
+  #entradas-table tbody td:first-child,#analises-table tbody td:first-child,
+  #entradas-table tbody td:last-child,#analises-table tbody td:last-child,
+  #analises-table tbody td:nth-child(2){
+    padding-left:0;padding-right:0;padding-top:7px;padding-bottom:7px;
+  }
+
+  /* Mesma lógica pros campos em si (inputs, selects, botão de data e input de
+     hora): no desktop cada um tem um padding/font-size próprio, mais compacto
+     e diferente entre Entradas (7px 7px) e Análises (7px 6px, ou 6px 2/3px pra
+     Hora/Data), pra caber nas colunas estreitas da tabela. No card do mobile
+     essa restrição de largura não existe mais, então todos os campos-caixa
+     (exceto Stake/Retorno/Odd/L-P, que são resumo "rótulo: valor", não caixa
+     de texto) passam a usar o mesmo padding e a mesma fonte — o padrão-base já
+     definido globalmente pros inputs do app (linha ~381), em vez do valor
+     compactado de cada tabela. Isso garante mesma altura, largura (100% já
+     herdado) e margem interna em todos os campos das duas abas. */
+  #entradas-table td input:not(.bare-input):not(.odd-input),#entradas-table td select,
+  #analises-table td input,#analises-table td select,
+  #entradas-table td .date-cell-btn,#analises-table td .date-cell-btn,
+  #analises-table td input[type="time"],#analises-table td input[type="date"]{
+    padding:9px 11px;font-size:13.5px;text-align:left;min-width:0;
+  }
+  #analises-table td select[data-field="leitura"],#an-leitura,
+  #analises-table td select[data-field="sup"],#an-sup{
+    padding:9px 28px 9px 11px;font-size:13.5px;
   }
 }
 
