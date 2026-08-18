@@ -394,8 +394,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .table-wrap::-webkit-scrollbar{display:none;}
 .table-wrap.dragging{cursor:grabbing;}
 table{width:100%;border-collapse:collapse;table-layout:fixed;}
-#entradas-table{width:100%;min-width:1474px;}
-#analises-table{width:100%;min-width:1500px;}
+#entradas-table{width:100%;min-width:1486px;}
+#analises-table{width:100%;min-width:1510px;}
 thead th{
   text-align:left;font-size:10.2px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-faint);
   padding:12px 10px;font-weight:700;border-bottom:1px solid var(--border-soft);white-space:nowrap;
@@ -408,6 +408,10 @@ tbody td{padding:10px 8px;border-bottom:1px solid var(--border-soft);vertical-al
 #analises-table tbody td{padding:10px 8px;}
 #analises-table tbody td:first-child{padding-left:16px;}
 #entradas-table tbody td:last-child,#analises-table tbody td:last-child{padding-right:16px;}
+/* Coluna de ações de Análises (avião + excluir): padding-esquerda maior que o padrão
+   pra dar um respiro visível entre o fim da coluna Leitura de mercado e o avião,
+   equivalente ao espaço dado à coluna de excluir em Entradas. */
+#analises-table tbody td:last-child{padding-left:16px;}
 #analises-table thead th:first-child{padding-left:16px;}
 #entradas-table thead th:last-child,#analises-table thead th:last-child{padding-right:16px;}
 /* Data é a 1ª coluna em Entradas. O padding não é simétrico (10/6) de propósito:
@@ -421,7 +425,7 @@ tbody td{padding:10px 8px;border-bottom:1px solid var(--border-soft);vertical-al
 #entradas-table tbody td:first-child,#entradas-table thead th:first-child{padding-left:10px;padding-right:6px;}
 /* Mesma lógica acima, mas pra coluna Data de Análises (3ª coluna), que não tem
    padding padrão diferenciado (era 10px 8px, herdado de #analises-table tbody td). */
-#analises-table tbody td:nth-child(3){padding-left:6px;padding-right:6px;}
+#analises-table tbody td:nth-child(2){padding-left:6px;padding-right:6px;}
 tbody tr{transition:background .12s ease;}
 tbody tr:hover{background:var(--row-hover-bg);}
 tbody tr:last-child td{border-bottom:none;}
@@ -475,6 +479,17 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 }
 .del-btn:hover{background:var(--red-bg);color:var(--red-text);border-color:rgba(248,86,79,.35);}
 
+.row-actions{display:flex;align-items:center;justify-content:flex-start;gap:6px;}
+.send-btn{
+  width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--card-2);
+  color:var(--text-faint);cursor:pointer;display:flex;align-items:center;justify-content:center;
+  transition:all .15s ease;
+}
+.send-btn svg{transform:scaleX(-1);transition:transform .15s ease;}
+.send-btn:hover{background:var(--blue-dim);color:var(--blue);border-color:rgba(70,130,255,.35);}
+.send-btn:hover svg{transform:scaleX(-1) translate(-1px,-1px);}
+.send-btn.sent{background:var(--blue-dim);color:var(--blue);border-color:rgba(70,130,255,.35);}
+
 .icon-add-btn{
   appearance:none;border:none;background:transparent;color:var(--text-faint);
   width:30px;height:30px;border-radius:8px;cursor:pointer;
@@ -524,10 +539,6 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
   }
   #entradas-table td input,#entradas-table td select,
   #analises-table td input,#analises-table td select{width:100%;text-align:left;}
-  #entradas-table td[data-label="Check"],#analises-table td[data-label="Check"]{
-    flex-direction:row;align-items:center;gap:10px;
-  }
-  #entradas-table td[data-label="Check"] input,#analises-table td[data-label="Check"] input{width:auto;}
   #entradas-table td[data-label=""],#analises-table td[data-label=""]{
     flex-direction:row;justify-content:flex-end;border-bottom:none;padding-top:6px;
   }
@@ -677,17 +688,16 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .chip button:hover{background:var(--red-bg);color:var(--red-text);}
 .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
 @media (max-width:760px){.config-grid{grid-template-columns:1fr;}}
-.add-inline{display:flex;gap:8px;margin-bottom:14px;}
+.add-inline{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
 .add-inline input{flex:1;}
 
 .top-row{display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-bottom:6px;}
 .clear-all-btn{
-  background:none;border:none;padding:2px 0;margin:0;
-  font-family:'Manrope';font-size:11px;font-weight:600;letter-spacing:.2px;
-  color:var(--red-text);cursor:pointer;text-decoration:underline;text-underline-offset:2px;
-  opacity:.85;transition:opacity .15s;
+  width:32px;height:32px;flex:0 0 auto;border-radius:50%;border:none;padding:0;margin:0;
+  background:var(--overlay);color:var(--text-faint);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s ease;
 }
-.clear-all-btn:hover{opacity:1;}
+.clear-all-btn:hover{background:var(--red-bg);color:var(--red-text);}
 
 .checkbox{width:17px;height:17px;accent-color:var(--pos);cursor:pointer;}
 
@@ -1881,7 +1891,7 @@ function renderEntradas(){
         <colgroup>
           <col style="width:74px"><col style="width:230px"><col style="width:220px"><col style="width:220px">
           <col style="width:390px"><col style="width:82px"><col style="width:86px"><col style="width:56px">
-          <col style="width:72px"><col style="width:44px">
+          <col style="width:72px"><col style="width:56px">
         </colgroup>
         <thead><tr>
           <th>Data</th><th>Campeonato</th><th>Mandante</th><th>Visitante</th><th>Aposta</th>
@@ -2138,17 +2148,16 @@ function renderAnalises(){
     <div class="table-wrap card">
       <table id="analises-table">
         <colgroup>
-          <col style="width:46px"><col style="width:74px"><col style="width:74px"><col style="width:216px">
+          <col style="width:74px"><col style="width:74px"><col style="width:230px">
           <col style="width:220px"><col style="width:220px"><col style="width:414px"><col style="width:178px">
-          <col style="width:58px">
+          <col style="width:100px">
         </colgroup>
         <thead><tr>
-          <th title="Check">&#10003;</th><th>Hora</th><th>Data</th><th>Campeonato</th><th>Mandante</th><th>Visitante</th>
+          <th>Hora</th><th>Data</th><th>Campeonato</th><th>Mandante</th><th>Visitante</th>
           <th>Superioridade no jogo</th><th>Leitura de mercado</th><th></th>
         </tr></thead>
         <tbody id="an-tbody">
           <tr class="add-row-form" id="add-row-analise">
-            <td data-label="Check"></td>
             <td data-label="Hora"><input type="time" id="an-hora" value=""></td>
             <td data-label="Data">${renderDateCellHtml("analises","new","date",todayIso(),"an-data")}</td>
             <td data-label="Campeonato"><input type="text" id="an-champ" list="dl-champs2" placeholder="Campeonato"></td>
@@ -2172,11 +2181,10 @@ function renderAnalises(){
   const tbody = document.getElementById("an-tbody");
   if(rows.length===0){
     const msg = (analisesTeamSearch||analisesMandante||analisesVisitante||analisesFilterDate) ? "Nenhuma análise encontrada para essa busca." : "Nenhuma análise cadastrada ainda.";
-    tbody.insertAdjacentHTML("beforeend", `<tr><td colspan="9"><div class="empty-state">${msg}</div></td></tr>`);
+    tbody.insertAdjacentHTML("beforeend", `<tr><td colspan="8"><div class="empty-state">${msg}</div></td></tr>`);
   } else {
     tbody.insertAdjacentHTML("beforeend", rows.map(r=>`
       <tr data-id="${r.id}">
-        <td data-label="Check" style="text-align:center;"><input type="checkbox" class="checkbox" data-field="checked" ${r.checked?"checked":""}></td>
         <td data-label="Hora"><input type="time" data-field="hora" value="${r.hora||''}"></td>
         <td data-label="Data">${renderDateCellHtml("analises", r.id, "date", r.date||'', null)}</td>
         <td data-label="Campeonato"><input type="text" data-field="champ" list="dl-champs2" value="${escapeHtml(r.champ||'')}"></td>
@@ -2184,7 +2192,14 @@ function renderAnalises(){
         <td data-label="Visitante"><input type="text" data-field="away" list="dl-clubs2" value="${escapeHtml(r.away||'')}"></td>
         <td data-label="Superioridade"><select data-field="sup" title="${escapeHtml(r.sup?superioridadeLabel(r.sup,r.home,r.away):'')}">${superioridadeOptionsHtml(r.sup, r.home, r.away)}</select></td>
         <td data-label="Leitura"><select data-field="leitura">${optionsHtml(LEITURA_OPTIONS, r.leitura)}</select></td>
-        <td data-label=""><button class="del-btn" data-del="${r.id}" title="Excluir">&#10005;</button></td>
+        <td data-label="">
+          <div class="row-actions">
+            <button class="send-btn ${r.linkedBetId?'sent':''}" data-send="${r.id}" title="${r.linkedBetId?'Enviado para Entradas — clique para desfazer':'Enviar para Entradas'}">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9z"/></svg>
+            </button>
+            <button class="del-btn" data-del="${r.id}" title="Excluir">&#10005;</button>
+          </div>
+        </td>
       </tr>
     `).join(""));
   }
@@ -2298,37 +2313,41 @@ function renderAnalises(){
         renderAnalises();
         return;
       }
-      if(field==="checked"){
-        item.checked = e.target.checked;
-        if(item.checked){
-          if(!item.linkedBetId){
-            const newBet = {
-              id: uid(),
-              date: item.date || todayIso(),
-              champ: item.champ || "",
-              home: item.home || "",
-              away: item.away || "",
-              pick: "",
-              stake: state.stakeUnit,
-              retorno: 0,
-              oddManual: ""
-            };
-            state.bets.unshift(newBet);
-            sortByDateDescInPlace(state.bets);
-            item.linkedBetId = newBet.id;
-            showToast("Enviado para Entradas");
-          }
-        } else {
-          if(item.linkedBetId){
-            const existiaEmEntradas = state.bets.some(b=>b.id===item.linkedBetId);
-            state.bets = state.bets.filter(b=>b.id!==item.linkedBetId);
-            item.linkedBetId = null;
-            if(existiaEmEntradas) showToast("Removido de Entradas");
-          }
-        }
-      }
-      else item[field] = e.target.value;
+      item[field] = e.target.value;
       if(field==="date" || field==="hora") sortByDateDescInPlace(state.analyses, true);
+      persist();
+      renderAnalises();
+    });
+  });
+  tbody.querySelectorAll("[data-send]").forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const tr = btn.closest("tr");
+      const item = state.analyses.find(x=>x.id===tr.dataset.id);
+      if(!item) return;
+      if(!item.linkedBetId){
+        const newBet = {
+          id: uid(),
+          date: item.date || todayIso(),
+          champ: item.champ || "",
+          home: item.home || "",
+          away: item.away || "",
+          pick: "",
+          stake: state.stakeUnit,
+          retorno: 0,
+          oddManual: ""
+        };
+        state.bets.unshift(newBet);
+        sortByDateDescInPlace(state.bets);
+        item.linkedBetId = newBet.id;
+        item.checked = true;
+        showToast("Enviado para Entradas");
+      } else {
+        const existiaEmEntradas = state.bets.some(b=>b.id===item.linkedBetId);
+        state.bets = state.bets.filter(b=>b.id!==item.linkedBetId);
+        item.linkedBetId = null;
+        item.checked = false;
+        if(existiaEmEntradas) showToast("Removido de Entradas");
+      }
       persist();
       renderAnalises();
     });
@@ -2413,11 +2432,11 @@ function renderConfig(){
       <div class="card panel">
         <div class="top-row">
           <div class="section-title" style="margin-bottom:0;">Campeonatos</div>
-          <button class="clear-all-btn" id="clear-champs-btn" type="button">Limpar tudo</button>
         </div>
         <div class="add-inline">
           <input type="text" id="add-champ-input" placeholder="Novo campeonato…" value="${escapeHtml(pendingChamp)}">
           <button class="btn btn-primary btn-sm" id="add-champ-btn">Adicionar</button>
+          <button class="clear-all-btn" id="clear-champs-btn" type="button" title="Limpar tudo">${broomIconSvg()}</button>
         </div>
         <input type="text" class="chip-search" id="champ-search" placeholder="Buscar campeonato…" value="${escapeHtml(champSearch)}">
         <div class="chip-list" id="champ-list"></div>
@@ -2425,11 +2444,11 @@ function renderConfig(){
       <div class="card panel">
         <div class="top-row">
           <div class="section-title" style="margin-bottom:0;">Clubes</div>
-          <button class="clear-all-btn" id="clear-clubs-btn" type="button">Limpar tudo</button>
         </div>
         <div class="add-inline">
           <input type="text" id="add-club-input" placeholder="Novo clube…" value="${escapeHtml(pendingClub)}">
           <button class="btn btn-primary btn-sm" id="add-club-btn">Adicionar</button>
+          <button class="clear-all-btn" id="clear-clubs-btn" type="button" title="Limpar tudo">${broomIconSvg()}</button>
         </div>
         <input type="text" class="chip-search" id="club-search" placeholder="Buscar clube…" value="${escapeHtml(clubSearch)}">
         <div class="chip-list" id="club-list"></div>
@@ -2502,6 +2521,17 @@ function renderConfig(){
       }
     });
   });
+}
+
+// Ícone de vassourinha usado no botão redondo "Limpar tudo", ao lado do
+// botão "Adicionar" em Configurações (Campeonatos/Clubes).
+function broomIconSvg(){
+  return `<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <polyline points="3 6 5 6 21 6"></polyline>
+    <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+    <line x1="10" y1="11" x2="10" y2="17"></line>
+    <line x1="14" y1="11" x2="14" y2="17"></line>
+  </svg>`;
 }
 
 function renderChampChips(){
