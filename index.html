@@ -65,6 +65,9 @@
   --radius-sm:8px;
   --shadow-card:0 1px 0 rgba(255,255,255,.02) inset, 0 8px 24px -12px var(--shadow-color);
   --input-focus-bg:#0f1319;
+  --ease-smooth: cubic-bezier(.4,0,.2,1);
+  --ease-spring: cubic-bezier(.34,1.56,.64,1);
+  --ease-out: cubic-bezier(.16,1,.3,1);
 }
 :root[data-theme="light"]{
   --cs: light;
@@ -137,12 +140,24 @@ nav.tabs.dragging{cursor:grabbing;}
 nav.tabs button{
   appearance:none;border:none;background:transparent;color:var(--text-dim);
   font-family:'Inter';font-weight:600;font-size:14px;
-  padding:12px 24px;border-radius:999px;cursor:pointer;
-  transition:background .18s ease, color .18s ease;
+  padding:12px 24px;border-radius:999px;cursor:pointer;position:relative;
+  transition:background .28s var(--ease-smooth), color .2s ease, transform .2s var(--ease-spring), box-shadow .28s var(--ease-smooth);
   white-space:nowrap;
 }
 nav.tabs button:hover{color:var(--text);}
-nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -4px rgba(59,130,246,.55);}
+/* sublinhado animado (esquerda -> direita) ao passar o mouse numa aba que não está
+   selecionada; some imediatamente das abas ativas, que já têm o fundo cheio como indicador. */
+nav.tabs button::after{
+  content:"";position:absolute;left:24px;right:24px;bottom:7px;height:2px;
+  background:currentColor;border-radius:1px;
+  transform:scaleX(0);transform-origin:left;
+  transition:transform .32s var(--ease-out);
+  pointer-events:none;
+}
+nav.tabs button:hover:not(.active)::after{transform:scaleX(1);}
+nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -4px rgba(59,130,246,.55);animation:tabPop .32s var(--ease-spring);}
+nav.tabs button.active::after{content:none;}
+@keyframes tabPop{0%{transform:scale(.94);}60%{transform:scale(1.02);}100%{transform:scale(1);}}
 
 .topbar-right{
   position:absolute;right:4px;top:50%;transform:translateY(-50%);
@@ -193,9 +208,9 @@ nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -
 
 /* ---------- generic ---------- */
 .view{display:none;}
-.view.active{display:block;animation:fadeUp .42s cubic-bezier(.16,1,.3,1);}
+.view.active{display:block;animation:fadeUp .48s var(--ease-out);}
 @keyframes fadeUp{
-  0%{opacity:0;transform:translateY(16px) scale(.985);filter:blur(2px);}
+  0%{opacity:0;transform:translateY(18px) scale(.98);filter:blur(3px);}
   55%{opacity:1;filter:blur(0);}
   100%{opacity:1;transform:translateY(0) scale(1);}
 }
@@ -218,10 +233,18 @@ nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -
 .dash-stats{display:flex;flex-direction:column;gap:8px;}
 .stat-block{
   background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);
-  padding:13px 16px;transition:background .18s ease, transform .15s ease;
-  animation:fadeUp .4s ease both;
+  padding:13px 16px;transition:background .22s var(--ease-smooth), transform .22s var(--ease-smooth), box-shadow .22s var(--ease-smooth);
+  animation:fadeUp .45s var(--ease-out) both;
 }
-.stat-block:hover{background:var(--card-2);}
+.stat-block:hover{background:var(--card-2);transform:translateY(-2px);box-shadow:0 8px 20px -12px var(--shadow-color);}
+.stat-block:nth-of-type(1){animation-delay:.02s;}
+.stat-block:nth-of-type(2){animation-delay:.06s;}
+.stat-block:nth-of-type(3){animation-delay:.1s;}
+.stat-block:nth-of-type(4){animation-delay:.14s;}
+.stat-block:nth-of-type(5){animation-delay:.18s;}
+.stat-block:nth-of-type(6){animation-delay:.22s;}
+.stat-block:nth-of-type(7){animation-delay:.26s;}
+.stat-block:nth-of-type(8){animation-delay:.3s;}
 .stat-label{font-size:10.5px;letter-spacing:.9px;text-transform:uppercase;color:var(--text-faint);font-weight:600;}
 .stat-value{font-size:21px;font-weight:800;margin-top:5px;letter-spacing:-.3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .stat-value.pos{color:var(--pos-text);}
@@ -263,9 +286,10 @@ nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -
 .cal-arrow{
   width:28px;height:28px;border-radius:50%;border:1px solid var(--border);
   background:var(--card-2);color:var(--text);display:flex;align-items:center;justify-content:center;
-  cursor:pointer;transition:all .15s ease;font-size:14px;
+  cursor:pointer;transition:all .2s var(--ease-smooth);font-size:14px;
 }
-.cal-arrow:hover{background:var(--blue);border-color:var(--blue);}
+.cal-arrow:hover{background:var(--blue);border-color:var(--blue);transform:scale(1.08);}
+.cal-arrow:active{transform:scale(.92);}
 .cal-title{font-family:'Manrope';font-weight:800;font-size:15px;min-width:170px;text-align:center;text-transform:capitalize;}
 
 .cal-toggle{display:flex;justify-content:center;margin-bottom:14px;}
@@ -285,12 +309,12 @@ nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -
   aspect-ratio:1/0.64;border-radius:10px;padding:7px 8px;
   display:flex;flex-direction:column;justify-content:space-between;
   background:var(--card-2);border:1px solid var(--border-soft);
-  transition:transform .15s ease, box-shadow .15s ease;
+  transition:transform .22s var(--ease-spring), box-shadow .22s var(--ease-smooth), background .18s ease;
   cursor:default;min-width:0;
 }
 .cal-cell.empty{background:transparent;border-color:transparent;}
 .cal-cell.has-data{cursor:pointer;}
-.cal-cell.has-data:hover{transform:translateY(-2px);}
+.cal-cell.has-data:hover{transform:translateY(-3px) scale(1.02);}
 .cal-cell.pos{background:var(--pos-bg-strong);border-color:var(--pos-border);}
 .cal-cell.pos:hover{box-shadow:0 6px 18px -6px rgba(167,139,250,.35);}
 .cal-cell.neg{background:var(--red-bg-strong);border-color:rgba(248,86,79,.28);}
@@ -358,17 +382,28 @@ input[type=number],input[type=date],input[type=time],input[type=text],input[type
 input:focus,select:focus{border-color:var(--blue);background:var(--input-focus-bg);}
 input::placeholder{color:var(--text-faint);}
 select{appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239297a1' stroke-width='2'%3e%3cpath d='M6 9l6 6 6-6'/%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right 8px center;background-size:15px;padding-right:28px;}
-input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{opacity:.6;filter:none;background:transparent;}
+/* Spinners nativos (setinhas de incremento/decremento) dos inputs numéricos removidos:
+   o controle nativo pinta um fundo cinza próprio do navegador que não é controlável só com
+   background/opacity em CSS, então escondemos com -webkit-appearance:none. Sem ícone nenhum
+   no lugar. As setas do teclado (↑/↓) continuam funcionando normalmente. */
+input[type=number]{
+  -moz-appearance:textfield;
+}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{
+  -webkit-appearance:none;appearance:none;margin:0;background:transparent;
+}
 
 .btn{
   appearance:none;border:none;border-radius:999px;cursor:pointer;font-family:'Inter';font-weight:700;
-  font-size:13px;padding:10px 18px;transition:transform .1s ease, opacity .15s ease,box-shadow .15s ease;
+  font-size:13px;padding:10px 18px;
+  transition:transform .2s var(--ease-spring), opacity .18s ease, box-shadow .22s var(--ease-smooth), background .18s ease, border-color .18s ease;
 }
-.btn:active{transform:scale(.97);}
+.btn:hover{transform:translateY(-1px);}
+.btn:active{transform:scale(.96) translateY(0);transition-duration:.1s;}
 .btn-primary{background:var(--blue);color:#fff;box-shadow:0 6px 16px -6px rgba(59,130,246,.6);}
-.btn-primary:hover{opacity:.92;}
+.btn-primary:hover{opacity:.94;box-shadow:0 10px 22px -8px rgba(59,130,246,.7);}
 .btn-ghost{background:var(--card-2);color:var(--text-dim);border:1px solid var(--border);}
-.btn-ghost:hover{color:var(--text);border-color:var(--hover-border);}
+.btn-ghost:hover{color:var(--text);border-color:var(--hover-border);box-shadow:0 6px 16px -10px var(--shadow-color);}
 .btn-sm{padding:7px 13px;font-size:12px;}
 .btn-danger{background:var(--red-bg);color:var(--red-text);border:1px solid rgba(248,86,79,.35);}
 .btn-danger:hover{background:var(--red);color:#fff;}
@@ -376,13 +411,13 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .confirm-overlay{
   position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:200;
   display:flex;align-items:center;justify-content:center;padding:20px;
-  opacity:0;transition:opacity .15s ease;
+  opacity:0;transition:opacity .2s var(--ease-smooth);
 }
 .confirm-overlay.show{opacity:1;}
 .confirm-card{
   background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);
   box-shadow:var(--shadow-card);width:100%;max-width:380px;padding:22px;
-  transform:translateY(8px) scale(.98);transition:transform .15s ease;
+  transform:translateY(10px) scale(.97);transition:transform .28s var(--ease-out);
 }
 .confirm-overlay.show .confirm-card{transform:translateY(0) scale(1);}
 .confirm-title{font-family:'Manrope';font-weight:800;font-size:16px;color:var(--text);margin-bottom:8px;}
@@ -428,8 +463,10 @@ tbody td{padding:10px 8px;border-bottom:1px solid var(--border-soft);vertical-al
 /* Mesma lógica acima, mas pra coluna Data de Análises (3ª coluna), que não tem
    padding padrão diferenciado (era 10px 8px, herdado de #analises-table tbody td). */
 #analises-table tbody td:nth-child(2){padding-left:6px;padding-right:6px;}
-tbody tr{transition:background .12s ease;}
+tbody tr{transition:background .18s var(--ease-smooth);}
 tbody tr:hover{background:var(--row-hover-bg);}
+tbody tr[data-id]{animation:rowIn .28s var(--ease-out) both;}
+@keyframes rowIn{0%{opacity:0;transform:translateY(4px);}100%{opacity:1;transform:translateY(0);}}
 tbody tr:last-child td{border-bottom:none;}
 td input,td select{padding:7px 9px;font-size:13px;width:100%;min-width:0;}
 /* Inputs mais compactos em Entradas, mesma lógica acima (exceto Stake/Retorno/Odd,
@@ -477,7 +514,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .del-btn{
   width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--card-2);
   color:var(--text-faint);cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:all .15s ease;font-size:14px;
+  transition:all .2s var(--ease-smooth);font-size:14px;
 }
 .del-btn:hover{background:var(--red-bg);color:var(--red-text);border-color:rgba(248,86,79,.35);}
 
@@ -485,7 +522,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .send-btn{
   width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--card-2);
   color:var(--text-faint);cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:all .15s ease;
+  transition:all .2s var(--ease-smooth);
 }
 .send-btn svg{transform:scaleX(-1);transition:transform .15s ease;}
 .send-btn:hover{background:var(--blue-dim);color:var(--blue);border-color:rgba(70,130,255,.35);}
@@ -497,7 +534,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
   width:28px;height:28px;border-radius:8px;cursor:pointer;
   display:flex;align-items:center;justify-content:center;
   font-size:18px;line-height:1;font-weight:500;font-family:'Inter';
-  transition:all .15s ease;
+  transition:all .2s var(--ease-smooth);
 }
 .icon-add-btn:hover{color:var(--blue);background:var(--blue-dim);}
 .icon-add-btn:active{transform:scale(.92);}
@@ -570,7 +607,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .search-toggle{
   appearance:none;border:1px solid var(--border);background:var(--card-2);color:var(--text-dim);
   font-family:'Inter';font-weight:700;font-size:12px;padding:8px 14px;border-radius:999px;cursor:pointer;
-  transition:all .15s ease;white-space:nowrap;
+  transition:all .2s var(--ease-smooth);white-space:nowrap;
 }
 .search-toggle:hover{color:var(--text);border-color:var(--hover-border);}
 .search-toggle.active{background:var(--blue);color:#fff;border-color:var(--blue);}
@@ -578,7 +615,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .date-filter-icon-btn{
   appearance:none;border:1px solid var(--border);background:var(--card-2);color:var(--text-dim);
   width:34px;height:34px;min-width:34px;border-radius:var(--radius-md);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:all .15s ease;position:relative;
+  display:flex;align-items:center;justify-content:center;transition:all .2s var(--ease-smooth);position:relative;
 }
 .date-filter-icon-btn:hover{color:var(--text);border-color:var(--hover-border);}
 .date-filter-icon-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
@@ -592,13 +629,18 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
   position:absolute;top:calc(100% + 6px);left:0;z-index:50;width:246px;
   background:var(--card);border:1px solid var(--border);border-radius:var(--radius-md);
   box-shadow:0 10px 28px rgba(0,0,0,.28);padding:10px;
+  animation:popIn .2s var(--ease-out);
+}
+@keyframes popIn{
+  0%{opacity:0;transform:translateY(-6px) scale(.96);}
+  100%{opacity:1;transform:translateY(0) scale(1);}
 }
 .mini-cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px;gap:6px;}
 .mini-cal-label{font-family:'Inter';font-weight:700;font-size:12px;color:var(--text);text-transform:capitalize;}
 .mini-cal-nav{
   appearance:none;border:1px solid var(--border);background:var(--card-2);color:var(--text-dim);
   width:26px;height:26px;min-width:26px;border-radius:8px;cursor:pointer;font-size:14px;line-height:1;
-  display:flex;align-items:center;justify-content:center;transition:all .15s ease;
+  display:flex;align-items:center;justify-content:center;transition:all .2s var(--ease-smooth);
 }
 .mini-cal-nav:hover{color:var(--text);border-color:var(--hover-border);}
 .mini-cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:2px;}
@@ -606,8 +648,9 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .mini-cal-day{
   appearance:none;border:1px solid transparent;background:transparent;color:var(--text);
   font-family:'Inter';font-size:12px;padding:7px 0;border-radius:8px;cursor:pointer;text-align:center;
+  transition:background .16s ease, transform .16s var(--ease-spring);
 }
-.mini-cal-day:hover{background:var(--card-2);}
+.mini-cal-day:hover{background:var(--card-2);transform:scale(1.08);}
 .mini-cal-day-muted{visibility:hidden;pointer-events:none;}
 .mini-cal-day-today{border-color:var(--blue);}
 .mini-cal-day-selected{background:var(--blue);color:#fff;}
@@ -660,7 +703,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .today-btn{
   appearance:none;border:1px solid var(--border);background:var(--card-2);color:var(--text-dim);
   font-family:'Inter';font-weight:700;font-size:12px;padding:8px 14px;border-radius:999px;cursor:pointer;
-  transition:all .15s ease;white-space:nowrap;
+  transition:all .2s var(--ease-smooth);white-space:nowrap;
 }
 .today-btn:hover{color:var(--text);border-color:var(--hover-border);}
 .today-btn.active{background:var(--blue);color:#fff;border-color:var(--blue);}
@@ -685,7 +728,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .chip button{
   width:18px;height:18px;border-radius:50%;border:none;background:var(--overlay);color:var(--text-faint);
   cursor:pointer;font-size:11px;line-height:1;display:flex;align-items:center;justify-content:center;
-  transition:all .15s ease;
+  transition:all .2s var(--ease-smooth);
 }
 .chip button:hover{background:var(--red-bg);color:var(--red-text);}
 .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
@@ -697,7 +740,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .clear-all-btn{
   width:34px;height:34px;flex:0 0 auto;border-radius:50%;border:none;padding:0;margin:0;
   background:var(--overlay);color:var(--text-faint);cursor:pointer;
-  display:flex;align-items:center;justify-content:center;transition:all .15s ease;
+  display:flex;align-items:center;justify-content:center;transition:all .2s var(--ease-smooth);
 }
 .clear-all-btn:hover{background:var(--red-bg);color:var(--red-text);}
 
@@ -724,13 +767,13 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 @keyframes skel-shimmer{100%{transform:translateX(100%);}}
 
 .toast{
-  position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(12px);
+  position:fixed;bottom:22px;left:50%;transform:translateX(-50%) translateY(16px) scale(.94);
   background:var(--card-2);border:1px solid var(--border);color:var(--text);
   padding:10px 18px;border-radius:999px;font-size:12.5px;font-weight:600;
   box-shadow:0 10px 30px -10px rgba(0,0,0,.6);opacity:0;pointer-events:none;
-  transition:opacity .2s ease, transform .2s ease;z-index:50;
+  transition:opacity .28s var(--ease-smooth), transform .32s var(--ease-spring);z-index:50;
 }
-.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0) scale(1);}
 
 /* ---------- foco consistente (teclado) ---------- */
 /* Botões e controles não tinham nenhum :focus próprio, então caíam no
@@ -769,14 +812,14 @@ button:focus-visible,.date-cell-btn:focus-visible,input:focus-visible,select:foc
 .logout-btn{
   appearance:none;border:1px solid var(--border);background:var(--card-2);color:var(--text-faint);
   border-radius:999px;padding:7px 13px;font-size:11.5px;font-weight:700;cursor:pointer;
-  display:flex;align-items:center;gap:6px;margin-left:8px;transition:all .15s ease;
+  display:flex;align-items:center;gap:6px;margin-left:8px;transition:all .2s var(--ease-smooth);
 }
 .logout-btn:hover{color:var(--text);border-color:var(--hover-border);}
 
 .theme-toggle{
   width:34px;height:34px;border-radius:50%;border:1px solid var(--border);background:var(--card-2);
   color:var(--text-dim);cursor:pointer;display:flex;align-items:center;justify-content:center;
-  transition:all .15s ease;
+  transition:all .2s var(--ease-smooth);
 }
 .theme-toggle:hover{color:var(--text);border-color:var(--hover-border);}
 .theme-toggle svg{width:16px;height:16px;display:block;}
@@ -1899,6 +1942,15 @@ function renderEntradas(){
   filtered = sortRowsByDate(filtered, !!entradasFilterDate);
 
   el.innerHTML = `
+    <div class="card panel">
+      <div class="field-row">
+        <div class="field"><label>Início (banca inicial)</label><input type="number" step="0.01" id="cfg-inicio" value="${state.bankrollInicial}"></div>
+        <div class="field"><label>Stake (unidade)</label><input type="number" step="0.01" id="cfg-stake" value="${state.stakeUnit}"></div>
+        <div class="field"><label>Atual</label><input type="text" disabled value="${fmtBRL(s.atual)}"></div>
+        <div class="field"><label>Total apostado</label><input type="text" disabled value="${fmtBRL(s.apostado)}"></div>
+      </div>
+    </div>
+
     ${entradasFilterDate ? `<div class="filter-banner"><span>Mostrando entradas de ${entradasFilterDate.split('-').reverse().join('/')}</span><button id="clear-filter">limpar filtro</button></div>` : ""}
     <div class="search-bar">
       <div class="date-filter-wrap" id="entradas-date-filter-wrap">
@@ -1973,10 +2025,39 @@ function renderEntradas(){
     }).join(""));
   }
 
+  // bindings config
+  document.getElementById("cfg-inicio").addEventListener("change", e=>{
+    state.bankrollInicial = Number(e.target.value)||0; persist(); renderEntradas();
+  });
+  document.getElementById("cfg-stake").addEventListener("change", e=>{
+    state.stakeUnit = Number(e.target.value)||0; persist(); renderEntradas();
+  });
+  // Vinculados logo após montar a tabela — antes do bloco do mini-calendário — para que
+  // uma eventual falha ali não impeça a busca/campos de time de reagir em tempo real.
+  document.getElementById("entradas-team-search").addEventListener("input", e=>{
+    entradasTeamSearch = e.target.value;
+    const pos = e.target.selectionStart;
+    renderEntradas();
+    const inp = document.getElementById("entradas-team-search");
+    if(inp){ inp.focus(); inp.setSelectionRange(pos,pos); }
+  });
+  document.getElementById("entradas-toggle-mandante").addEventListener("click", ()=>{
+    entradasMandante = !entradasMandante; renderEntradas();
+  });
+  document.getElementById("entradas-toggle-visitante").addEventListener("click", ()=>{
+    entradasVisitante = !entradasVisitante; renderEntradas();
+  });
+
+  attachRestrictedTeamInput(document.getElementById("new-champ"), ()=>state.championships);
+  attachRestrictedTeamInput(document.getElementById("new-home"), ()=>state.clubs);
+  attachRestrictedTeamInput(document.getElementById("new-away"), ()=>state.clubs);
+  tbody.querySelectorAll('tr[data-id] input[data-field="champ"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.championships));
+  tbody.querySelectorAll('tr[data-id] input[data-field="home"], tr[data-id] input[data-field="away"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.clubs));
+
   const clearBtn = document.getElementById("clear-filter");
   if(clearBtn) clearBtn.addEventListener("click", ()=>{ entradasFilterDate=null; renderEntradas(); });
 
-  {
+  try{
     document.getElementById("entradas-date-btn").addEventListener("click", e=>{
       e.stopPropagation(); // impede que o clique feche o calendário no mesmo instante em que o abre
       if(entradasCalendarOpen){
@@ -2018,31 +2099,12 @@ function renderEntradas(){
         });
       });
     }
-  }
+  }catch(err){ console.error("Falha ao religar o mini-calendário de Entradas:", err); }
+
   document.getElementById("entradas-today-btn").addEventListener("click", ()=>{
     entradasFilterDate = entradasFilterDate===todayIso() ? null : todayIso();
     renderEntradas();
   });
-
-  document.getElementById("entradas-team-search").addEventListener("input", e=>{
-    entradasTeamSearch = e.target.value;
-    const pos = e.target.selectionStart;
-    renderEntradas();
-    const inp = document.getElementById("entradas-team-search");
-    if(inp){ inp.focus(); inp.setSelectionRange(pos,pos); }
-  });
-  document.getElementById("entradas-toggle-mandante").addEventListener("click", ()=>{
-    entradasMandante = !entradasMandante; renderEntradas();
-  });
-  document.getElementById("entradas-toggle-visitante").addEventListener("click", ()=>{
-    entradasVisitante = !entradasVisitante; renderEntradas();
-  });
-
-  attachRestrictedTeamInput(document.getElementById("new-champ"), ()=>state.championships);
-  attachRestrictedTeamInput(document.getElementById("new-home"), ()=>state.clubs);
-  attachRestrictedTeamInput(document.getElementById("new-away"), ()=>state.clubs);
-  tbody.querySelectorAll('tr[data-id] input[data-field="champ"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.championships));
-  tbody.querySelectorAll('tr[data-id] input[data-field="home"], tr[data-id] input[data-field="away"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.clubs));
 
   // linhas existentes
   tbody.querySelectorAll("tr[data-id] input, tr[data-id] select").forEach(inp=>{
@@ -2228,10 +2290,70 @@ function renderAnalises(){
     `).join(""));
   }
 
+  // IMPORTANTE: a busca por time, os toggles Mandante/Visitante e os campos de
+  // Mandante/Visitante das linhas são vinculados AQUI, logo após montar a tabela —
+  // antes do bloco do mini-calendário abaixo. Isso evita que uma falha naquele bloco
+  // (ex.: popover em estado inconsistente) impeça esses listeners de serem religados,
+  // o que fazia a busca/atualização em tempo real parar de reagir até um clique forçar
+  // um novo render completo.
+  document.getElementById("analises-team-search").addEventListener("input", e=>{
+    analisesTeamSearch = e.target.value;
+    const pos = e.target.selectionStart;
+    // O re-render (renderAnalises) monta a tabela filtrada já no início da função, então o
+    // resultado da busca fica correto na tela mesmo que algo mais abaixo (religar um botão,
+    // o mini-calendário etc.) venha a falhar. Só que sem o try/finally, uma falha ali
+    // interrompia a função ANTES de chegar nestas duas linhas de baixo, que devolvem o foco
+    // e a posição do cursor pro campo de busca — resultado: a lista até atualizava, mas o
+    // campo perdia o foco a cada tecla, dando a impressão de que só "atualizava" depois de
+    // clicar de novo nele. O finally garante que o foco sempre volta, aconteça o que
+    // acontecer no resto do render.
+    try{
+      renderAnalises();
+    } finally {
+      const inp = document.getElementById("analises-team-search");
+      if(inp){ inp.focus(); inp.setSelectionRange(pos,pos); }
+    }
+  });
+  document.getElementById("analises-toggle-mandante").addEventListener("click", ()=>{
+    analisesMandante = !analisesMandante; renderAnalises();
+  });
+  document.getElementById("analises-toggle-visitante").addEventListener("click", ()=>{
+    analisesVisitante = !analisesVisitante; renderAnalises();
+  });
+
+  attachRestrictedTeamInput(document.getElementById("an-champ"), ()=>state.championships);
+  attachRestrictedTeamInput(document.getElementById("an-home"), ()=>state.clubs);
+  attachRestrictedTeamInput(document.getElementById("an-away"), ()=>state.clubs);
+  tbody.querySelectorAll('tr[data-id] input[data-field="champ"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.championships));
+  tbody.querySelectorAll('tr[data-id] input[data-field="home"], tr[data-id] input[data-field="away"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.clubs));
+
+  // atualiza as opções de "Superioridade no jogo" em tempo real enquanto Mandante/Visitante
+  // são editados na mesma linha, sem esperar o campo perder o foco. Envolvido em try/catch
+  // (como o bloco do mini-calendário logo abaixo) para que uma falha aqui não impeça o
+  // restante das ligações desta função de acontecer (botões de excluir/enviar, calendário etc.).
+  try{
+    tbody.querySelectorAll('tr[data-id]').forEach(tr=>{
+      const homeInp = tr.querySelector('input[data-field="home"]');
+      const awayInp = tr.querySelector('input[data-field="away"]');
+      const supSel = tr.querySelector('select[data-field="sup"]');
+      if(!homeInp || !awayInp || !supSel) return;
+      // O setTimeout(...,0) adia essa atualização pro próximo ciclo do navegador: os campos
+      // Mandante/Visitante têm uma lista de sugestões nativa (datalist) vinculada, e mexer no
+      // DOM (recriar as opções do select de Superioridade) DENTRO do mesmo evento "input" que
+      // dispara o filtro dessa lista de sugestões atrapalha o navegador, fazendo a lista parar
+      // de filtrar em tempo real (só volta a funcionar depois de clicar de novo no campo).
+      // Adiando em 0ms a atualização continua parecendo instantânea, mas já não compete mais
+      // com o navegador pelo mesmo evento.
+      const refresh = ()=> setTimeout(()=> refreshSupSelect(supSel, homeInp.value, awayInp.value), 0);
+      homeInp.addEventListener("input", refresh);
+      awayInp.addEventListener("input", refresh);
+    });
+  }catch(err){ console.error("Falha ao religar atualização de Superioridade:", err); }
+
   const clearBtnAn = document.getElementById("clear-filter-analises");
   if(clearBtnAn) clearBtnAn.addEventListener("click", ()=>{ analisesFilterDate=null; renderAnalises(); });
 
-  {
+  try{
     document.getElementById("analises-date-btn").addEventListener("click", e=>{
       e.stopPropagation(); // impede que o clique feche o calendário no mesmo instante em que o abre
       if(analisesCalendarOpen){
@@ -2273,42 +2395,11 @@ function renderAnalises(){
         });
       });
     }
-  }
+  }catch(err){ console.error("Falha ao religar o mini-calendário de Análises:", err); }
+
   document.getElementById("analises-today-btn").addEventListener("click", ()=>{
     analisesFilterDate = analisesFilterDate===todayIso() ? null : todayIso();
     renderAnalises();
-  });
-
-  document.getElementById("analises-team-search").addEventListener("input", e=>{
-    analisesTeamSearch = e.target.value;
-    const pos = e.target.selectionStart;
-    renderAnalises();
-    const inp = document.getElementById("analises-team-search");
-    if(inp){ inp.focus(); inp.setSelectionRange(pos,pos); }
-  });
-  document.getElementById("analises-toggle-mandante").addEventListener("click", ()=>{
-    analisesMandante = !analisesMandante; renderAnalises();
-  });
-  document.getElementById("analises-toggle-visitante").addEventListener("click", ()=>{
-    analisesVisitante = !analisesVisitante; renderAnalises();
-  });
-
-  attachRestrictedTeamInput(document.getElementById("an-champ"), ()=>state.championships);
-  attachRestrictedTeamInput(document.getElementById("an-home"), ()=>state.clubs);
-  attachRestrictedTeamInput(document.getElementById("an-away"), ()=>state.clubs);
-  tbody.querySelectorAll('tr[data-id] input[data-field="champ"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.championships));
-  tbody.querySelectorAll('tr[data-id] input[data-field="home"], tr[data-id] input[data-field="away"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.clubs));
-
-  // atualiza as opções de "Superioridade no jogo" em tempo real enquanto Mandante/Visitante
-  // são editados na mesma linha, sem esperar o campo perder o foco.
-  tbody.querySelectorAll('tr[data-id]').forEach(tr=>{
-    const homeInp = tr.querySelector('input[data-field="home"]');
-    const awayInp = tr.querySelector('input[data-field="away"]');
-    const supSel = tr.querySelector('select[data-field="sup"]');
-    if(!homeInp || !awayInp || !supSel) return;
-    const refresh = ()=> refreshSupSelect(supSel, homeInp.value, awayInp.value);
-    homeInp.addEventListener("input", refresh);
-    awayInp.addEventListener("input", refresh);
   });
 
   tbody.querySelectorAll("tr[data-id] input, tr[data-id] select").forEach(inp=>{
@@ -2425,11 +2516,14 @@ function renderAnalises(){
   tbody.querySelectorAll('input[type="time"][data-field="hora"]').forEach(attachTimeDrag);
 
   // atualiza as opções de "Superioridade no jogo" em tempo real, conforme o Mandante/Visitante
-  // são digitados na linha de nova análise (antes mesmo de confirmar o lançamento)
+  // são digitados na linha de nova análise (antes mesmo de confirmar o lançamento). Adiado com
+  // setTimeout(...,0) pelo mesmo motivo explicado acima, junto ao bloco equivalente das linhas
+  // já existentes: evita que essa atualização do DOM atrapalhe o filtro da lista de sugestões
+  // (datalist) desses campos de Mandante/Visitante.
   const anHomeInput = document.getElementById("an-home");
   const anAwayInput = document.getElementById("an-away");
   const anSupSelect = document.getElementById("an-sup");
-  const refreshAnSup = ()=> refreshSupSelect(anSupSelect, anHomeInput.value, anAwayInput.value);
+  const refreshAnSup = ()=> setTimeout(()=> refreshSupSelect(anSupSelect, anHomeInput.value, anAwayInput.value), 0);
   anHomeInput.addEventListener("input", refreshAnSup);
   anAwayInput.addEventListener("input", refreshAnSup);
 
