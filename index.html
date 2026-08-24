@@ -877,6 +877,7 @@ button:focus-visible,.date-cell-btn:focus-visible,input:focus-visible,select:foc
 html.is-fullscreen .fullscreen-toggle .icon-expand{display:none;}
 html.is-fullscreen .fullscreen-toggle .icon-compress{display:block;}
 @media (max-width:700px){.fullscreen-toggle{display:none;}}
+@media (hover:none) and (pointer:coarse){.fullscreen-toggle{display:none;}}
 </style>
 </head>
 <body>
@@ -948,6 +949,11 @@ function syncFullscreenIcon(){
 }
 document.addEventListener("fullscreenchange", syncFullscreenIcon);
 document.addEventListener("webkitfullscreenchange", syncFullscreenIcon);
+function isMobileDevice(){
+  var isTouch = window.matchMedia && window.matchMedia("(hover:none) and (pointer:coarse)").matches;
+  var fsSupported = !!(document.documentElement.requestFullscreen || document.documentElement.webkitRequestFullscreen);
+  return isTouch || !fsSupported;
+}
 
 /* ================= SUPABASE CONFIG =================
    Cole aqui a URL e a chave "anon public" do seu projeto Supabase
@@ -1774,7 +1780,9 @@ function renderShell(){
   attachTabDrag(document.getElementById("tabs"));
   document.getElementById("logout-btn").addEventListener("click", signOut);
   document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
-  document.getElementById("fullscreen-toggle").addEventListener("click", toggleFullscreen);
+  const fsBtn = document.getElementById("fullscreen-toggle");
+  fsBtn.addEventListener("click", toggleFullscreen);
+  if(isMobileDevice()) fsBtn.style.display = "none";
   renderTabs();
 }
 
