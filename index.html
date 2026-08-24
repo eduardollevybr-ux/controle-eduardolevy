@@ -871,6 +871,11 @@ button:focus-visible,.date-cell-btn:focus-visible,input:focus-visible,select:foc
 .theme-toggle .icon-sun{display:none;}
 :root[data-theme="light"] .theme-toggle .icon-moon{display:none;}
 :root[data-theme="light"] .theme-toggle .icon-sun{display:block;}
+
+.fullscreen-toggle .icon-compress{display:none;}
+.fullscreen-toggle .icon-expand{display:block;}
+html.is-fullscreen .fullscreen-toggle .icon-expand{display:none;}
+html.is-fullscreen .fullscreen-toggle .icon-compress{display:block;}
 </style>
 </head>
 <body>
@@ -923,6 +928,25 @@ function toggleTheme(){
   else document.documentElement.removeAttribute("data-theme");
   try{ localStorage.setItem("theme", next); }catch(e){}
 }
+
+/* ================= TELA CHEIA ================= */
+function toggleFullscreen(){
+  const el = document.documentElement;
+  const isFs = document.fullscreenElement || document.webkitFullscreenElement;
+  if(!isFs){
+    const req = el.requestFullscreen || el.webkitRequestFullscreen;
+    if(req) req.call(el).catch(()=>{});
+  } else {
+    const exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if(exit) exit.call(document);
+  }
+}
+function syncFullscreenIcon(){
+  const isFs = !!(document.fullscreenElement || document.webkitFullscreenElement);
+  document.documentElement.classList.toggle("is-fullscreen", isFs);
+}
+document.addEventListener("fullscreenchange", syncFullscreenIcon);
+document.addEventListener("webkitfullscreenchange", syncFullscreenIcon);
 
 /* ================= SUPABASE CONFIG =================
    Cole aqui a URL e a chave "anon public" do seu projeto Supabase
@@ -1734,6 +1758,10 @@ function renderShell(){
           <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
         </button>
+        <button class="theme-toggle fullscreen-toggle" id="fullscreen-toggle" title="Tela cheia" type="button">
+          <svg class="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
+          <svg class="icon-compress" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v3a2 2 0 0 1-2 2H4M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+        </button>
         <button class="logout-btn" id="logout-btn">Sair</button>
       </div>
     </div>
@@ -1745,6 +1773,7 @@ function renderShell(){
   attachTabDrag(document.getElementById("tabs"));
   document.getElementById("logout-btn").addEventListener("click", signOut);
   document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
+  document.getElementById("fullscreen-toggle").addEventListener("click", toggleFullscreen);
   renderTabs();
 }
 
