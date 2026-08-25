@@ -1386,13 +1386,14 @@ function fmtOdd(n){
 }
 function betCalc(b){
   const stake = Number(b.stake)||0;
-  const retorno = Number(b.retorno)||0;
-  // Regra: se o retorno for 0 ou menor que a stake, a odd NÃO é calculada automaticamente.
-  const autoOdd = stake>0 && retorno>0 && retorno>=stake;
+  // Campo "retorno" agora representa o LUCRO informado diretamente (não mais o retorno bruto).
+  const lucro = Number(b.retorno)||0;
+  // Regra: só calcula a odd automaticamente quando há lucro positivo (aposta ganha).
+  const autoOdd = stake>0 && lucro>0;
   let odd = null;
-  if(autoOdd) odd = retorno/stake;
+  if(autoOdd) odd = (stake+lucro)/stake;
   else if(b.oddManual!==undefined && b.oddManual!==null && b.oddManual!=="") odd = Number(b.oddManual);
-  const profit = stake>0 ? (retorno-stake) : 0;
+  const profit = stake>0 ? lucro : 0;
   const profitUnits = (stake>0 && state.stakeUnit>0) ? profit/state.stakeUnit : 0;
   return {odd, autoOdd, profit, profitUnits};
 }
@@ -2104,11 +2105,11 @@ function renderEntradas(){
         <colgroup>
           <col style="width:74px"><col style="width:230px"><col style="width:220px"><col style="width:220px">
           <col style="width:90px"><col style="width:300px"><col style="width:82px"><col style="width:86px"><col style="width:56px">
-          <col style="width:72px"><col style="width:56px">
+          <col style="width:56px">
         </colgroup>
         <thead><tr>
           <th>Data</th><th>Campeonato</th><th>Mandante</th><th>Visitante</th><th>Placar</th><th>Aposta</th>
-          <th>Stake</th><th>Retorno</th><th>Odd</th><th>L/P</th><th></th>
+          <th>Stake</th><th>Lucro</th><th>Odd</th><th></th>
         </tr></thead>
         <tbody id="bets-tbody">
           <tr class="add-row-form" id="add-row-entrada">
@@ -2119,8 +2120,8 @@ function renderEntradas(){
             <td data-label="Placar"><select id="new-placar" class="placar-select">${placarOptionsHtml("")}</select></td>
             <td data-label="Aposta"><select id="new-pick">${apostaOptionsHtml("", "", "")}</select></td>
             <td data-label="Stake"><input type="text" inputmode="decimal" class="calc bare-input" id="new-stake" value="${fmtBRL(state.stakeUnit)}"></td>
-            <td data-label="Retorno"><input type="text" inputmode="decimal" class="calc bare-input" id="new-retorno" placeholder="${fmtBRL(0)}"></td>
-            <td colspan="2" data-label=""></td>
+            <td data-label="Lucro"><input type="text" inputmode="decimal" class="calc bare-input" id="new-retorno" placeholder="${fmtBRL(0)}"></td>
+            <td data-label=""></td>
             <td data-label=""><button class="icon-add-btn" id="add-bet" title="Adicionar">+</button></td>
           </tr>
         </tbody>
@@ -2134,7 +2135,7 @@ function renderEntradas(){
 
   if(filtered.length===0){
     const msg = (entradasTeamSearch||entradasMandante||entradasVisitante||entradasFilterDate) ? "Nenhuma aposta encontrada para essa busca." : "Nenhuma aposta lançada ainda.";
-    tbody.insertAdjacentHTML("beforeend", `<tr><td colspan="11"><div class="empty-state">${msg}</div></td></tr>`);
+    tbody.insertAdjacentHTML("beforeend", `<tr><td colspan="10"><div class="empty-state">${msg}</div></td></tr>`);
   } else {
     tbody.insertAdjacentHTML("beforeend", filtered.map(b=>{
       const c = betCalc(b);
@@ -2149,9 +2150,8 @@ function renderEntradas(){
         <td data-label="Placar"><select data-field="placar" class="placar-select">${placarOptionsHtml(b.placar)}</select></td>
         <td data-label="Aposta"><select data-field="pick" title="${escapeHtml(b.pick?apostaLabel(b.pick,b.home,b.away):'')}">${apostaOptionsHtml(b.pick, b.home, b.away)}</select></td>
         <td data-label="Stake"><input type="text" inputmode="decimal" class="calc bare-input" data-field="stake" value="${fmtBRL(b.stake)}"></td>
-        <td data-label="Retorno"><input type="text" inputmode="decimal" class="calc bare-input" data-field="retorno" value="${fmtBRL(b.retorno)}"></td>
+        <td data-label="Lucro"><input type="text" inputmode="decimal" class="calc bare-input ${c.profit>0?'pos':(c.profit<0?'neg':'')}" data-field="retorno" value="${fmtBRL(b.retorno)}"></td>
         <td data-label="Odd">${oddCell}</td>
-        <td data-label="L/P" class="calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}">${fmtBRL(c.profit)}</td>
         <td data-label=""><button class="del-btn" data-del="${b.id}" title="Excluir">&#10005;</button></td>
       </tr>`;
     }).join(""));
