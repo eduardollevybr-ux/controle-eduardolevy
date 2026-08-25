@@ -499,7 +499,15 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .calc.pos{color:var(--pos-text);}
 .calc.neg{color:var(--red-text);}
 #entradas-table th,#analises-table th{text-align:center;}
-#entradas-table td:nth-child(6),#entradas-table td:nth-child(7),#entradas-table td:nth-child(8),#entradas-table td:nth-child(9){text-align:center;}
+#entradas-table td:nth-child(7),#entradas-table td:nth-child(8),#entradas-table td:nth-child(9),#entradas-table td:nth-child(10){text-align:center;}
+#entradas-table td:nth-child(5){text-align:center;}
+#entradas-table .placar-select{
+  text-align:center;text-align-last:center;
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  background-image:none;padding-right:7px;
+}
+#entradas-table .placar-select::-ms-expand{display:none;}
+
 .calc.bare-input{
   appearance:none;-webkit-appearance:none;-moz-appearance:textfield;
   background:transparent;border:none;padding:0;width:100%;text-align:center;
@@ -588,8 +596,8 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
   #entradas-table td.calc,#analises-table td.calc{
     flex-direction:row;justify-content:space-between;align-items:center;
   }
-  #entradas-table td:nth-child(6),#entradas-table td:nth-child(7),
-  #entradas-table td:nth-child(8),#entradas-table td:nth-child(9){text-align:left;}
+  #entradas-table td:nth-child(7),#entradas-table td:nth-child(8),
+  #entradas-table td:nth-child(9),#entradas-table td:nth-child(10){text-align:left;}
 
   /* Uniformização mobile — Entradas e Análises.
      No desktop, o padding de cada célula (td) é definido por regras fora de
@@ -1034,6 +1042,8 @@ const DEFAULT_CHAMPIONSHIPS = ["Brasileirão Betano","Premier League","LaLiga","
 const DEFAULT_CLUBS = ["1. FC Köln","1. FC Union Berlin","1. FSV Mainz 05","AC Milan","AS Monaco","AS Roma","Angers","Arsenal","Aston Villa","Atalanta","Athletic Club","Athletico","Atlético Madrid","Atlético Mineiro","Auxerre","Bahia","Bayer 04 Leverkusen","Bologna","Borussia Dortmund","Borussia M'gladbach","Botafogo","Bournemouth","Brentford","Brighton & Hove Albion","Cagliari","Celta Vigo","Chapecoense","Chelsea","Como","Corinthians","Coritiba","Coventry City","Cruzeiro","Crystal Palace","Deportivo Alavés","Deportivo de A Coruña","Eintracht Frankfurt","Elche","Espanyol","Everton","FC Augsburg","FC Barcelona","FC Bayern München","FC Schalke 04","Fiorentina","Flamengo","Fluminense","Frosinone","Fulham","Genoa","Getafe","Grêmio","Hamburger SV","Hull City","Inter","Internacional","Ipswich Town","Juventus","Lazio","Le Havre","Le Mans","Lecce","Leeds United","Levante UD","Lille","Liverpool FC","Lorient","Manchester City","Manchester United","Mirassol","Monza","Málaga CF","Newcastle United","Nice","Nottingham Forest","Olympique Lyonnais","Olympique de Marseille","Osasuna","Palmeiras","Paris FC","Paris Saint-Germain","Parma","RB Leipzig","RC Lens","RC Strasbourg","Rayo Vallecano","Real Betis","Real Madrid","Real Racing Club","Real Sociedad","Red Bull Bragantino","Remo","SC Freiburg","SC Paderborn 07","SSC Napoli","SV 07 Elversberg","SV Werder Bremen","Santos","Sassuolo","Sevilla","Stade Brestois","Stade Rennais","Sunderland","São Paulo","TSG Hoffenheim","Torino","Tottenham Hotspur","Toulouse","Troyes","Udinese","Valencia","Vasco da Gama","Venezia","VfB Stuttgart","Villarreal","Vitória"];
 
 const SUPERIORIDADE_OPTIONS = ["Live!","Mandante HT","Mandante FT","Mandante HT / FT","Visitante HT","Visitante FT","Visitante HT / FT","Mandante HT / Visitante FT","Visitante HT / Mandante FT"];
+const APOSTA_OPTIONS = ["Back Mandante","Back Visitante","Lay Mandante","Lay Visitante"];
+const PLACAR_OPTIONS = ["0 x 0","1 x 0","0 x 1","2 x 0","0 x 2","1 x 1","2 x 1","1 x 2","2 x 2"];
 const LEITURA_OPTIONS = ["Leitura pró favorito","Favorito sob risco","Leitura dinâmica"];
 const LEITURA_TAG_CLASS = {"Leitura pró favorito":"tag-blue","Favorito sob risco":"tag-red","Leitura dinâmica":"tag-yellow"};
 
@@ -1457,13 +1467,22 @@ function teamInPick(pickText){
   }
   return null;
 }
+// A Aposta agora é um dos 4 valores fixos (Back/Lay Mandante/Visitante), então o time
+// é obtido diretamente pelo valor canônico + Mandante/Visitante da linha, em vez de
+// procurar o nome do clube dentro de um texto livre (como era antes).
+function pickTeam(b){
+  if(!b || !b.pick) return null;
+  if(b.pick.includes("Mandante")) return b.home || null;
+  if(b.pick.includes("Visitante")) return b.away || null;
+  return null;
+}
 function teamRanking(scope){
   const map = {};
   const y = calMonth.getFullYear(), m = calMonth.getMonth();
   const prefix = `${y}-${pad2(m+1)}-`;
   state.bets.forEach(b=>{
     if(scope==="month" && !(b.date && b.date.startsWith(prefix))) return;
-    const team = teamInPick(b.pick);
+    const team = pickTeam(b);
     if(!team) return;
     map[team] = (map[team]||0) + betCalc(b).profit;
   });
@@ -1643,6 +1662,12 @@ function optionsHtml(options, selected){
   const blank = `<option value="" ${!selected?"selected":""}>Selecione</option>`;
   return blank + options.map(o=>`<option ${o===selected?"selected":""}>${o}</option>`).join("");
 }
+// Placar (Entradas): sem opção em branco "Selecione" — sempre um valor definido,
+// e a seta nativa do select é removida via CSS (.placar-select), texto centralizado.
+function placarOptionsHtml(selected){
+  const sel = selected || PLACAR_OPTIONS[0];
+  return PLACAR_OPTIONS.map(o=>`<option value="${o}" ${o===sel?"selected":""}>${o}</option>`).join("");
+}
 
 // Opções de "Superioridade no jogo": o VALOR salvo continua fixo ("Mandante HT" etc,
 // compatível com dados já existentes), mas o TEXTO exibido troca "Mandante"/"Visitante"
@@ -1667,6 +1692,28 @@ function refreshSupSelect(selectEl, home, away){
   const current = selectEl.value;
   selectEl.innerHTML = superioridadeOptionsHtml(current, home, away);
   selectEl.title = current ? superioridadeLabel(current, home, away) : "";
+}
+
+// Opções do campo "Aposta" (Entradas): mesma lógica da Superioridade — o VALOR
+// salvo continua fixo ("Back Mandante" etc), mas o TEXTO exibido troca
+// "Mandante"/"Visitante" pelo nome dos times preenchidos na mesma linha.
+function apostaLabel(optionValue, home, away){
+  const h = (home||"").trim() || "Mandante";
+  const a = (away||"").trim() || "Visitante";
+  return optionValue.replace(/Mandante/g, h).replace(/Visitante/g, a);
+}
+function apostaOptionsHtml(selected, home, away){
+  const blank = `<option value="" ${!selected?"selected":""}>Selecione</option>`;
+  return blank + APOSTA_OPTIONS.map(o=>{
+    const label = apostaLabel(o, home, away);
+    return `<option value="${escapeHtml(o)}" ${o===selected?"selected":""}>${escapeHtml(label)}</option>`;
+  }).join("");
+}
+function refreshApostaSelect(selectEl, home, away){
+  if(!selectEl) return;
+  const current = selectEl.value;
+  selectEl.innerHTML = apostaOptionsHtml(current, home, away);
+  selectEl.title = current ? apostaLabel(current, home, away) : "";
 }
 
 // Comparador de data (string ISO "YYYY-MM-DD"): mais recente primeiro.
@@ -2056,11 +2103,11 @@ function renderEntradas(){
       <table id="entradas-table">
         <colgroup>
           <col style="width:74px"><col style="width:230px"><col style="width:220px"><col style="width:220px">
-          <col style="width:390px"><col style="width:82px"><col style="width:86px"><col style="width:56px">
+          <col style="width:90px"><col style="width:300px"><col style="width:82px"><col style="width:86px"><col style="width:56px">
           <col style="width:72px"><col style="width:56px">
         </colgroup>
         <thead><tr>
-          <th>Data</th><th>Campeonato</th><th>Mandante</th><th>Visitante</th><th>Aposta</th>
+          <th>Data</th><th>Campeonato</th><th>Mandante</th><th>Visitante</th><th>Placar</th><th>Aposta</th>
           <th>Stake</th><th>Retorno</th><th>Odd</th><th>L/P</th><th></th>
         </tr></thead>
         <tbody id="bets-tbody">
@@ -2069,7 +2116,8 @@ function renderEntradas(){
             <td data-label="Campeonato"><input type="text" id="new-champ" list="dl-champs" placeholder="Campeonato"></td>
             <td data-label="Mandante"><input type="text" id="new-home" list="dl-clubs" placeholder="Mandante"></td>
             <td data-label="Visitante"><input type="text" id="new-away" list="dl-clubs" placeholder="Visitante"></td>
-            <td data-label="Aposta"><input type="text" id="new-pick" placeholder="Descrição da aposta"></td>
+            <td data-label="Placar"><select id="new-placar" class="placar-select">${placarOptionsHtml("")}</select></td>
+            <td data-label="Aposta"><select id="new-pick">${apostaOptionsHtml("", "", "")}</select></td>
             <td data-label="Stake"><input type="text" inputmode="decimal" class="calc bare-input" id="new-stake" value="${fmtBRL(state.stakeUnit)}"></td>
             <td data-label="Retorno"><input type="text" inputmode="decimal" class="calc bare-input" id="new-retorno" placeholder="${fmtBRL(0)}"></td>
             <td colspan="2" data-label=""></td>
@@ -2086,7 +2134,7 @@ function renderEntradas(){
 
   if(filtered.length===0){
     const msg = (entradasTeamSearch||entradasMandante||entradasVisitante||entradasFilterDate) ? "Nenhuma aposta encontrada para essa busca." : "Nenhuma aposta lançada ainda.";
-    tbody.insertAdjacentHTML("beforeend", `<tr><td colspan="10"><div class="empty-state">${msg}</div></td></tr>`);
+    tbody.insertAdjacentHTML("beforeend", `<tr><td colspan="11"><div class="empty-state">${msg}</div></td></tr>`);
   } else {
     tbody.insertAdjacentHTML("beforeend", filtered.map(b=>{
       const c = betCalc(b);
@@ -2098,7 +2146,8 @@ function renderEntradas(){
         <td data-label="Campeonato"><input type="text" data-field="champ" list="dl-champs" value="${escapeHtml(b.champ)}"></td>
         <td data-label="Mandante"><input type="text" data-field="home" list="dl-clubs" value="${escapeHtml(b.home)}"></td>
         <td data-label="Visitante"><input type="text" data-field="away" list="dl-clubs" value="${escapeHtml(b.away)}"></td>
-        <td data-label="Aposta"><input type="text" data-field="pick" value="${escapeHtml(b.pick)}"></td>
+        <td data-label="Placar"><select data-field="placar" class="placar-select">${placarOptionsHtml(b.placar)}</select></td>
+        <td data-label="Aposta"><select data-field="pick" title="${escapeHtml(b.pick?apostaLabel(b.pick,b.home,b.away):'')}">${apostaOptionsHtml(b.pick, b.home, b.away)}</select></td>
         <td data-label="Stake"><input type="text" inputmode="decimal" class="calc bare-input" data-field="stake" value="${fmtBRL(b.stake)}"></td>
         <td data-label="Retorno"><input type="text" inputmode="decimal" class="calc bare-input" data-field="retorno" value="${fmtBRL(b.retorno)}"></td>
         <td data-label="Odd">${oddCell}</td>
@@ -2254,7 +2303,8 @@ function renderEntradas(){
       champ: document.getElementById("new-champ").value.trim(),
       home: document.getElementById("new-home").value.trim(),
       away: document.getElementById("new-away").value.trim(),
-      pick: document.getElementById("new-pick").value.trim(),
+      placar: document.getElementById("new-placar").value,
+      pick: document.getElementById("new-pick").value,
       stake: parseBRL(document.getElementById("new-stake").value),
       retorno: parseBRL(document.getElementById("new-retorno").value)
     };
@@ -2282,6 +2332,28 @@ function renderEntradas(){
   document.getElementById("add-row-entrada").querySelectorAll("input").forEach(inp=>{
     inp.addEventListener("change", ()=> submitNewBet(false));
   });
+
+  // atualiza as opções do campo "Aposta" em tempo real conforme Mandante/Visitante
+  // são editados na mesma linha, mesma lógica usada em Análises para a Superioridade.
+  try{
+    const newHomeInp = document.getElementById("new-home");
+    const newAwayInp = document.getElementById("new-away");
+    const newPickSel = document.getElementById("new-pick");
+    if(newHomeInp && newAwayInp && newPickSel){
+      const refreshNew = ()=> setTimeout(()=> refreshApostaSelect(newPickSel, newHomeInp.value, newAwayInp.value), 0);
+      newHomeInp.addEventListener("input", refreshNew);
+      newAwayInp.addEventListener("input", refreshNew);
+    }
+    tbody.querySelectorAll('tr[data-id]').forEach(tr=>{
+      const homeInp = tr.querySelector('input[data-field="home"]');
+      const awayInp = tr.querySelector('input[data-field="away"]');
+      const pickSel = tr.querySelector('select[data-field="pick"]');
+      if(!homeInp || !awayInp || !pickSel) return;
+      const refresh = ()=> setTimeout(()=> refreshApostaSelect(pickSel, homeInp.value, awayInp.value), 0);
+      homeInp.addEventListener("input", refresh);
+      awayInp.addEventListener("input", refresh);
+    });
+  }catch(err){ console.error("Falha ao religar atualização de Aposta:", err); }
 
   wireRowDatePickers("entradas", renderEntradas);
 
