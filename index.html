@@ -2109,7 +2109,7 @@ function renderEntradas(){
         </colgroup>
         <thead><tr>
           <th>Data</th><th>Campeonato</th><th>Mandante</th><th>Visitante</th><th>Placar</th><th>Aposta</th>
-          <th>Stake</th><th>Lucro</th><th>Odd</th><th></th>
+          <th>Stake</th><th>L/P</th><th>Odd</th><th></th>
         </tr></thead>
         <tbody id="bets-tbody">
           <tr class="add-row-form" id="add-row-entrada">
@@ -2120,7 +2120,7 @@ function renderEntradas(){
             <td data-label="Placar"><select id="new-placar" class="placar-select">${placarOptionsHtml("")}</select></td>
             <td data-label="Aposta"><select id="new-pick">${apostaOptionsHtml("", "", "")}</select></td>
             <td data-label="Stake"><input type="text" inputmode="decimal" class="calc bare-input" id="new-stake" value="${fmtBRL(state.stakeUnit)}"></td>
-            <td data-label="Lucro"><input type="text" inputmode="decimal" class="calc bare-input" id="new-retorno" placeholder="${fmtBRL(0)}"></td>
+            <td data-label="L/P"><input type="text" inputmode="decimal" class="calc bare-input" id="new-retorno" placeholder="${fmtBRL(0)}"></td>
             <td data-label=""></td>
             <td data-label=""><button class="icon-add-btn" id="add-bet" title="Adicionar">+</button></td>
           </tr>
@@ -2150,7 +2150,7 @@ function renderEntradas(){
         <td data-label="Placar"><select data-field="placar" class="placar-select">${placarOptionsHtml(b.placar)}</select></td>
         <td data-label="Aposta"><select data-field="pick" title="${escapeHtml(b.pick?apostaLabel(b.pick,b.home,b.away):'')}">${apostaOptionsHtml(b.pick, b.home, b.away)}</select></td>
         <td data-label="Stake"><input type="text" inputmode="decimal" class="calc bare-input" data-field="stake" value="${fmtBRL(b.stake)}"></td>
-        <td data-label="Lucro"><input type="text" inputmode="decimal" class="calc bare-input ${c.profit>0?'pos':(c.profit<0?'neg':'')}" data-field="retorno" value="${fmtBRL(b.retorno)}"></td>
+        <td data-label="L/P"><input type="text" inputmode="decimal" class="calc bare-input ${c.profit>0?'pos':(c.profit<0?'neg':'')}" data-field="retorno" value="${fmtBRL(b.retorno)}"></td>
         <td data-label="Odd">${oddCell}</td>
         <td data-label=""><button class="del-btn" data-del="${b.id}" title="Excluir">&#10005;</button></td>
       </tr>`;
