@@ -484,7 +484,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
    tomando como base o nome de time e de campeonato mais longos cadastrados (ex.:
    "CONMEBOL Sudamericana", "Olympique de Marseille"), mantendo Superioridade no jogo
    larga o bastante para mostrar o texto completo. */
-#analises-table td input[type="time"]{min-width:52px;padding:6px 2px;font-size:13px;text-align:center;-webkit-appearance:none;appearance:none;}
+#analises-table td input[type="time"]{min-width:52px;padding:6px 2px;font-size:13px;text-align:center;}
 #analises-table td input[type="time"]::-webkit-calendar-picker-indicator{display:none;-webkit-appearance:none;margin:0;}
 #analises-table td input[type="date"]{min-width:96px;padding:6px 3px;font-size:13px;text-align:center;}
 #analises-table td select[data-field="leitura"],#an-leitura{
@@ -638,23 +638,6 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
   #analises-table td select[data-field="leitura"],#an-leitura,
   #analises-table td select[data-field="sup"],#an-sup{
     padding:9px 28px 9px 11px;font-size:13.5px;
-  }
-
-  /* Fix específico pro campo Hora em Análises (mobile): no Safari/iOS o
-     input[type="time"] nativo, dentro do td (flex-direction:column), não
-     resolve corretamente a largura em porcentagem (width:100%) contra o
-     container — ele ignora o percentual e usa a largura intrínseca do
-     próprio controle nativo, que pode passar da largura do card, e como
-     .table-wrap tem overflow-x:visible (linha ~563) esse excesso vaza pra
-     fora do card em vez de ser contido. Troca-se o método de largura, de
-     percentual pra "stretch" do próprio flex (align-self/align-items),
-     que o WebKit resolve de forma confiável mesmo pra controles nativos —
-     sem depender de width:100%. Escopado só na célula Hora; não afeta
-     Data/Campeonato/Mandante/Visitante/Superioridade/Leitura nem a aba
-     Entradas nem o desktop. */
-  #analises-table td[data-label="Hora"]{align-items:stretch;}
-  #analises-table td[data-label="Hora"] input[type="time"]{
-    width:auto;max-width:100%;align-self:stretch;box-sizing:border-box;
   }
 }
 
