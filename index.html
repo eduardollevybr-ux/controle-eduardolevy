@@ -635,6 +635,13 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
   #analises-table td input[type="time"],#analises-table td input[type="date"]{
     padding:9px 11px;font-size:13.5px;text-align:left;min-width:0;
   }
+  /* Campo Hora (Análises) no mobile: input[type="time"] vazio no iOS Safari ignora o
+     padding acima e renderiza com uma altura nativa bem maior que os outros campos
+     (bug conhecido do controle nativo quando não há valor definido). Fixando a altura
+     e o line-height força o mesmo tamanho dos demais campos, com ou sem valor. */
+  #analises-table td input[type="time"]{
+    height:40px;line-height:20px;box-sizing:border-box;-webkit-appearance:none;appearance:none;
+  }
   #analises-table td select[data-field="leitura"],#an-leitura,
   #analises-table td select[data-field="sup"],#an-sup{
     padding:9px 28px 9px 11px;font-size:13.5px;
