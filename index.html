@@ -191,6 +191,10 @@ nav.tabs button.active::after{content:none;}
     padding:11px 15px 11px 18px;cursor:pointer;
     border-radius:12px;
   }
+  /* aba fechada (só a ativa visível): sem fundo azul, só a escrita */
+  nav.tabs:not(.tabs-open) button.active{
+    background:transparent;color:var(--text);box-shadow:none;
+  }
   nav.tabs button.active::after{
     content:"";width:0;height:0;flex:0 0 auto;
     border-left:4px solid transparent;border-right:4px solid transparent;
