@@ -3084,6 +3084,9 @@ document.body.addEventListener("animationend", function onBodyAnim(e){
   if(e.target===document.body){ document.body.classList.add("loaded"); document.body.removeEventListener("animationend", onBodyAnim); }
 });
 
+if("scrollRestoration" in history) history.scrollRestoration = "manual";
+window.scrollTo(0,0);
+
 boot();
 
 })();
