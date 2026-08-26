@@ -229,7 +229,9 @@ nav.tabs button.active::after{content:none;}
   transition:transform .28s var(--ease-smooth), box-shadow .28s var(--ease-smooth), border-color .28s var(--ease-smooth);
   animation:fadeUp .5s var(--ease-out) both;
 }
-.card:hover{transform:translateY(-3px);box-shadow:0 16px 32px -16px var(--shadow-color);border-color:var(--hover-border);}
+@media (hover:hover) and (pointer:fine){
+  .card:hover{transform:translateY(-3px);box-shadow:0 16px 32px -16px var(--shadow-color);border-color:var(--hover-border);}
+}
 @keyframes tabsOpenIn{0%{opacity:0;transform:translateY(-6px) scale(.96);}100%{opacity:1;transform:translateY(0) scale(1);}}
 nav.tabs.tabs-open{animation:tabsOpenIn .22s var(--ease-spring);}
 @media (hover:hover){
@@ -583,11 +585,9 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
   #analises-table tbody,#analises-table tr{display:block;width:100%;}
   #entradas-table tbody tr[data-id],#entradas-table tbody tr.add-row-form,
   #analises-table tbody tr[data-id],#analises-table tbody tr.add-row-form{
-    background:var(--card-2);border:1px solid var(--border-soft);border-radius:var(--radius-md);
+    background:var(--card);border:1px solid var(--border);border-radius:var(--radius-lg);
+    box-shadow:var(--shadow-card);
     padding:10px 14px 4px;margin-bottom:10px;
-  }
-  #entradas-table tbody tr.add-row-form,#analises-table tbody tr.add-row-form{
-    background:var(--bg-soft);border-style:dashed;
   }
   #entradas-table td,#analises-table td{
     display:flex;flex-direction:column;align-items:flex-start;gap:4px;
