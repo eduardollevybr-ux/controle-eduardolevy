@@ -1179,9 +1179,17 @@ function subscribeRealtime(){
     .on("postgres_changes",
       { event: "UPDATE", schema: "public", table: "app_state", filter: `user_id=eq.${currentUser.id}` },
       (payload) => {
+        // Todo persist() salvo por este mesmo aparelho volta aqui via realtime (o Supabase
+        // ecoa a própria atualização de volta pro cliente que a fez). Antes isso causava um
+        // segundo renderTabs() completo logo depois de qualquer ação (ex.: finalizar uma
+        // análise) — dando a impressão de "atualizar de novo" na tela. Agora comparamos com
+        // o estado local: se for o eco da própria mudança (dados idênticos), só atualiza os
+        // dados em memória, SEM re-renderizar a tela.
+        const incoming = repairOrphanChecks(Object.assign(defaultState(), payload.new.data));
+        const isOwnEcho = JSON.stringify(incoming) === JSON.stringify(state);
         applyingRemote = true;
-        state = repairOrphanChecks(Object.assign(defaultState(), payload.new.data));
-        renderTabs();
+        state = incoming;
+        if(!isOwnEcho) renderTabs();
         applyingRemote = false;
       }
     )
