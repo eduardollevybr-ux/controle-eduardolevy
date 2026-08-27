@@ -294,12 +294,13 @@ nav.tabs.tabs-open{animation:tabsOpenIn .22s var(--ease-spring);}
   position:absolute;top:20px;right:22px;text-align:right;
   background:var(--card-2);border:1px solid var(--border);border-radius:var(--radius-md);
   padding:8px 13px;min-width:104px;
+  display:flex;flex-direction:column;
 }
-.cal-month-summary .stat-label{font-size:9px;}
-.cal-month-summary .stat-value{font-size:16px;margin-top:3px;}
-.cal-month-summary-pct{font-size:11px;font-weight:700;margin-top:2px;color:var(--text-dim);}
-.cal-month-summary-pct.pos{color:var(--pos-text);}
-.cal-month-summary-pct.neg{color:var(--red-text);}
+.cal-month-summary .stat-label{font-size:9px;order:1;}
+.cal-month-summary .stat-value{font-size:16px;margin-top:3px;order:2;color:var(--text);transition:font-size .28s cubic-bezier(.34,1.56,.64,1),color .28s ease;}
+.cal-month-summary-pct{font-size:11px;font-weight:700;margin-top:2px;color:var(--text-dim);order:3;transition:font-size .28s cubic-bezier(.34,1.56,.64,1),color .28s ease;}
+.cal-month-summary.pct-primary .stat-value{font-size:11px;order:3;color:var(--text-dim);}
+.cal-month-summary.pct-primary .cal-month-summary-pct{font-size:16px;order:2;color:var(--text);}
 @media (max-width:860px){
   .cal-month-summary{position:static;margin:0 0 12px auto;width:fit-content;max-width:100%;}
 }
@@ -307,12 +308,14 @@ nav.tabs.tabs-open{animation:tabsOpenIn .22s var(--ease-spring);}
   .cal-month-summary{
     margin:0 auto 12px;width:fit-content;max-width:100%;
     padding:5px 14px;min-width:0;
-    display:flex;align-items:baseline;gap:8px;
+    display:flex;flex-direction:row;align-items:baseline;gap:8px;
     border-radius:999px;
   }
   .cal-month-summary .stat-label{display:none;}
   .cal-month-summary .stat-value{font-size:14px;margin-top:0;}
   .cal-month-summary-pct{font-size:11px;margin-top:0;}
+  .cal-month-summary.pct-primary .stat-value{font-size:11px;}
+  .cal-month-summary.pct-primary .cal-month-summary-pct{font-size:14px;}
 }
 .cal-nav{display:flex;align-items:center;justify-content:center;gap:16px;margin:2px 0 14px;}
 .cal-arrow{
@@ -803,10 +806,13 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 
 .filter-banner{
   display:flex;align-items:center;justify-content:space-between;gap:12px;
-  background:var(--blue-dim);border:1px solid rgba(59,130,246,.3);color:var(--blue-text);
+  background:var(--card-2);border:1px solid var(--border);color:var(--text-dim);
   padding:11px 16px;border-radius:var(--radius-md);font-size:13px;font-weight:600;margin-bottom:16px;
 }
-.filter-banner button{background:none;border:none;color:var(--blue-text);text-decoration:underline;cursor:pointer;font-size:12.5px;font-weight:600;}
+.filter-banner button{background:none;border:none;color:var(--text);text-decoration:underline;cursor:pointer;font-size:12.5px;font-weight:600;}
+@media (max-width:720px){
+  .filters-active .add-row-form{display:none;}
+}
 
 .empty-state{padding:36px 20px;text-align:center;color:var(--text-faint);font-size:13.5px;}
 
@@ -2038,11 +2044,42 @@ function renderCalendar(){
   const ms = monthStats(y,m);
   const summaryEl = document.getElementById("cal-month-summary");
   if(summaryEl){
-    summaryEl.innerHTML = `
-      <div class="stat-label">Resultado do mês</div>
-      <div class="stat-value ${ms.profit>0?'pos':(ms.profit<0?'neg':'')}">${fmtBRL(ms.profit)}</div>
-      <div class="cal-month-summary-pct ${ms.profit>0?'pos':(ms.profit<0?'neg':'')}">${fmtPct(ms.pct)}</div>
-    `;
+    let valueEl = document.getElementById("cal-sum-value");
+    let pctEl = document.getElementById("cal-sum-pct");
+    const isNew = !valueEl;
+    if(isNew){
+      summaryEl.innerHTML = `
+        <div class="stat-label">Resultado do mês</div>
+        <div class="stat-value" id="cal-sum-value"></div>
+        <div class="cal-month-summary-pct" id="cal-sum-pct"></div>
+      `;
+      valueEl = document.getElementById("cal-sum-value");
+      pctEl = document.getElementById("cal-sum-pct");
+    }
+    valueEl.className = "stat-value";
+    valueEl.textContent = fmtBRL(ms.profit);
+    pctEl.className = "cal-month-summary-pct";
+    pctEl.textContent = fmtPct(ms.pct);
+
+    const wantPctPrimary = calView==="pct";
+    const isPctPrimary = summaryEl.classList.contains("pct-primary");
+    if(!isNew && wantPctPrimary!==isPctPrimary){
+      const pairs = [valueEl, pctEl].map(el=>[el, el.getBoundingClientRect()]);
+      summaryEl.classList.toggle("pct-primary", wantPctPrimary);
+      pairs.forEach(([el, r1])=>{
+        const r2 = el.getBoundingClientRect();
+        const dx = r1.left-r2.left, dy = r1.top-r2.top;
+        el.style.transition = "none";
+        el.style.transform = `translate(${dx}px,${dy}px)`;
+        requestAnimationFrame(()=>{
+          el.style.transition = "transform .32s cubic-bezier(.34,1.56,.64,1)";
+          el.style.transform = "";
+          el.addEventListener("transitionend", ()=>{ el.style.transition=""; }, {once:true});
+        });
+      });
+    } else {
+      summaryEl.classList.toggle("pct-primary", wantPctPrimary);
+    }
   }
 
   const firstDow = new Date(y,m,1).getDay();
@@ -2183,7 +2220,7 @@ function renderEntradas(){
       </div>
     </div>
 
-    ${entradasFilterDate ? `<div class="filter-banner"><span>Mostrando entradas de ${entradasFilterDate.split('-').reverse().join('/')}</span><button id="clear-filter">limpar filtro</button></div>` : ""}
+    ${entradasFilterDate ? `<div class="filter-banner"><span>Entradas de ${entradasFilterDate.split('-').reverse().join('/')}</span><button id="clear-filter">Limpar filtro</button></div>` : ""}
     <div class="search-bar">
       <div class="date-filter-wrap" id="entradas-date-filter-wrap">
         <button class="date-filter-icon-btn ${entradasFilterDate?'active':''}" id="entradas-date-btn" type="button" title="Filtrar por data">
@@ -2201,7 +2238,7 @@ function renderEntradas(){
         <button class="search-toggle ${entradasVisitante?'active':''}" id="entradas-toggle-visitante" type="button">Visitante</button>
       </div>
     </div>
-    <div class="table-wrap card">
+    <div class="table-wrap card${entradasFilterDate?' filters-active':''}">
       <table id="entradas-table">
         <colgroup>
           <col style="width:74px"><col style="width:230px"><col style="width:220px"><col style="width:220px">
@@ -2505,7 +2542,7 @@ function renderAnalises(){
   }
 
   el.innerHTML = `
-    ${analisesFilterDate ? `<div class="filter-banner"><span>Mostrando análises de ${analisesFilterDate.split('-').reverse().join('/')}</span><button id="clear-filter-analises">limpar filtro</button></div>` : ""}
+    ${analisesFilterDate ? `<div class="filter-banner"><span>Análises de ${analisesFilterDate.split('-').reverse().join('/')}</span><button id="clear-filter-analises">Limpar filtro</button></div>` : ""}
     <div class="search-bar">
       <div class="date-filter-wrap" id="analises-date-filter-wrap">
         <button class="date-filter-icon-btn ${analisesFilterDate?'active':''}" id="analises-date-btn" type="button" title="Filtrar por data">
@@ -2523,7 +2560,7 @@ function renderAnalises(){
         <button class="search-toggle ${analisesVisitante?'active':''}" id="analises-toggle-visitante" type="button">Visitante</button>
       </div>
     </div>
-    <div class="table-wrap card">
+    <div class="table-wrap card${analisesFilterDate?' filters-active':''}">
       <table id="analises-table">
         <colgroup>
           <col style="width:74px"><col style="width:74px"><col style="width:230px">
