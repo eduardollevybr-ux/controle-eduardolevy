@@ -1158,19 +1158,18 @@ async function loadState(){
 }
 
 let saveTimer = null;
-let lastSavedAt = null; // timestamp exato do último salvamento feito por ESTE aparelho
+let lastLocalChangeAt = 0; // marca timestamp de qualquer alteração feita NESTE aparelho
 function persist(){
   if(applyingRemote) return; // não reenviar dados que acabaram de chegar de outro aparelho
+  lastLocalChangeAt = Date.now();
   showSavePill();
   clearTimeout(saveTimer);
   saveTimer = setTimeout(async () => {
     try{
-      const savedAt = new Date().toISOString();
       const { error } = await supabase
         .from("app_state")
-        .upsert({ user_id: currentUser.id, data: state, updated_at: savedAt }, { onConflict: "user_id" });
+        .upsert({ user_id: currentUser.id, data: state, updated_at: new Date().toISOString() }, { onConflict: "user_id" });
       if(error) throw error;
-      lastSavedAt = savedAt; // usado pra reconhecer e ignorar o eco desse mesmo save via realtime
     }catch(e){ console.error("Falha ao salvar:", e); showToast("Erro ao salvar - verifique a conexão"); }
   }, 350);
 }
@@ -1182,17 +1181,17 @@ function subscribeRealtime(){
     .on("postgres_changes",
       { event: "UPDATE", schema: "public", table: "app_state", filter: `user_id=eq.${currentUser.id}` },
       (payload) => {
-        // Todo persist() salvo por este mesmo aparelho volta aqui via realtime (o Supabase
-        // ecoa a própria atualização de volta pro cliente que a fez). Comparar os dados em
-        // si (JSON.stringify) é frágil, pois a ordem das chaves pode variar e o "eco" nunca
-        // batia — daí a tela continuava piscando/atualizando de novo depois de qualquer ação.
-        // Agora comparamos o timestamp exato que ESTE aparelho enviou (lastSavedAt): se bater,
-        // é o próprio eco — só atualiza os dados em memória, sem re-renderizar a tela.
-        const isOwnEcho = !!lastSavedAt && payload.new.updated_at === lastSavedAt;
+        // Qualquer save feito por ESTE aparelho volta pelo realtime pouco depois (eco do
+        // próprio Supabase) e antes disparava um segundo renderTabs() logo após qualquer
+        // ação — dando a impressão de "atualizar de novo" na tela. Tentativas anteriores de
+        // comparar o payload (por conteúdo ou por timestamp exato) eram frágeis. Agora, se
+        // este aparelho fez QUALQUER alteração nos últimos 2.5s, o evento é tratado como
+        // eco local: os dados são atualizados por baixo dos panos, sem re-renderizar.
+        const isLikelyOwnEcho = (Date.now() - lastLocalChangeAt) < 2500;
         const incoming = repairOrphanChecks(Object.assign(defaultState(), payload.new.data));
         applyingRemote = true;
         state = incoming;
-        if(!isOwnEcho) renderTabs();
+        if(!isLikelyOwnEcho) renderTabs();
         applyingRemote = false;
       }
     )
