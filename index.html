@@ -811,7 +811,8 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 }
 .filter-banner button{background:none;border:none;color:var(--text);text-decoration:underline;cursor:pointer;font-size:12.5px;font-weight:600;}
 @media (max-width:720px){
-  .filters-active .add-row-form{display:none;}
+  .table-wrap.filters-active #entradas-table tbody tr.add-row-form,
+  .table-wrap.filters-active #analises-table tbody tr.add-row-form{display:none !important;}
 }
 
 .empty-state{padding:36px 20px;text-align:center;color:var(--text-faint);font-size:13.5px;}
@@ -2456,7 +2457,7 @@ function renderEntradas(){
         linkedAnalysis.linkedBetId = null;
       }
       persist(); renderEntradas();
-      showToast("Lançamento excluído — Ctrl+Z para desfazer");
+      showToast(isMobileDevice() ? "Lançamento excluído" : "Lançamento excluído — Ctrl+Z para desfazer");
     });
   });
 
@@ -2822,7 +2823,7 @@ function renderAnalises(){
       snapshotForUndo();
       state.analyses = state.analyses.filter(x=>x.id!==btn.dataset.del);
       persist(); renderAnalises();
-      showToast("Análise excluída — Ctrl+Z para desfazer");
+      showToast(isMobileDevice() ? "Análise excluída" : "Análise excluída — Ctrl+Z para desfazer");
     });
   });
 
@@ -2977,14 +2978,14 @@ function renderConfig(){
     if(state.championships.length===0){ showToast("Não há campeonatos cadastrados."); return; }
     showConfirmModal({
       title: "Limpar todos os campeonatos?",
-      message: `Isso vai remover ${state.championships.length===1?"o único campeonato cadastrado":`os ${state.championships.length} campeonatos cadastrados`}. Essa ação não pode ser desfeita, exceto com Ctrl+Z logo em seguida.`,
+      message: `Isso vai remover ${state.championships.length===1?"o único campeonato cadastrado":`os ${state.championships.length} campeonatos cadastrados`}.${isMobileDevice()?"":" Essa ação não pode ser desfeita, exceto com Ctrl+Z logo em seguida."}`,
       confirmLabel: "Limpar tudo",
       onConfirm: ()=>{
         snapshotForUndo();
         state.championships = [];
         persist();
         renderChampChips();
-        showToast("Todos os campeonatos foram removidos. Ctrl+Z para desfazer");
+        showToast(isMobileDevice() ? "Todos os campeonatos foram removidos." : "Todos os campeonatos foram removidos. Ctrl+Z para desfazer");
       }
     });
   });
@@ -2993,14 +2994,14 @@ function renderConfig(){
     if(state.clubs.length===0){ showToast("Não há clubes cadastrados."); return; }
     showConfirmModal({
       title: "Limpar todos os clubes?",
-      message: `Isso vai remover ${state.clubs.length===1?"o único clube cadastrado":`os ${state.clubs.length} clubes cadastrados`}. Essa ação não pode ser desfeita, exceto com Ctrl+Z logo em seguida.`,
+      message: `Isso vai remover ${state.clubs.length===1?"o único clube cadastrado":`os ${state.clubs.length} clubes cadastrados`}.${isMobileDevice()?"":" Essa ação não pode ser desfeita, exceto com Ctrl+Z logo em seguida."}`,
       confirmLabel: "Limpar tudo",
       onConfirm: ()=>{
         snapshotForUndo();
         state.clubs = [];
         persist();
         renderClubChips();
-        showToast("Todos os clubes foram removidos. Ctrl+Z para desfazer");
+        showToast(isMobileDevice() ? "Todos os clubes foram removidos." : "Todos os clubes foram removidos. Ctrl+Z para desfazer");
       }
     });
   });
