@@ -1113,6 +1113,7 @@ let calMonth = new Date(2026,7,1);
 let calView = "brl"; // 'brl' | 'pct'
 let entradasFilterDate = null;
 let analisesFilterDate = null;
+let analisesShowAll = false;
 let entradasCalendarOpen = false;
 let entradasCalendarViewY = null;
 let entradasCalendarViewM = null;
@@ -1808,6 +1809,16 @@ function sortRowsByDate(list, filterActive, useHora){
   return filterActive ? sorted.reverse() : sorted;
 }
 
+// Usado no "ver mais" das Análises: data mais recente no topo, e dentro de cada
+// dia, o horário mais antigo (mais cedo) no topo.
+function dateDescHourAscCompare(a,b){
+  const da = a.date || "", db = b.date || "";
+  if(da !== db) return da > db ? -1 : 1;
+  const ha = a.hora || "00:00", hb = b.hora || "00:00";
+  if(ha === hb) return 0;
+  return ha < hb ? -1 : 1;
+}
+
 function applyTeamSearch(list, term, mandante, visitante){
   const q = (term||"").trim().toLowerCase();
   if(!q) return list;
@@ -2473,7 +2484,17 @@ function renderAnalises(){
   const el = document.getElementById("view-analises");
   let baseRows = analisesFilterDate ? state.analyses.filter(r=>r.date===analisesFilterDate) : state.analyses;
   let rows = applyTeamSearch(baseRows, analisesTeamSearch, analisesMandante, analisesVisitante);
-  rows = sortRowsByDate(rows, !!analisesFilterDate, true);
+
+  let showVerMaisBtn = false;
+  if(analisesFilterDate){
+    rows = sortRowsByDate(rows, true, true);
+  } else if(!analisesShowAll){
+    const today = todayIso();
+    showVerMaisBtn = rows.some(r => (r.date||"") < today);
+    rows = sortRowsByDate(rows.filter(r => (r.date||"") >= today), true, true);
+  } else {
+    rows = [...rows].sort(dateDescHourAscCompare);
+  }
 
   el.innerHTML = `
     ${analisesFilterDate ? `<div class="filter-banner"><span>Mostrando análises de ${analisesFilterDate.split('-').reverse().join('/')}</span><button id="clear-filter-analises">limpar filtro</button></div>` : ""}
@@ -2525,6 +2546,7 @@ function renderAnalises(){
     </div>
     <datalist id="dl-champs2">${state.championships.map(c=>`<option value="${escapeHtml(c)}">`).join("")}</datalist>
     <datalist id="dl-clubs2">${state.clubs.map(c=>`<option value="${escapeHtml(c)}">`).join("")}</datalist>
+    ${showVerMaisBtn ? `<div style="display:flex;justify-content:center;margin-top:14px;"><button class="btn btn-ghost" id="analises-ver-mais-btn" type="button">Ver mais</button></div>` : ""}
   `;
 
   const tbody = document.getElementById("an-tbody");
@@ -2614,7 +2636,7 @@ function renderAnalises(){
   }catch(err){ console.error("Falha ao religar atualização de Superioridade:", err); }
 
   const clearBtnAn = document.getElementById("clear-filter-analises");
-  if(clearBtnAn) clearBtnAn.addEventListener("click", ()=>{ analisesFilterDate=null; renderAnalises(); });
+  if(clearBtnAn) clearBtnAn.addEventListener("click", ()=>{ analisesFilterDate=null; analisesShowAll=false; renderAnalises(); });
 
   try{
     document.getElementById("analises-date-btn").addEventListener("click", e=>{
@@ -2647,12 +2669,14 @@ function renderAnalises(){
         const [y,m] = t.split("-").map(Number);
         analisesCalendarViewY = y; analisesCalendarViewM = m-1;
         analisesFilterDate = t;
+        analisesShowAll = false;
         analisesCalendarOpen = false;
         renderAnalises();
       });
       document.querySelectorAll("#analises-cal-popover .mini-cal-day[data-iso]").forEach(btn=>{
         btn.addEventListener("click", ()=>{
           analisesFilterDate = btn.dataset.iso;
+          analisesShowAll = false;
           analisesCalendarOpen = false;
           renderAnalises();
         });
@@ -2662,6 +2686,13 @@ function renderAnalises(){
 
   document.getElementById("analises-today-btn").addEventListener("click", ()=>{
     analisesFilterDate = analisesFilterDate===todayIso() ? null : todayIso();
+    analisesShowAll = false;
+    renderAnalises();
+  });
+
+  const verMaisBtnAn = document.getElementById("analises-ver-mais-btn");
+  if(verMaisBtnAn) verMaisBtnAn.addEventListener("click", ()=>{
+    analisesShowAll = true;
     renderAnalises();
   });
 
