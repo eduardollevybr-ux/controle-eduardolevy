@@ -2655,9 +2655,20 @@ function renderAnalises(){
         return;
       }
       item[field] = e.target.value;
-      if(field==="date" || field==="hora") sortByDateDescInPlace(state.analyses, true);
+      if(field==="date" || field==="hora"){
+        sortByDateDescInPlace(state.analyses, true);
+        persist();
+        renderAnalises();
+        return;
+      }
+      // "sup" (Superioridade) e "leitura" (Leitura de mercado) não afetam ordenação nem
+      // nenhum outro texto na tela — só o próprio <select>, que o navegador já atualiza
+      // sozinho. Re-renderizar a tabela inteira aqui só causava a piscada ao escolher uma
+      // opção. Agora só salva e atualiza o tooltip da Superioridade, sem redesenhar nada.
+      if(field==="sup"){
+        e.target.title = item.sup ? superioridadeLabel(item.sup, item.home, item.away) : "";
+      }
       persist();
-      renderAnalises();
     });
   });
   tbody.querySelectorAll("[data-send]").forEach(btn=>{
