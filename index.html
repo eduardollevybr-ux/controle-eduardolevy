@@ -208,6 +208,7 @@ nav.tabs button.active::after{content:none;}
     transition:background .28s var(--ease-smooth), color .2s ease, transform .15s var(--ease-spring);
   }
   .bottom-nav button.drag-hover{transform:scale(1.16);background:var(--blue-bg,rgba(59,130,246,.12));color:var(--blue);}
+  .bottom-nav.dragging button.active:not(.drag-hover){background:transparent;color:var(--text-dim);}
   .bottom-nav button svg{width:21px;height:21px;display:block;}
   .bottom-nav button.active{background:var(--blue-bg,rgba(59,130,246,.12));color:var(--blue);}
   #app{padding-bottom:88px;}
@@ -2976,18 +2977,20 @@ function attachTabDrag(navEl){
   });
 }
 
-// Arrasto na bottom-nav (mobile): o dedo "passeia" pelos ícones, cada um
-// aumenta (efeito zoom/magnify) ao passar por baixo do dedo, e ao soltar
-// abre a aba onde o dedo estiver naquele momento — não é swipe por
-// distância/direção, é seleção direta pela posição do toque.
+// Arrasto na bottom-nav (mobile): o dedo "passeia" pelos ícones. Enquanto o
+// dedo estiver EM MOVIMENTO, nenhuma aba fica azul (nem a que estava ativa,
+// nem a que o dedo está sobrevoando). Só quando o dedo PARA (sem se mover
+// por um instante) é que a aba embaixo dele ganha o destaque azul/zoom. Ao
+// soltar, abre a aba onde o dedo parou por último.
 function attachSwipeNav(){
-  let tracking=false, hoverBtn=null;
+  let tracking=false, hoverBtn=null, stillTimer=null, lastX=0, lastY=0;
   const isMobile = ()=> window.matchMedia("(max-width:700px)").matches;
+  function bar(){ return document.getElementById("bottom-nav"); }
   function btnAt(x,y){
-    const bar = document.getElementById("bottom-nav");
-    if(!bar) return null;
+    const b = bar();
+    if(!b) return null;
     const el = document.elementFromPoint(x,y);
-    if(!el || !bar.contains(el)) return null;
+    if(!el || !b.contains(el)) return null;
     return el.closest ? el.closest("button[data-tab]") : null;
   }
   function setHover(btn){
@@ -2996,26 +2999,41 @@ function attachSwipeNav(){
     hoverBtn = btn;
     if(hoverBtn) hoverBtn.classList.add("drag-hover");
   }
+  function clearStillTimer(){ if(stillTimer){ clearTimeout(stillTimer); stillTimer=null; } }
+  function scheduleStillCheck(x,y){
+    clearStillTimer();
+    stillTimer = setTimeout(()=>{ if(tracking) setHover(btnAt(x,y)); }, 110);
+  }
   document.addEventListener("touchstart", e=>{
-    tracking = false; setHover(null);
+    tracking = false; clearStillTimer(); setHover(null);
     if(!isMobile() || e.touches.length!==1) return;
-    const bar = document.getElementById("bottom-nav");
-    if(!bar || !bar.contains(e.target)) return;
+    const b = bar();
+    if(!b || !b.contains(e.target)) return;
     tracking = true;
-    setHover(btnAt(e.touches[0].clientX, e.touches[0].clientY));
+    b.classList.add("dragging");
+    lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+    scheduleStillCheck(lastX, lastY);
   }, {passive:true});
   document.addEventListener("touchmove", e=>{
     if(!tracking) return;
-    setHover(btnAt(e.touches[0].clientX, e.touches[0].clientY));
+    lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+    setHover(null); // em movimento: sem azul
+    scheduleStillCheck(lastX, lastY);
   }, {passive:true});
-  document.addEventListener("touchend", e=>{
+  function finish(){
     if(!tracking) return;
     tracking = false;
-    const btn = hoverBtn;
+    clearStillTimer();
+    const b = bar();
+    if(b) b.classList.remove("dragging");
+    const btn = hoverBtn || btnAt(lastX, lastY);
     setHover(null);
     if(btn && btn.dataset.tab){ currentTab = btn.dataset.tab; renderTabs(); }
+  }
+  document.addEventListener("touchend", finish, {passive:true});
+  document.addEventListener("touchcancel", ()=>{
+    tracking=false; clearStillTimer(); const b=bar(); if(b) b.classList.remove("dragging"); setHover(null);
   }, {passive:true});
-  document.addEventListener("touchcancel", ()=>{ tracking=false; setHover(null); }, {passive:true});
 }
 attachSwipeNav();
 
