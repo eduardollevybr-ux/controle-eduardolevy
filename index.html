@@ -1119,6 +1119,7 @@ let entradasTeamSearch = "";
 let entradasMandante = false;
 let entradasVisitante = false;
 let analisesTeamSearch = "";
+let analisesSearchDebounce = null;
 let analisesMandante = false;
 let analisesVisitante = false;
 let rankingScope = "month";
@@ -2514,20 +2515,20 @@ function renderAnalises(){
   document.getElementById("analises-team-search").addEventListener("input", e=>{
     analisesTeamSearch = e.target.value;
     const pos = e.target.selectionStart;
-    // O re-render (renderAnalises) monta a tabela filtrada já no início da função, então o
-    // resultado da busca fica correto na tela mesmo que algo mais abaixo (religar um botão,
-    // o mini-calendário etc.) venha a falhar. Só que sem o try/finally, uma falha ali
-    // interrompia a função ANTES de chegar nestas duas linhas de baixo, que devolvem o foco
-    // e a posição do cursor pro campo de busca — resultado: a lista até atualizava, mas o
-    // campo perdia o foco a cada tecla, dando a impressão de que só "atualizava" depois de
-    // clicar de novo nele. O finally garante que o foco sempre volta, aconteça o que
-    // acontecer no resto do render.
-    try{
-      renderAnalises();
-    } finally {
-      const inp = document.getElementById("analises-team-search");
-      if(inp){ inp.focus(); inp.setSelectionRange(pos,pos); }
-    }
+    // Antes, cada tecla digitada disparava um renderAnalises() imediato — como esse
+    // render remonta a tabela inteira (linhas, calendário, listeners), na prática a
+    // aba parecia "atualizar a página o tempo todo" enquanto se digitava. Agora o
+    // render é adiado um pouquinho (120ms) e reagendado a cada tecla nova, então só
+    // roda quando a digitação dá uma pausa — sem travar/piscar a tela a cada letra.
+    clearTimeout(analisesSearchDebounce);
+    analisesSearchDebounce = setTimeout(()=>{
+      try{
+        renderAnalises();
+      } finally {
+        const inp = document.getElementById("analises-team-search");
+        if(inp){ inp.focus(); inp.setSelectionRange(pos,pos); }
+      }
+    }, 120);
   });
   document.getElementById("analises-toggle-mandante").addEventListener("click", ()=>{
     analisesMandante = !analisesMandante; renderAnalises();
