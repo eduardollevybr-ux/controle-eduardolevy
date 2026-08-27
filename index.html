@@ -627,6 +627,9 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
   }
   #entradas-table td:nth-child(7),#entradas-table td:nth-child(8),
   #entradas-table td:nth-child(9),#entradas-table td:nth-child(10){text-align:left;}
+  #entradas-table td:nth-child(5),
+  #analises-table td input[type="time"],#analises-table td input[type="date"],
+  #entradas-table .placar-select,.calc.bare-input{text-align:left;text-align-last:left;}
 
   /* Uniformização mobile — Entradas e Análises.
      No desktop, o padding de cada célula (td) é definido por regras fora de
@@ -3242,6 +3245,59 @@ document.body.addEventListener("animationend", function onBodyAnim(e){
 
 if("scrollRestoration" in history) history.scrollRestoration = "manual";
 window.scrollTo(0,0);
+
+// Pull-to-refresh (mobile): puxar para baixo no topo da página recarrega o app
+(function(){
+  var startY = 0, startX = 0, pulling = false, triggered = false;
+  var THRESHOLD = 70;
+  var scroller = document.scrollingElement || document.documentElement;
+
+  var indicator = document.createElement("div");
+  indicator.textContent = "↓ Solte para atualizar";
+  indicator.style.cssText = "position:fixed;top:0;left:0;right:0;text-align:center;padding:10px;font-size:13px;font-weight:600;color:#fff;background:#333;transform:translateY(-100%);transition:transform .15s ease;z-index:2147483647;pointer-events:none;";
+  document.documentElement.appendChild(indicator);
+
+  function atTop(){
+    return (scroller.scrollTop || window.pageYOffset || 0) <= 0;
+  }
+
+  window.addEventListener("touchstart", function(e){
+    if(e.touches.length !== 1){ pulling = false; return; }
+    pulling = atTop();
+    triggered = false;
+    startY = e.touches[0].clientY;
+    startX = e.touches[0].clientX;
+  }, {passive:true, capture:true});
+
+  window.addEventListener("touchmove", function(e){
+    if(!pulling) return;
+    if(!atTop()){ pulling = false; indicator.style.transform = "translateY(-100%)"; return; }
+    var diff = e.touches[0].clientY - startY;
+    if(Math.abs(e.touches[0].clientX - startX) > Math.abs(diff)) return; // gesto horizontal, ignora
+    if(diff > 0){
+      var pull = Math.min(diff, 120);
+      indicator.style.transform = "translateY(" + (pull - 100) + "%)";
+      triggered = pull > THRESHOLD;
+      indicator.textContent = triggered ? "↑ Solte para atualizar" : "↓ Solte para atualizar";
+    } else {
+      indicator.style.transform = "translateY(-100%)";
+    }
+  }, {passive:true, capture:true});
+
+  function release(){
+    if(!pulling) return;
+    pulling = false;
+    if(triggered){
+      indicator.textContent = "Atualizando...";
+      indicator.style.transform = "translateY(0%)";
+      location.reload();
+    } else {
+      indicator.style.transform = "translateY(-100%)";
+    }
+  }
+  window.addEventListener("touchend", release, {passive:true, capture:true});
+  window.addEventListener("touchcancel", release, {passive:true, capture:true});
+})();
 
 boot();
 
