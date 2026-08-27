@@ -120,6 +120,19 @@ body{
   animation:fadeUp .55s var(--ease-out) both;
 }
 body.loaded{animation:none;transform:none;filter:none;}
+/* Depois do carregamento inicial da página, desliga TODA animação de "entrada" (fade/slide/pop)
+   que roda em elementos recém-criados pelo re-render (cards, linhas de tabela, abas, calendário,
+   etc). Sem isso, qualquer atualização de tela (preencher um campo, trocar aba, abrir o
+   calendário...) recriava esses elementos no DOM e a animação tocava de novo do zero, dando a
+   sensação de "piscar" o site inteiro. Agora essas animações só acontecem uma vez, ao abrir o app.*/
+body.loaded .card,
+body.loaded .view.active,
+body.loaded tbody tr[data-id],
+body.loaded .stat-block,
+body.loaded nav.tabs.tabs-open,
+body.loaded .mini-cal-popover{
+  animation:none !important;
+}
 @media (max-width:700px){
   body{background:var(--bg);}
 }
