@@ -1116,6 +1116,7 @@ let rowDatePicker = null;
 let clubSearch = "";
 let champSearch = "";
 let entradasTeamSearch = "";
+let entradasSearchDebounce = null;
 let entradasMandante = false;
 let entradasVisitante = false;
 let analisesTeamSearch = "";
@@ -2240,9 +2241,12 @@ function renderEntradas(){
   document.getElementById("entradas-team-search").addEventListener("input", e=>{
     entradasTeamSearch = e.target.value;
     const pos = e.target.selectionStart;
-    renderEntradas();
-    const inp = document.getElementById("entradas-team-search");
-    if(inp){ inp.focus(); inp.setSelectionRange(pos,pos); }
+    clearTimeout(entradasSearchDebounce);
+    entradasSearchDebounce = setTimeout(()=>{
+      renderEntradas();
+      const inp = document.getElementById("entradas-team-search");
+      if(inp){ inp.focus(); inp.setSelectionRange(pos,pos); }
+    }, 120);
   });
   document.getElementById("entradas-toggle-mandante").addEventListener("click", ()=>{
     entradasMandante = !entradasMandante; renderEntradas();
@@ -2310,47 +2314,70 @@ function renderEntradas(){
   });
 
   // linhas existentes
-  tbody.querySelectorAll("tr[data-id] input, tr[data-id] select").forEach(inp=>{
-    inp.addEventListener("change", e=>{
-      const tr = e.target.closest("tr");
-      const id = tr.dataset.id;
-      const bet = state.bets.find(b=>b.id===id);
-      if(!bet) return;
-      const field = e.target.dataset.field;
-      if(field==="champ" || field==="home" || field==="away"){
-        const list = field==="champ" ? state.championships : state.clubs;
-        const raw = e.target.value.trim();
-        if(raw===""){
-          bet[field] = "";
-        } else {
-          const matched = resolveRegistered(list, raw);
-          if(matched===null){
-            const label = field==="champ" ? "campeonato" : "clube";
-            showToast(`Esse ${label} não está cadastrado.`);
-            e.target.value = bet[field] || "";
-            return;
-          }
-          bet[field] = matched;
-          e.target.value = matched;
+  function handleRowChange(e){
+    const tr = e.target.closest("tr");
+    const id = tr.dataset.id;
+    const bet = state.bets.find(b=>b.id===id);
+    if(!bet) return;
+    const field = e.target.dataset.field;
+    if(field==="champ" || field==="home" || field==="away"){
+      const list = field==="champ" ? state.championships : state.clubs;
+      const raw = e.target.value.trim();
+      if(raw===""){
+        bet[field] = "";
+      } else {
+        const matched = resolveRegistered(list, raw);
+        if(matched===null){
+          const label = field==="champ" ? "campeonato" : "clube";
+          showToast(`Esse ${label} não está cadastrado.`);
+          e.target.value = bet[field] || "";
+          return;
         }
-        persist();
-        renderEntradas();
-        return;
+        bet[field] = matched;
+        e.target.value = matched;
       }
-      if(field==="stake" || field==="retorno") bet[field] = parseBRL(e.target.value);
-      else if(field==="oddManual"){
-        let raw = String(e.target.value).trim();
-        if(raw==="") bet.oddManual = "";
-        else{
-          if(raw.includes(",")) raw = raw.replace(/\./g,"").replace(",",".");
-          bet.oddManual = Number(raw);
-        }
-      }
-      else bet[field] = e.target.value;
-      if(field==="date") sortByDateDescInPlace(state.bets);
       persist();
       renderEntradas();
-    });
+      return;
+    }
+    if(field==="stake" || field==="retorno") bet[field] = parseBRL(e.target.value);
+    else if(field==="oddManual"){
+      let raw = String(e.target.value).trim();
+      if(raw==="") bet.oddManual = "";
+      else{
+        if(raw.includes(",")) raw = raw.replace(/\./g,"").replace(",",".");
+        bet.oddManual = Number(raw);
+      }
+    }
+    else bet[field] = e.target.value;
+    if(field==="date"){
+      sortByDateDescInPlace(state.bets);
+      persist();
+      renderEntradas();
+      return;
+    }
+    // Os demais campos (placar, aposta, stake, L/P, odd) não mudam a ordem da lista nem
+    // nada fora desta linha — só precisam recalcular a própria linha (cor pos/neg e a
+    // odd calculada). Re-renderizar a tabela inteira aqui era o que causava a piscada ao
+    // preencher/selecionar algo em Entradas. Agora só essa linha é atualizada.
+    persist();
+    const c = betCalc(bet);
+    const oddTd = tr.querySelector('td[data-label="Odd"]');
+    if(oddTd){
+      oddTd.innerHTML = c.autoOdd
+        ? `<span class="calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}">${fmtOdd(c.odd)}</span>`
+        : `<input type="text" inputmode="decimal" class="odd-input calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}" data-field="oddManual" value="${bet.oddManual!==undefined&&bet.oddManual!==null&&bet.oddManual!==''?Number(bet.oddManual).toFixed(2):''}">`;
+      const newOddInp = oddTd.querySelector("input[data-field=\"oddManual\"]");
+      if(newOddInp) newOddInp.addEventListener("change", handleRowChange);
+    }
+    const retornoInp = tr.querySelector('input[data-field="retorno"]');
+    if(retornoInp){ retornoInp.classList.toggle("pos", c.profit>0); retornoInp.classList.toggle("neg", c.profit<0); }
+    if(field==="pick"){
+      e.target.title = bet.pick ? apostaLabel(bet.pick, bet.home, bet.away) : "";
+    }
+  }
+  tbody.querySelectorAll("tr[data-id] input, tr[data-id] select").forEach(inp=>{
+    inp.addEventListener("change", handleRowChange);
   });
   tbody.querySelectorAll("[data-del]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
