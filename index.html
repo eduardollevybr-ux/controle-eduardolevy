@@ -2984,7 +2984,8 @@ function attachSwipeNav(){
   document.addEventListener("touchstart", e=>{
     if(!isMobile() || e.touches.length!==1){ tracking=false; return; }
     const t = e.target;
-    if(t.closest && t.closest(".bottom-nav,.mini-cal-popover")){ tracking=false; return; }
+    if(!(t.closest && t.closest(".tab-switcher"))){ tracking=false; return; }
+    if(t.closest(".bottom-nav,.mini-cal-popover")){ tracking=false; return; }
     startX = e.touches[0].clientX; startY = e.touches[0].clientY; tracking = true;
   }, {passive:true});
   document.addEventListener("touchend", e=>{
