@@ -809,6 +809,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 }
 .chip button:hover{background:var(--red-bg);color:var(--red-text);}
 .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
+.config-grid>.card{margin-bottom:0;}
 @media (max-width:760px){.config-grid{grid-template-columns:1fr;}}
 @media (max-width:700px){.config-grid{gap:16px;}}
 .add-inline{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
@@ -2974,18 +2975,20 @@ function attachTabDrag(navEl){
   });
 }
 
-// Swipe horizontal no mobile: desliza o dedo pra trocar de aba, igual a
-// tocar direto na nav bar (sem arrastar a página). Registrado uma unica
-// vez no documento; ignora toques que comecam na bottom-nav ou em
-// popovers de calendário.
+// Swipe horizontal no mobile: desliza o dedo dentro da bottom-nav pra trocar
+// de aba (estilo WhatsApp/Instagram). Só é reconhecido se o toque começar
+// dentro do elemento #bottom-nav (usa Node.contains em vez de
+// Element.closest, que em alguns navegadores/webviews não existe em nós SVG,
+// como os ícones dos botões — o que fazia o gesto falhar silenciosamente).
 function attachSwipeNav(){
   const order = ["dashboard","entradas","analises","config"];
   let startX=0, startY=0, tracking=false;
   const isMobile = ()=> window.matchMedia("(max-width:700px)").matches;
   document.addEventListener("touchstart", e=>{
-    if(!isMobile() || e.touches.length!==1){ tracking=false; return; }
-    const t = e.target;
-    if(!(t.closest && t.closest(".bottom-nav"))){ tracking=false; return; }
+    tracking = false;
+    if(!isMobile() || e.touches.length!==1) return;
+    const bar = document.getElementById("bottom-nav");
+    if(!bar || !bar.contains(e.target)) return;
     startX = e.touches[0].clientX; startY = e.touches[0].clientY; tracking = true;
   }, {passive:true});
   document.addEventListener("touchend", e=>{
@@ -2993,7 +2996,7 @@ function attachSwipeNav(){
     tracking = false;
     const t = e.changedTouches[0];
     const dx = t.clientX - startX, dy = t.clientY - startY;
-    if(Math.abs(dx) < 55 || Math.abs(dx) < Math.abs(dy)*1.5) return;
+    if(Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)*1.5) return;
     const idx = order.indexOf(currentTab);
     if(dx < 0 && idx < order.length-1){ currentTab = order[idx+1]; renderTabs(); }
     else if(dx > 0 && idx > 0){ currentTab = order[idx-1]; renderTabs(); }
