@@ -810,6 +810,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .chip button:hover{background:var(--red-bg);color:var(--red-text);}
 .config-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;}
 @media (max-width:760px){.config-grid{grid-template-columns:1fr;}}
+@media (max-width:700px){.config-grid{gap:16px;}}
 .add-inline{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
 .add-inline input{flex:1;}
 
@@ -2984,8 +2985,7 @@ function attachSwipeNav(){
   document.addEventListener("touchstart", e=>{
     if(!isMobile() || e.touches.length!==1){ tracking=false; return; }
     const t = e.target;
-    if(!(t.closest && t.closest(".tab-switcher"))){ tracking=false; return; }
-    if(t.closest(".bottom-nav,.mini-cal-popover")){ tracking=false; return; }
+    if(!(t.closest && t.closest(".bottom-nav"))){ tracking=false; return; }
     startX = e.touches[0].clientX; startY = e.touches[0].clientY; tracking = true;
   }, {passive:true});
   document.addEventListener("touchend", e=>{
