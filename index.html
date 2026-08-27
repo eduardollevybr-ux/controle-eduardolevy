@@ -205,8 +205,9 @@ nav.tabs button.active::after{content:none;}
     flex:1 1 0;display:flex;flex-direction:column;align-items:center;gap:3px;
     padding:9px 4px 8px;border-radius:999px;cursor:pointer;
     font-family:'Inter';font-weight:600;font-size:10.5px;
-    transition:background .28s var(--ease-smooth), color .2s ease;
+    transition:background .28s var(--ease-smooth), color .2s ease, transform .15s var(--ease-spring);
   }
+  .bottom-nav button.drag-hover{transform:scale(1.16);background:var(--blue-bg,rgba(59,130,246,.12));color:var(--blue);}
   .bottom-nav button svg{width:21px;height:21px;display:block;}
   .bottom-nav button.active{background:var(--blue-bg,rgba(59,130,246,.12));color:var(--blue);}
   #app{padding-bottom:88px;}
@@ -2975,32 +2976,46 @@ function attachTabDrag(navEl){
   });
 }
 
-// Swipe horizontal no mobile: desliza o dedo dentro da bottom-nav pra trocar
-// de aba (estilo WhatsApp/Instagram). Só é reconhecido se o toque começar
-// dentro do elemento #bottom-nav (usa Node.contains em vez de
-// Element.closest, que em alguns navegadores/webviews não existe em nós SVG,
-// como os ícones dos botões — o que fazia o gesto falhar silenciosamente).
+// Arrasto na bottom-nav (mobile): o dedo "passeia" pelos ícones, cada um
+// aumenta (efeito zoom/magnify) ao passar por baixo do dedo, e ao soltar
+// abre a aba onde o dedo estiver naquele momento — não é swipe por
+// distância/direção, é seleção direta pela posição do toque.
 function attachSwipeNav(){
-  const order = ["dashboard","entradas","analises","config"];
-  let startX=0, startY=0, tracking=false;
+  let tracking=false, hoverBtn=null;
   const isMobile = ()=> window.matchMedia("(max-width:700px)").matches;
+  function btnAt(x,y){
+    const bar = document.getElementById("bottom-nav");
+    if(!bar) return null;
+    const el = document.elementFromPoint(x,y);
+    if(!el || !bar.contains(el)) return null;
+    return el.closest ? el.closest("button[data-tab]") : null;
+  }
+  function setHover(btn){
+    if(hoverBtn===btn) return;
+    if(hoverBtn) hoverBtn.classList.remove("drag-hover");
+    hoverBtn = btn;
+    if(hoverBtn) hoverBtn.classList.add("drag-hover");
+  }
   document.addEventListener("touchstart", e=>{
-    tracking = false;
+    tracking = false; setHover(null);
     if(!isMobile() || e.touches.length!==1) return;
     const bar = document.getElementById("bottom-nav");
     if(!bar || !bar.contains(e.target)) return;
-    startX = e.touches[0].clientX; startY = e.touches[0].clientY; tracking = true;
+    tracking = true;
+    setHover(btnAt(e.touches[0].clientX, e.touches[0].clientY));
+  }, {passive:true});
+  document.addEventListener("touchmove", e=>{
+    if(!tracking) return;
+    setHover(btnAt(e.touches[0].clientX, e.touches[0].clientY));
   }, {passive:true});
   document.addEventListener("touchend", e=>{
     if(!tracking) return;
     tracking = false;
-    const t = e.changedTouches[0];
-    const dx = t.clientX - startX, dy = t.clientY - startY;
-    if(Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)*1.5) return;
-    const idx = order.indexOf(currentTab);
-    if(dx < 0 && idx < order.length-1){ currentTab = order[idx+1]; renderTabs(); }
-    else if(dx > 0 && idx > 0){ currentTab = order[idx-1]; renderTabs(); }
+    const btn = hoverBtn;
+    setHover(null);
+    if(btn && btn.dataset.tab){ currentTab = btn.dataset.tab; renderTabs(); }
   }, {passive:true});
+  document.addEventListener("touchcancel", ()=>{ tracking=false; setHover(null); }, {passive:true});
 }
 attachSwipeNav();
 
