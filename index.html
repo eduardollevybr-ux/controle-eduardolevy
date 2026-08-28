@@ -1242,6 +1242,7 @@ function setAuthMode(mode){
   document.getElementById("auth-switch-text").textContent = mode==="login" ? "Não tem conta?" : "Já tem conta?";
   document.getElementById("auth-switch-btn").textContent = mode==="login" ? "Criar conta" : "Entrar";
 }
+const AUTH_RETRY_EMAIL_KEY = "controle_apostas_auth_retry_email";
 async function handleAuthSubmit(){
   const email = document.getElementById("auth-email").value.trim();
   const password = document.getElementById("auth-password").value;
@@ -1250,12 +1251,25 @@ async function handleAuthSubmit(){
   if(!email || !password){ errEl.textContent = "Preencha email e senha."; return; }
   const btn = document.getElementById("auth-submit");
   btn.disabled = true;
+  errEl.style.color = "";
+  // Watchdog: se a chamada travar (bug conhecido do cliente Supabase depois de um
+  // signOut automático por inatividade), não deixamos o botão travado para sempre.
+  // Depois de alguns segundos sem resposta, recarregamos a página sozinhos (mesmo
+  // efeito de dar F5 manualmente) e reabrimos o login já com o email preenchido.
+  let settled = false;
+  const watchdog = setTimeout(()=>{
+    if(settled) return;
+    try{ sessionStorage.setItem(AUTH_RETRY_EMAIL_KEY, email); }catch(e){}
+    window.location.reload();
+  }, 6000);
   try{
     if(authMode==="login"){
       const { error } = await supabase.auth.signInWithPassword({ email, password });
+      settled = true; clearTimeout(watchdog);
       if(error) throw error;
     } else {
       const { error } = await supabase.auth.signUp({ email, password });
+      settled = true; clearTimeout(watchdog);
       if(error) throw error;
       errEl.style.color = "var(--pos-text)";
       errEl.textContent = "Conta criada! Enviamos um email de confirmação — abra sua caixa de entrada (e o spam), clique no link e depois volte aqui para entrar.";
@@ -1264,6 +1278,7 @@ async function handleAuthSubmit(){
       return;
     }
   }catch(e){
+    settled = true; clearTimeout(watchdog);
     errEl.style.color = "";
     errEl.textContent = traduzErroAuth(e.message);
     btn.disabled = false;
@@ -1957,18 +1972,13 @@ function renderTabs(){
 /* ================= DASHBOARD ================= */
 function renderDashboard(){
   const s = computeStats();
-  let oddClass = "";
-  if(s.oddMedia>0){
-    if(s.oddMedia<1.60) oddClass = "neg";
-    else if(s.oddMedia>1.60) oddClass = "pos";
-  }
   const el = document.getElementById("view-dashboard");
   el.innerHTML = `
     <div class="dash-grid">
       <div class="dash-stats">
         ${statBlock("Início", fmtBRL(s.inicio), "")}
-        ${statBlock("Atual", fmtBRL(s.atual), s.atual>=s.inicio?"pos":"neg")}
-        ${statBlock("Odd média", fmtOdd(s.oddMedia), oddClass)}
+        ${statBlock("Atual", fmtBRL(s.atual), "")}
+        ${statBlock("Odd média", fmtOdd(s.oddMedia), "")}
         ${statBlock("Stake", fmtBRL(s.stake), "")}
         ${statBlock("Lucro em unidades", fmtNum(s.lucroUnidades,2), s.lucroUnidades>=0?"pos":"neg")}
         ${statBlock("Lucro em R$", fmtBRL(s.lucroReais), s.lucroReais>=0?"pos":"neg")}
@@ -2277,8 +2287,8 @@ function renderEntradas(){
     tbody.insertAdjacentHTML("beforeend", filtered.map(b=>{
       const c = betCalc(b);
       const oddCell = c.autoOdd
-        ? `<span class="calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}">${fmtOdd(c.odd)}</span>`
-        : `<input type="text" inputmode="decimal" class="odd-input calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}" data-field="oddManual" value="${b.oddManual!==undefined&&b.oddManual!==null&&b.oddManual!==''?Number(b.oddManual).toFixed(2):''}">`;
+        ? `<span class="calc">${fmtOdd(c.odd)}</span>`
+        : `<input type="text" inputmode="decimal" class="odd-input calc" data-field="oddManual" value="${b.oddManual!==undefined&&b.oddManual!==null&&b.oddManual!==''?Number(b.oddManual).toFixed(2):''}">`;
       return `<tr data-id="${b.id}">
         <td data-label="Data">${renderDateCellHtml("entradas", b.id, "date", b.date, null)}</td>
         <td data-label="Campeonato"><input type="text" data-field="champ" list="dl-champs" value="${escapeHtml(b.champ)}"></td>
@@ -2405,7 +2415,10 @@ function renderEntradas(){
       renderEntradas();
       return;
     }
-    if(field==="stake" || field==="retorno") bet[field] = parseBRL(e.target.value);
+    if(field==="stake" || field==="retorno"){
+      bet[field] = parseBRL(e.target.value);
+      e.target.value = fmtBRL(bet[field]);
+    }
     else if(field==="oddManual"){
       let raw = String(e.target.value).trim();
       if(raw==="") bet.oddManual = "";
@@ -2430,8 +2443,8 @@ function renderEntradas(){
     const oddTd = tr.querySelector('td[data-label="Odd"]');
     if(oddTd){
       oddTd.innerHTML = c.autoOdd
-        ? `<span class="calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}">${fmtOdd(c.odd)}</span>`
-        : `<input type="text" inputmode="decimal" class="odd-input calc ${c.profit>0?'pos':(c.profit<0?'neg':'')}" data-field="oddManual" value="${bet.oddManual!==undefined&&bet.oddManual!==null&&bet.oddManual!==''?Number(bet.oddManual).toFixed(2):''}">`;
+        ? `<span class="calc">${fmtOdd(c.odd)}</span>`
+        : `<input type="text" inputmode="decimal" class="odd-input calc" data-field="oddManual" value="${bet.oddManual!==undefined&&bet.oddManual!==null&&bet.oddManual!==''?Number(bet.oddManual).toFixed(2):''}">`;
       const newOddInp = oddTd.querySelector("input[data-field=\"oddManual\"]");
       if(newOddInp) newOddInp.addEventListener("change", handleRowChange);
     }
@@ -3252,6 +3265,14 @@ async function boot(){
   } else {
     currentUser = null;
     showAuthScreen("login");
+    try{
+      const retryEmail = sessionStorage.getItem(AUTH_RETRY_EMAIL_KEY);
+      if(retryEmail){
+        sessionStorage.removeItem(AUTH_RETRY_EMAIL_KEY);
+        document.getElementById("auth-email").value = retryEmail;
+        document.getElementById("auth-error").textContent = "Conexão travou — atualizamos a página automaticamente. Digite sua senha e clique em Entrar.";
+      }
+    }catch(e){}
   }
 }
 
