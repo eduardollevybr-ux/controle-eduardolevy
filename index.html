@@ -531,6 +531,11 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .calc{font-family:'Manrope';font-weight:700;font-size:13px;white-space:nowrap;color:var(--text);}
 .calc.pos{color:var(--pos-text);}
 .calc.neg{color:var(--red-text);}
+/* Especificidade extra pra vencer a regra global de inputs (font-size:13.5px,
+   Inter) que, por ter um seletor de elemento a mais, ganhava da .calc sozinha
+   e deixava Stake/L-P com fonte diferente da Odd (que é <span>, não pega a
+   regra global de input). Isso fazia a Odd parecer visivelmente menor. */
+#entradas-table .calc{font-family:'Manrope';font-weight:700;font-size:13px;}
 #entradas-table th,#analises-table th{text-align:center;}
 #entradas-table td:nth-child(7),#entradas-table td:nth-child(8),#entradas-table td:nth-child(9),#entradas-table td:nth-child(10){text-align:center;}
 #entradas-table td:nth-child(5){text-align:center;}
