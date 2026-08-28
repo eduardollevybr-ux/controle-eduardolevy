@@ -553,12 +553,16 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .calc.bare-input:focus{background:transparent;border:none;}
 .calc.bare-input::-webkit-outer-spin-button,.calc.bare-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .odd-input{max-width:80px;}
-.odd-input.calc{
-  appearance:none;-webkit-appearance:none;-moz-appearance:textfield;
-  background:transparent;border:none;padding:0;width:100%;
+.odd-input.calc,
+.odd-input.calc:focus,
+.odd-input.calc:hover,
+.odd-input.calc:active{
+  appearance:none!important;-webkit-appearance:none!important;-moz-appearance:textfield!important;
+  background:transparent!important;background-color:transparent!important;
+  border:none!important;box-shadow:none!important;outline:none!important;border-radius:0!important;
+  padding:0!important;width:100%;
   font-family:'Manrope';font-weight:700;font-size:13px;text-align:center;
 }
-.odd-input.calc:focus{background:transparent;border:none;}
 .odd-input.calc:hover{cursor:text;}
 .odd-input.calc::-webkit-outer-spin-button,.odd-input.calc::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 #entradas-table td[data-label="Odd"] .calc{font-size:13px!important;font-weight:700!important;font-family:'Manrope'!important;display:inline-block;line-height:normal;}
@@ -2298,7 +2302,7 @@ function renderEntradas(){
       const c = betCalc(b);
       const oddCell = c.autoOdd
         ? `<span class="calc">${fmtOdd(c.odd)}</span>`
-        : `<input type="text" inputmode="decimal" class="odd-input calc" data-field="oddManual" value="${b.oddManual!==undefined&&b.oddManual!==null&&b.oddManual!==''?Number(b.oddManual).toFixed(2):''}">`;
+        : `<input type="text" inputmode="decimal" class="odd-input calc bare-input" data-field="oddManual" value="${b.oddManual!==undefined&&b.oddManual!==null&&b.oddManual!==''?Number(b.oddManual).toFixed(2):''}">`;
       return `<tr data-id="${b.id}">
         <td data-label="Data">${renderDateCellHtml("entradas", b.id, "date", b.date, null)}</td>
         <td data-label="Campeonato"><input type="text" data-field="champ" list="dl-champs" value="${escapeHtml(b.champ)}"></td>
@@ -2454,7 +2458,7 @@ function renderEntradas(){
     if(oddTd){
       oddTd.innerHTML = c.autoOdd
         ? `<span class="calc">${fmtOdd(c.odd)}</span>`
-        : `<input type="text" inputmode="decimal" class="odd-input calc" data-field="oddManual" value="${bet.oddManual!==undefined&&bet.oddManual!==null&&bet.oddManual!==''?Number(bet.oddManual).toFixed(2):''}">`;
+        : `<input type="text" inputmode="decimal" class="odd-input calc bare-input" data-field="oddManual" value="${bet.oddManual!==undefined&&bet.oddManual!==null&&bet.oddManual!==''?Number(bet.oddManual).toFixed(2):''}">`;
       const newOddInp = oddTd.querySelector("input[data-field=\"oddManual\"]");
       if(newOddInp) newOddInp.addEventListener("change", handleRowChange);
     }
