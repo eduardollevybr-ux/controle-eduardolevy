@@ -517,7 +517,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
    tomando como base o nome de time e de campeonato mais longos cadastrados (ex.:
    "CONMEBOL Sudamericana", "Olympique de Marseille"), mantendo Superioridade no jogo
    larga o bastante para mostrar o texto completo. */
-#analises-table td input[type="time"]{min-width:52px;padding:6px 2px;font-size:13px;text-align:center;}
+#analises-table td input[type="time"],#analises-table td input[data-field="hora"],#analises-table td #an-hora{min-width:52px;padding:6px 2px;font-size:13px;text-align:center;}
 #analises-table td input[type="time"]::-webkit-calendar-picker-indicator{display:none;-webkit-appearance:none;margin:0;}
 #analises-table td input[type="date"]{min-width:96px;padding:6px 3px;font-size:13px;text-align:center;}
 #analises-table td select[data-field="leitura"],#an-leitura{
@@ -643,7 +643,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
   #entradas-table td:nth-child(7),#entradas-table td:nth-child(8),
   #entradas-table td:nth-child(9),#entradas-table td:nth-child(10){text-align:left;}
   #entradas-table td:nth-child(5),
-  #analises-table td input[type="time"],#analises-table td input[type="date"],
+  #analises-table td input[type="time"],#analises-table td input[data-field="hora"],#analises-table td #an-hora,#analises-table td input[type="date"],
   #entradas-table .placar-select,.calc.bare-input{text-align:left;text-align-last:left;}
 
   /* Uniformização mobile — Entradas e Análises.
@@ -679,7 +679,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
   #entradas-table td input:not(.bare-input):not(.odd-input),#entradas-table td select,
   #analises-table td input,#analises-table td select,
   #entradas-table td .date-cell-btn,#analises-table td .date-cell-btn,
-  #analises-table td input[type="time"],#analises-table td input[type="date"]{
+  #analises-table td input[type="time"],#analises-table td input[data-field="hora"],#analises-table td #an-hora,#analises-table td input[type="date"]{
     padding:9px 11px;font-size:13.5px;text-align:left;min-width:0;
   }
   /* Campo Hora (Análises) no mobile: input[type="time"] vazio no iOS Safari ignora o
@@ -1419,32 +1419,17 @@ function handleEscapeKey(){
   }
 }
 
-// Enter: dentro da linha de "adicionar", envia o lançamento/análise (igual ao botão "+").
-// Em um campo de uma linha já existente, confirma a edição (dispara o "change") e tira o foco.
+// Enter: em qualquer campo (linha de "adicionar" ou linha já existente), apenas confirma
+// a edição daquela célula específica (dispara o "change" ao tirar o foco) — nunca envia
+// a linha inteira nem cria um novo lançamento/análise sozinho. O envio da linha continua
+// só pelo botão "+".
 function handleEnterKey(e){
   const active = document.activeElement;
   if(!active) return;
   const tag = active.tagName;
   if(tag!=="INPUT" && tag!=="SELECT") return;
-
-  const addRowEntrada = active.closest && active.closest("#add-row-entrada");
-  if(addRowEntrada){
-    e.preventDefault();
-    const btn = document.getElementById("add-bet");
-    if(btn) btn.click();
-    return;
-  }
-  const addRowAnalise = active.closest && active.closest("#add-row-analise");
-  if(addRowAnalise){
-    e.preventDefault();
-    const btn = document.getElementById("add-an");
-    if(btn) btn.click();
-    return;
-  }
-  if(active.dataset && active.dataset.field){
-    e.preventDefault();
-    active.blur();
-  }
+  e.preventDefault();
+  active.blur();
 }
 
 /* ================= HELPERS ================= */
@@ -1872,22 +1857,26 @@ function applyTeamSearch(list, term, mandante, visitante){
   });
 }
 
-function attachRestrictedTeamInput(inputEl, getList){
+function attachRestrictedTeamInput(inputEl, getList, label){
+  // Campos de clube/campeonato na linha de "adicionar" (novo lançamento/nova
+  // análise): a digitação continua livre (o datalist list="dl-..." já sugere
+  // conforme o usuário digita). A validação só roda ao sair do campo (blur) ou
+  // apertar Enter (que também dispara blur): se o texto não corresponder a um
+  // item cadastrado, mostra o aviso e limpa a célula; se corresponder, normaliza
+  // para o nome exatamente como está cadastrado.
   if(!inputEl || inputEl.dataset.restrictedBound) return;
   inputEl.dataset.restrictedBound = "1";
-  let lastValid = inputEl.value || "";
-  inputEl.addEventListener("input", ()=>{
-    const val = inputEl.value;
-    if(val===""){ lastValid=""; return; }
-    const lower = val.toLowerCase();
+  inputEl.addEventListener("keydown", e=>{ if(e.key==="Enter") inputEl.blur(); });
+  inputEl.addEventListener("blur", ()=>{
+    const raw = inputEl.value.trim();
+    if(raw===""){ inputEl.value=""; return; }
     const list = getList();
-    const ok = list.some(item=>item.toLowerCase().startsWith(lower));
-    if(ok){
-      lastValid = val;
+    const matched = resolveRegistered(list, raw);
+    if(matched===null){
+      showToast(`Esse ${label||"item"} não está cadastrado.`);
+      inputEl.value = "";
     } else {
-      const pos = Math.max(0, inputEl.selectionStart - 1);
-      inputEl.value = lastValid;
-      inputEl.setSelectionRange(pos,pos);
+      inputEl.value = matched;
     }
   });
 }
@@ -2344,11 +2333,9 @@ function renderEntradas(){
     entradasVisitante = !entradasVisitante; renderEntradas();
   });
 
-  attachRestrictedTeamInput(document.getElementById("new-champ"), ()=>state.championships);
-  attachRestrictedTeamInput(document.getElementById("new-home"), ()=>state.clubs);
-  attachRestrictedTeamInput(document.getElementById("new-away"), ()=>state.clubs);
-  tbody.querySelectorAll('tr[data-id] input[data-field="champ"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.championships));
-  tbody.querySelectorAll('tr[data-id] input[data-field="home"], tr[data-id] input[data-field="away"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.clubs));
+  attachRestrictedTeamInput(document.getElementById("new-champ"), ()=>state.championships, "campeonato");
+  attachRestrictedTeamInput(document.getElementById("new-home"), ()=>state.clubs, "clube");
+  attachRestrictedTeamInput(document.getElementById("new-away"), ()=>state.clubs, "clube");
 
   const clearBtn = document.getElementById("clear-filter");
   if(clearBtn) clearBtn.addEventListener("click", ()=>{ entradasFilterDate=null; renderEntradas(); });
@@ -2419,7 +2406,10 @@ function renderEntradas(){
         if(matched===null){
           const label = field==="champ" ? "campeonato" : "clube";
           showToast(`Esse ${label} não está cadastrado.`);
-          e.target.value = bet[field] || "";
+          bet[field] = "";
+          e.target.value = "";
+          persist();
+          renderEntradas();
           return;
         }
         bet[field] = matched;
@@ -2504,7 +2494,7 @@ function renderEntradas(){
     if(submittingBet) return;
     const data = readNewBet();
     if(!data.home || !data.away || data.stake<=0){
-      if(showAlertIfInvalid) alert("Preencha ao menos Mandante, Visitante e um Stake maior que zero.");
+      if(showAlertIfInvalid) showToast("Preencha ao menos Mandante, Visitante e um Stake maior que zero.");
       return;
     }
     const v = validateTeamFields(data);
@@ -2599,7 +2589,7 @@ function renderAnalises(){
         </tr></thead>
         <tbody id="an-tbody">
           <tr class="add-row-form" id="add-row-analise">
-            <td data-label="Hora"><input type="time" id="an-hora" value=""></td>
+            <td data-label="Hora"><input type="text" inputmode="numeric" autocomplete="off" maxlength="5" id="an-hora" value="00:00"></td>
             <td data-label="Data">${renderDateCellHtml("analises","new","date",todayIso(),"an-data")}</td>
             <td data-label="Campeonato"><input type="text" id="an-champ" list="dl-champs2" placeholder="Campeonato"></td>
             <td data-label="Mandante"><input type="text" id="an-home" list="dl-clubs2" placeholder="Mandante"></td>
@@ -2627,7 +2617,7 @@ function renderAnalises(){
   } else {
     tbody.insertAdjacentHTML("beforeend", rows.map(r=>`
       <tr data-id="${r.id}">
-        <td data-label="Hora"><input type="time" data-field="hora" value="${r.hora||''}"></td>
+        <td data-label="Hora"><input type="text" inputmode="numeric" autocomplete="off" maxlength="5" data-field="hora" value="${r.hora||'00:00'}"></td>
         <td data-label="Data">${renderDateCellHtml("analises", r.id, "date", r.date||'', null)}</td>
         <td data-label="Campeonato"><input type="text" data-field="champ" list="dl-champs2" value="${escapeHtml(r.champ||'')}"></td>
         <td data-label="Mandante"><input type="text" data-field="home" list="dl-clubs2" value="${escapeHtml(r.home||'')}"></td>
@@ -2677,11 +2667,9 @@ function renderAnalises(){
     analisesVisitante = !analisesVisitante; renderAnalises();
   });
 
-  attachRestrictedTeamInput(document.getElementById("an-champ"), ()=>state.championships);
-  attachRestrictedTeamInput(document.getElementById("an-home"), ()=>state.clubs);
-  attachRestrictedTeamInput(document.getElementById("an-away"), ()=>state.clubs);
-  tbody.querySelectorAll('tr[data-id] input[data-field="champ"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.championships));
-  tbody.querySelectorAll('tr[data-id] input[data-field="home"], tr[data-id] input[data-field="away"]').forEach(inp=>attachRestrictedTeamInput(inp, ()=>state.clubs));
+  attachRestrictedTeamInput(document.getElementById("an-champ"), ()=>state.championships, "campeonato");
+  attachRestrictedTeamInput(document.getElementById("an-home"), ()=>state.clubs, "clube");
+  attachRestrictedTeamInput(document.getElementById("an-away"), ()=>state.clubs, "clube");
 
   // atualiza as opções de "Superioridade no jogo" em tempo real enquanto Mandante/Visitante
   // são editados na mesma linha, sem esperar o campo perder o foco. Envolvido em try/catch
@@ -2783,7 +2771,10 @@ function renderAnalises(){
           if(matched===null){
             const label = field==="champ" ? "campeonato" : "clube";
             showToast(`Esse ${label} não está cadastrado.`);
-            e.target.value = item[field] || "";
+            item[field] = "";
+            e.target.value = "";
+            persist();
+            renderAnalises();
             return;
           }
           item[field] = matched;
@@ -2792,6 +2783,9 @@ function renderAnalises(){
         persist();
         renderAnalises();
         return;
+      }
+      if(field==="hora"){
+        e.target.value = formatHoraLivre(e.target.value);
       }
       item[field] = e.target.value;
       if(field==="date" || field==="hora"){
@@ -2855,7 +2849,7 @@ function renderAnalises(){
   /* ---- adicionar (botão + auto-preenchimento) ---- */
   function readNewAnalysis(){
     return {
-      hora: document.getElementById("an-hora").value,
+      hora: formatHoraLivre(document.getElementById("an-hora").value),
       date: document.getElementById("an-data").value,
       champ: document.getElementById("an-champ").value.trim(),
       home: document.getElementById("an-home").value.trim(),
@@ -2869,7 +2863,7 @@ function renderAnalises(){
     if(submittingAn) return;
     const data = readNewAnalysis();
     if(!data.home || !data.away){
-      if(showAlertIfInvalid) alert("Preencha ao menos Mandante e Visitante.");
+      if(showAlertIfInvalid) showToast("Preencha ao menos Mandante e Visitante.");
       return;
     }
     const v = validateTeamFields(data);
@@ -2888,8 +2882,12 @@ function renderAnalises(){
     inp.addEventListener("change", ()=> submitNewAnalysis(false));
   });
 
-  attachTimeDrag(document.getElementById("an-hora"));
-  tbody.querySelectorAll('input[type="time"][data-field="hora"]').forEach(attachTimeDrag);
+  // attachTimeDrag foi removido daqui: arrastar o mouse sobre um <input type="time">
+  // nativo não interferia na edição de texto, mas agora que o campo é um <input
+  // type="text"> comum, o mesmo gesto de arrastar é o jeito padrão de selecionar
+  // texto/posicionar o cursor — mantê-lo atrapalharia a digitação livre.
+  attachFreeHoraInput(document.getElementById("an-hora"));
+  tbody.querySelectorAll('input[data-field="hora"]').forEach(attachFreeHoraInput);
 
   // atualiza as opções de "Superioridade no jogo" em tempo real, conforme o Mandante/Visitante
   // são digitados na linha de nova análise (antes mesmo de confirmar o lançamento). Adiado com
@@ -3216,6 +3214,43 @@ document.addEventListener("click", ()=>{
     if(scope==="analises" && document.getElementById("an-tbody")) renderAnalises();
   }
 });
+
+/* ================= CAMPO DE HORA COM DIGITAÇÃO LIVRE =================
+   Antes usávamos <input type="time"> nativo, cujo comportamento de segmentos
+   (hora/minuto) em alguns navegadores fazia os dígitos digitados caírem sempre
+   no campo de minutos, dificultando a edição manual. Agora o campo é um
+   <input type="text"> comum: o usuário digita livremente, sem nenhuma
+   formatação ou reposicionamento de caracteres durante a digitação. A
+   formatação/validação (para HH:MM) só é aplicada quando o campo perde o foco
+   (blur) ou quando o usuário aperta Enter. */
+function formatHoraLivre(raw){
+  const digits = String(raw||"").replace(/\D/g,"").slice(0,4);
+  if(!digits) return "00:00";
+  let hh, mm;
+  if(digits.length<=2){
+    hh = digits; mm = "00";
+  } else {
+    hh = digits.slice(0, digits.length-2);
+    mm = digits.slice(-2);
+  }
+  let h = Math.min(23, parseInt(hh,10)||0);
+  let m = Math.min(59, parseInt(mm,10)||0);
+  return String(h).padStart(2,"0")+":"+String(m).padStart(2,"0");
+}
+function attachFreeHoraInput(input){
+  if(!input || input.dataset.freeHoraBound) return;
+  input.dataset.freeHoraBound = "1";
+  input.addEventListener("keydown", e=>{
+    if(e.key==="Enter") input.blur();
+  });
+  input.addEventListener("blur", ()=>{
+    const formatted = formatHoraLivre(input.value);
+    if(formatted!==input.value){
+      input.value = formatted;
+      input.dispatchEvent(new Event("change", {bubbles:true}));
+    }
+  });
+}
 
 /* ================= DRAG TO ADJUST TIME (segurar e arrastar p/ cima ou baixo) ================= */
 function attachTimeDrag(input){
