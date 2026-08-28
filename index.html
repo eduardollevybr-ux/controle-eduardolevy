@@ -358,6 +358,10 @@ nav.tabs.tabs-open{animation:tabsOpenIn .22s var(--ease-spring);}
 .cal-value{font-size:14px;font-weight:800;font-family:'Manrope';color:var(--text-dim);letter-spacing:-.2px;white-space:nowrap;overflow:hidden;text-overflow:clip;max-width:100%;}
 .cal-cell.pos .cal-value{color:var(--pos-text);}
 .cal-cell.neg .cal-value{color:var(--red-text);}
+@media (min-width:641px){
+  .cal-daynum{font-size:13px;}
+  .cal-value{font-size:16px;}
+}
 @media (max-width:640px){
   .cal-cell{border-radius:8px;padding:5px 6px;}
   .cal-value{font-size:11px;}
@@ -380,7 +384,7 @@ nav.tabs.tabs-open{animation:tabsOpenIn .22s var(--ease-spring);}
 /* ---------- monthly chart ---------- */
 .chart-card{padding:20px 22px 22px;margin-top:16px;}
 .monthly-chart-svg{width:100%;height:auto;display:block;overflow:visible;}
-.chart-value-label{font-family:'Manrope';font-weight:700;font-size:11px;}
+.chart-value-label{font-family:'Manrope';font-weight:700;font-size:10.5px;}
 .chart-axis-label{font-family:'Inter';font-weight:600;font-size:10.5px;fill:var(--text-faint);text-transform:capitalize;}
 
 /* ---------- ranking ---------- */
@@ -552,6 +556,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .odd-input.calc:focus{background:transparent;border:none;}
 .odd-input.calc:hover{cursor:text;}
 .odd-input.calc::-webkit-outer-spin-button,.odd-input.calc::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+#entradas-table td[data-label="Odd"] .calc{font-size:13px!important;font-weight:700!important;font-family:'Manrope'!important;display:inline-block;line-height:normal;}
 .del-btn{
   width:28px;height:28px;border-radius:8px;border:1px solid var(--border);background:var(--card-2);
   color:var(--text-faint);cursor:pointer;display:flex;align-items:center;justify-content:center;
@@ -2154,7 +2159,7 @@ function renderMonthlyChart(){
   const scaleY = (innerH/2 - 6) / maxAbs;
   const n = shown.length;
   const bandW = innerW / n;
-  const barW = Math.min(22, bandW*0.32);
+  const barW = Math.min(16, bandW*0.22);
 
   let bars = "", labels = "", gridLines = "";
   gridLines += `<line x1="${padL}" y1="${zeroY}" x2="${W-padR}" y2="${zeroY}" stroke="var(--border)" stroke-width="1"/>`;
