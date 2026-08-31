@@ -2263,7 +2263,7 @@ function renderEntradas(){
         </tr></thead>
         <tbody id="bets-tbody">
           <tr class="add-row-form" id="add-row-entrada">
-            <td data-label="Data">${renderDateCellHtml("entradas","new","date",todayIso(),"new-date")}</td>
+            <td data-label="Data">${renderDateCellHtml("entradas","new","date",(document.getElementById("new-date")&&document.getElementById("new-date").value)||todayIso(),"new-date")}</td>
             <td data-label="Campeonato"><input type="text" id="new-champ" list="dl-champs" placeholder="Campeonato"></td>
             <td data-label="Mandante"><input type="text" id="new-home" list="dl-clubs" placeholder="Mandante"></td>
             <td data-label="Visitante"><input type="text" id="new-away" list="dl-clubs" placeholder="Visitante"></td>
@@ -2590,7 +2590,7 @@ function renderAnalises(){
         <tbody id="an-tbody">
           <tr class="add-row-form" id="add-row-analise">
             <td data-label="Hora"><input type="text" inputmode="numeric" autocomplete="off" maxlength="5" id="an-hora" value="00:00"></td>
-            <td data-label="Data">${renderDateCellHtml("analises","new","date",todayIso(),"an-data")}</td>
+            <td data-label="Data">${renderDateCellHtml("analises","new","date",(document.getElementById("an-data")&&document.getElementById("an-data").value)||todayIso(),"an-data")}</td>
             <td data-label="Campeonato"><input type="text" id="an-champ" list="dl-champs2" placeholder="Campeonato"></td>
             <td data-label="Mandante"><input type="text" id="an-home" list="dl-clubs2" placeholder="Mandante"></td>
             <td data-label="Visitante"><input type="text" id="an-away" list="dl-clubs2" placeholder="Visitante"></td>
