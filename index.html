@@ -1135,7 +1135,7 @@ try{
   var __lastTab = sessionStorage.getItem("lastTab");
   if(__lastTab && ["dashboard","entradas","analises","config"].indexOf(__lastTab)!==-1) currentTab = __lastTab;
 }catch(e){}
-let calMonth = new Date(2026,7,1);
+let calMonth = (function(){ const t = new Date(); return new Date(t.getFullYear(), t.getMonth(), 1); })();
 let calView = "brl"; // 'brl' | 'pct'
 let entradasFilterDate = null;
 let analisesFilterDate = null;
