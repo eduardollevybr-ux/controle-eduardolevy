@@ -3047,9 +3047,18 @@ function renderChampChips(){
   box.innerHTML = list.length ? list.map(c=>`<div class="chip">${escapeHtml(c)}<button data-remove="${escapeHtml(c)}">&#10005;</button></div>`).join("") : `<div class="empty-state">Nenhum resultado.</div>`;
   box.querySelectorAll("[data-remove]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
-      snapshotForUndo();
-      state.championships = state.championships.filter(c=>c!==btn.dataset.remove);
-      persist(); renderChampChips();
+      const nome = btn.dataset.remove;
+      showConfirmModal({
+        title: "Excluir campeonato?",
+        message: `Isso vai remover "${nome}" da lista de campeonatos cadastrados.${isMobileDevice()?"":" Essa ação não pode ser desfeita, exceto com Ctrl+Z logo em seguida."}`,
+        confirmLabel: "Excluir",
+        onConfirm: ()=>{
+          snapshotForUndo();
+          state.championships = state.championships.filter(c=>c!==nome);
+          persist(); renderChampChips();
+          showToast(isMobileDevice() ? `"${nome}" foi removido.` : `"${nome}" foi removido. Ctrl+Z para desfazer`);
+        }
+      });
     });
   });
 }
@@ -3059,9 +3068,18 @@ function renderClubChips(){
   box.innerHTML = list.length ? list.map(c=>`<div class="chip">${escapeHtml(c)}<button data-remove="${escapeHtml(c)}">&#10005;</button></div>`).join("") : `<div class="empty-state">Nenhum resultado.</div>`;
   box.querySelectorAll("[data-remove]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
-      snapshotForUndo();
-      state.clubs = state.clubs.filter(c=>c!==btn.dataset.remove);
-      persist(); renderClubChips();
+      const nome = btn.dataset.remove;
+      showConfirmModal({
+        title: "Excluir clube?",
+        message: `Isso vai remover "${nome}" da lista de clubes cadastrados.${isMobileDevice()?"":" Essa ação não pode ser desfeita, exceto com Ctrl+Z logo em seguida."}`,
+        confirmLabel: "Excluir",
+        onConfirm: ()=>{
+          snapshotForUndo();
+          state.clubs = state.clubs.filter(c=>c!==nome);
+          persist(); renderClubChips();
+          showToast(isMobileDevice() ? `"${nome}" foi removido.` : `"${nome}" foi removido. Ctrl+Z para desfazer`);
+        }
+      });
     });
   });
 }
