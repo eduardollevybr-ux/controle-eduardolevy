@@ -1983,9 +1983,9 @@ function renderDashboard(){
         ${statBlock("Atual", fmtBRL(s.atual), "")}
         ${statBlock("Odd média", fmtOdd(s.oddMedia), "")}
         ${statBlock("Stake", fmtBRL(s.stake), "")}
-        ${statBlock("Lucro em unidades", fmtNum(s.lucroUnidades,2), s.lucroUnidades>=0?"pos":"neg")}
-        ${statBlock("Lucro em R$", fmtBRL(s.lucroReais), s.lucroReais>=0?"pos":"neg")}
-        ${statBlock("ROI", fmtPct(s.roi), s.roi>=0?"pos":"neg")}
+        ${statBlock("L/P em unidades", fmtNum(s.lucroUnidades,2), s.lucroUnidades>0?"pos":(s.lucroUnidades<0?"neg":""))}
+        ${statBlock("L/P em R$", fmtBRL(s.lucroReais), s.lucroReais>0?"pos":(s.lucroReais<0?"neg":""))}
+        ${statBlock("ROI", fmtPct(s.roi), "")}
         ${statBlock("Taxa de acerto", fmtPct(s.taxaAcerto), "")}
       </div>
       <div class="card cal-card">
@@ -2580,12 +2580,12 @@ function renderAnalises(){
       <table id="analises-table">
         <colgroup>
           <col style="width:74px"><col style="width:74px"><col style="width:230px">
-          <col style="width:220px"><col style="width:220px"><col style="width:414px"><col style="width:178px">
+          <col style="width:220px"><col style="width:220px"><col style="width:414px">
           <col style="width:100px">
         </colgroup>
         <thead><tr>
           <th>Hora</th><th>Data</th><th>Campeonato</th><th>Mandante</th><th>Visitante</th>
-          <th>Superioridade no jogo</th><th>Leitura de mercado</th><th></th>
+          <th>Superioridade no jogo</th><th></th>
         </tr></thead>
         <tbody id="an-tbody">
           <tr class="add-row-form" id="add-row-analise">
@@ -2596,9 +2596,6 @@ function renderAnalises(){
             <td data-label="Visitante"><input type="text" id="an-away" list="dl-clubs2" placeholder="Visitante"></td>
             <td data-label="Superioridade no jogo">
               <select id="an-sup">${superioridadeOptionsHtml("", "", "")}</select>
-            </td>
-            <td data-label="Leitura de mercado">
-              <select id="an-leitura">${optionsHtml(LEITURA_OPTIONS, "")}</select>
             </td>
             <td data-label=""><button class="icon-add-btn" id="add-an" title="Adicionar">+</button></td>
           </tr>
@@ -2613,7 +2610,7 @@ function renderAnalises(){
   const tbody = document.getElementById("an-tbody");
   if(rows.length===0){
     const msg = (analisesTeamSearch||analisesMandante||analisesVisitante||analisesFilterDate) ? "Nenhuma análise encontrada para essa busca." : "Nenhuma análise cadastrada ainda.";
-    tbody.insertAdjacentHTML("beforeend", `<tr><td colspan="8"><div class="empty-state">${msg}</div></td></tr>`);
+    tbody.insertAdjacentHTML("beforeend", `<tr><td colspan="7"><div class="empty-state">${msg}</div></td></tr>`);
   } else {
     tbody.insertAdjacentHTML("beforeend", rows.map(r=>`
       <tr data-id="${r.id}">
@@ -2623,7 +2620,6 @@ function renderAnalises(){
         <td data-label="Mandante"><input type="text" data-field="home" list="dl-clubs2" value="${escapeHtml(r.home||'')}"></td>
         <td data-label="Visitante"><input type="text" data-field="away" list="dl-clubs2" value="${escapeHtml(r.away||'')}"></td>
         <td data-label="Superioridade"><select data-field="sup" title="${escapeHtml(r.sup?superioridadeLabel(r.sup,r.home,r.away):'')}">${superioridadeOptionsHtml(r.sup, r.home, r.away)}</select></td>
-        <td data-label="Leitura"><select data-field="leitura">${optionsHtml(LEITURA_OPTIONS, r.leitura)}</select></td>
         <td data-label="">
           <div class="row-actions">
             <button class="send-btn ${r.linkedBetId?'sent':''}" data-send="${r.id}" title="${r.linkedBetId?'Enviado para Entradas — clique para desfazer':'Enviar para Entradas'}">
@@ -2855,7 +2851,7 @@ function renderAnalises(){
       home: document.getElementById("an-home").value.trim(),
       away: document.getElementById("an-away").value.trim(),
       sup: document.getElementById("an-sup").value,
-      leitura: document.getElementById("an-leitura").value
+      leitura: ""
     };
   }
   let submittingAn = false;
