@@ -1112,7 +1112,7 @@ const PLACAR_OPTIONS = ["0 x 0","1 x 0","0 x 1","2 x 0","0 x 2","1 x 1","2 x 1",
 const LEITURA_OPTIONS = ["Leitura pró favorito","Favorito sob risco","Leitura dinâmica"];
 const LEITURA_TAG_CLASS = {"Leitura pró favorito":"tag-blue","Favorito sob risco":"tag-red","Leitura dinâmica":"tag-yellow"};
 
-const DOW = ["Dom","Seg","Ter","Qua","Qui","Sex","Sáb"];
+const DOW = ["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"];
 const MONTHS = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
 
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
@@ -2094,7 +2094,7 @@ function renderCalendar(){
     }
   }
 
-  const firstDow = new Date(y,m,1).getDay();
+  const firstDow = (new Date(y,m,1).getDay()+6)%7;
   const daysInMonth = new Date(y,m+1,0).getDate();
   const cells = [];
   for(let i=0;i<firstDow;i++) cells.push(null);
