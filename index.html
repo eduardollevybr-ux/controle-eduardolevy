@@ -1085,7 +1085,7 @@ let currentUser = null;
 let realtimeChannel = null;
 
 /* ================= INATIVIDADE (logout automático) ================= */
-const INACTIVITY_LIMIT_MS = 30 * 60 * 1000; // 30 minutos
+const INACTIVITY_LIMIT_MS = 12 * 60 * 60 * 1000; // 12 horas
 const LAST_ACTIVITY_KEY = "controle_apostas_last_activity";
 const ACTIVITY_EVENTS = ["mousedown","keydown","scroll","touchstart"];
 let inactivityInterval = null;
@@ -3387,7 +3387,7 @@ async function boot(){
   const { data: { session } } = await supabase.auth.getSession();
   if(session && session.user){
     if(Date.now() - getLastActivity() >= INACTIVITY_LIMIT_MS){
-      // sessão salva, mas passou de 30min sem uso: desloga antes de mostrar o app
+      // sessão salva, mas passou de 12h sem uso: desloga antes de mostrar o app
       inactivityLogoutPending = true;
       await supabase.auth.signOut();
       return;
@@ -3430,7 +3430,7 @@ supabase.auth.onAuthStateChange((event, session) => {
     stopActivityTracking();
     if(inactivityLogoutPending){
       inactivityLogoutPending = false;
-      showAuthScreen("login", "Sessão encerrada após 30 min de inatividade. Entre novamente.");
+      showAuthScreen("login", "Sessão encerrada após 12h de inatividade. Entre novamente.");
     } else {
       showAuthScreen("login");
     }
