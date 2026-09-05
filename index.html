@@ -207,7 +207,7 @@ nav.tabs button.active::after{content:none;}
     position:fixed;left:12px;right:12px;
     bottom:calc(12px + env(safe-area-inset-bottom));
     z-index:40;padding:6px;border-radius:999px;
-    background:var(--card);border:1px solid var(--border);
+    background:var(--card);border:1.5px solid var(--nav-outline, var(--border));
     box-shadow:0 14px 32px -12px var(--shadow-color);
     backdrop-filter:blur(10px);
   }
@@ -218,16 +218,40 @@ nav.tabs button.active::after{content:none;}
     font-family:'Inter';font-weight:600;font-size:10.5px;
     transition:background .28s var(--ease-smooth), color .2s ease, transform .15s var(--ease-spring);
   }
-  .bottom-nav button.drag-hover{transform:scale(1.16);background:var(--blue-bg,rgba(59,130,246,.12));color:var(--blue);}
-  .bottom-nav.dragging button.active:not(.drag-hover){background:transparent;color:var(--text-dim);}
-  .bottom-nav button svg{width:21px;height:21px;display:block;}
-  .bottom-nav button.active{background:var(--blue-bg,rgba(59,130,246,.12));color:var(--blue);}
+  .bottom-nav button.drag-hover{transform:scale(1.16);color:var(--blue);}
+  .bottom-nav.dragging button.active:not(.drag-hover){color:var(--text-dim);}
+  .bottom-nav button svg.nav-icon{width:21px;height:21px;display:block;flex:none;}
+  .bottom-nav button.active{color:var(--blue);}
   #app{padding-bottom:88px;}
 }
+:root{--nav-outline:rgba(255,255,255,.14);}
+:root[data-theme="light"]{--nav-outline:rgba(15,23,42,.10);}
+.bottom-nav-lens{
+  position:absolute;top:4px;bottom:4px;width:62px;border-radius:999px;pointer-events:none;
+  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.04));
+  backdrop-filter:blur(7px) saturate(160%);-webkit-backdrop-filter:blur(7px) saturate(160%);
+  border:1px solid rgba(255,255,255,.28);
+  box-shadow:0 6px 18px -4px rgba(0,0,0,.35), inset 0 1px 1px rgba(255,255,255,.55), inset 0 -1px 2px rgba(0,0,0,.15);
+  opacity:0;transform:scale(.85);
+  transition:opacity .18s ease, transform .18s var(--ease-spring);
+  z-index:1;will-change:left, opacity, transform;
+}
+.bottom-nav-lens.show{opacity:1;transform:scale(1);}
+.bottom-nav button{position:relative;z-index:2;}
+.bottom-nav button svg.nav-icon *{transition:fill .22s ease, stroke .22s ease;}
+.bottom-nav button.active svg.nav-icon *,
+.bottom-nav button.drag-hover svg.nav-icon *{fill:currentColor;}
+.bottom-nav button.active svg.nav-icon .icon-static,
+.bottom-nav button.drag-hover svg.nav-icon .icon-static{
+  stroke:var(--card) !important;fill:var(--card) !important;
+}
+.bottom-nav button svg.nav-icon .icon-noFill{fill:none !important;}
 
 /* ---------- generic ---------- */
 .view{display:none;margin-top:6px;}
 .view.active{display:block;animation:fadeUp .48s var(--ease-out);}
+.view.active.dir-left{animation:swipeInLeft .32s var(--ease-out);}
+.view.active.dir-right{animation:swipeInRight .32s var(--ease-out);}
 @keyframes fadeUp{
   0%{opacity:0;transform:translateY(18px) scale(.98);filter:blur(3px);}
   55%{opacity:1;filter:blur(0);}
@@ -1901,7 +1925,7 @@ function renderShell(){
           <button data-tab="dashboard">Dashboard</button>
           <button data-tab="entradas">Entradas</button>
           <button data-tab="analises">Análises</button>
-          <button data-tab="config">Configurações</button>
+          <button data-tab="config">Ajustes</button>
         </nav>
       </div>
       <div class="topbar-right">
@@ -1922,20 +1946,21 @@ function renderShell(){
     <div id="view-analises" class="view"></div>
     <div id="view-config" class="view"></div>
     <nav class="bottom-nav" id="bottom-nav">
+      <div class="bottom-nav-lens" id="bottom-nav-lens"></div>
       <button data-tab="dashboard" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
         <span>Dashboard</span>
       </button>
       <button data-tab="entradas" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 6h6M4 12h14M4 18h10"/></svg>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         <span>Entradas</span>
       </button>
       <button data-tab="analises" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M11 20V4M18 20v-7"/></svg>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Z"/><path class="icon-noFill" d="M4 22a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path class="icon-static" d="M18 14h-8"/><path class="icon-static" d="M15 18h-5"/><path class="icon-static" d="M10 6h8v4h-8V6Z"/></svg>
         <span>Análises</span>
       </button>
       <button data-tab="config" type="button">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .34 1.87l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.7 1.7 0 0 0-1.87-.34 1.7 1.7 0 0 0-1.04 1.56V21a2 2 0 1 1-4 0v-.09A1.7 1.7 0 0 0 9 19.4a1.7 1.7 0 0 0-1.87.34l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.7 1.7 0 0 0 4.6 15a1.7 1.7 0 0 0-1.56-1.04H3a2 2 0 1 1 0-4h.09A1.7 1.7 0 0 0 4.6 9a1.7 1.7 0 0 0-.34-1.87l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.7 1.7 0 0 0 9 4.6a1.7 1.7 0 0 0 1.04-1.56V3a2 2 0 1 1 4 0v.09A1.7 1.7 0 0 0 15 4.6a1.7 1.7 0 0 0 1.87-.34l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.7 1.7 0 0 0 19.4 9a1.7 1.7 0 0 0 1.56 1.04H21a2 2 0 1 1 0 4h-.09A1.7 1.7 0 0 0 19.4 15z"/></svg>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 17H5"/><path d="M19 7h-9"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></svg>
         <span>Ajustes</span>
       </button>
     </nav>
@@ -1957,14 +1982,21 @@ function renderShell(){
 
 function renderTabs(){
   try{ sessionStorage.setItem("lastTab", currentTab); }catch(e){}
+  var order=["dashboard","entradas","analises","config"];
+  var prevTab=window.__prevTab;
+  var dir=(prevTab && prevTab!==currentTab) ? (order.indexOf(currentTab)>order.indexOf(prevTab)?"dir-left":"dir-right") : null;
+  window.__prevTab=currentTab;
   document.querySelectorAll("#tabs button").forEach(b=>{
     b.classList.toggle("active", b.dataset.tab===currentTab);
   });
   document.querySelectorAll("#bottom-nav button").forEach(b=>{
     b.classList.toggle("active", b.dataset.tab===currentTab);
   });
-  ["dashboard","entradas","analises","config"].forEach(t=>{
-    document.getElementById("view-"+t).classList.toggle("active", t===currentTab);
+  order.forEach(t=>{
+    var v=document.getElementById("view-"+t);
+    v.classList.remove("dir-left","dir-right");
+    if(t===currentTab && dir) v.classList.add(dir);
+    v.classList.toggle("active", t===currentTab);
   });
   if(currentTab==="dashboard") renderDashboard();
   if(currentTab==="entradas") renderEntradas();
@@ -3159,6 +3191,7 @@ function attachSwipeNav(){
   let tracking=false, hoverBtn=null, stillTimer=null, lastX=0, lastY=0;
   const isMobile = ()=> window.matchMedia("(max-width:700px)").matches;
   function bar(){ return document.getElementById("bottom-nav"); }
+  function lens(){ return document.getElementById("bottom-nav-lens"); }
   function btnAt(x,y){
     const b = bar();
     if(!b) return null;
@@ -3166,6 +3199,16 @@ function attachSwipeNav(){
     if(!el || !b.contains(el)) return null;
     return el.closest ? el.closest("button[data-tab]") : null;
   }
+  function moveLensTo(x){
+    const b = bar(), l = lens();
+    if(!b || !l) return;
+    const rect = b.getBoundingClientRect();
+    const clampedX = Math.max(rect.left, Math.min(rect.right, x));
+    const left = clampedX - rect.left - (l.offsetWidth/2);
+    l.style.left = left + "px";
+    l.classList.add("show");
+  }
+  function hideLens(){ const l = lens(); if(l) l.classList.remove("show"); }
   function setHover(btn){
     if(hoverBtn===btn) return;
     if(hoverBtn) hoverBtn.classList.remove("drag-hover");
@@ -3178,19 +3221,21 @@ function attachSwipeNav(){
     stillTimer = setTimeout(()=>{ if(tracking) setHover(btnAt(x,y)); }, 110);
   }
   document.addEventListener("touchstart", e=>{
-    tracking = false; clearStillTimer(); setHover(null);
+    tracking = false; clearStillTimer(); setHover(null); hideLens();
     if(!isMobile() || e.touches.length!==1) return;
     const b = bar();
     if(!b || !b.contains(e.target)) return;
     tracking = true;
     b.classList.add("dragging");
     lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
+    moveLensTo(lastX);
     scheduleStillCheck(lastX, lastY);
   }, {passive:true});
   document.addEventListener("touchmove", e=>{
     if(!tracking) return;
     lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
     setHover(null); // em movimento: sem azul
+    moveLensTo(lastX);
     scheduleStillCheck(lastX, lastY);
   }, {passive:true});
   function finish(){
@@ -3199,13 +3244,14 @@ function attachSwipeNav(){
     clearStillTimer();
     const b = bar();
     if(b) b.classList.remove("dragging");
+    hideLens();
     const btn = hoverBtn || btnAt(lastX, lastY);
     setHover(null);
     if(btn && btn.dataset.tab){ currentTab = btn.dataset.tab; renderTabs(); }
   }
   document.addEventListener("touchend", finish, {passive:true});
   document.addEventListener("touchcancel", ()=>{
-    tracking=false; clearStillTimer(); const b=bar(); if(b) b.classList.remove("dragging"); setHover(null);
+    tracking=false; clearStillTimer(); const b=bar(); if(b) b.classList.remove("dragging"); hideLens(); setHover(null);
   }, {passive:true});
 }
 attachSwipeNav();
