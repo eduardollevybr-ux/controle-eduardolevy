@@ -48,12 +48,12 @@
   --text-faint:#5a5e66;
   --blue:#4f46e5;
   --blue-dim:rgba(79,70,229,.16);
-  --blue-text:#6366f1;
+  --blue-text:#a5b4fc;
   --pos:#4f46e5;
-  --pos-text:#6366f1;
+  --pos-text:#a5b4fc;
   --pos-bg:rgba(79,70,229,.14);
-  --pos-bg-strong:#191c3a;
-  --pos-border:rgba(79,70,229,.32);
+  --pos-bg-strong:rgba(165,180,252,.16);
+  --pos-border:rgba(165,180,252,.4);
   --red:#f8564f;
   --red-text:#f87171;
   --red-bg:rgba(248,86,79,.12);
@@ -89,12 +89,12 @@
   --text-faint:#9297a1;
   --blue:#4f46e5;
   --blue-dim:rgba(79,70,229,.1);
-  --blue-text:#4338ca;
+  --blue-text:#a5b4fc;
   --pos:#4f46e5;
-  --pos-text:#4338ca;
+  --pos-text:#a5b4fc;
   --pos-bg:rgba(79,70,229,.1);
-  --pos-bg-strong:#eceafc;
-  --pos-border:rgba(79,70,229,.3);
+  --pos-bg-strong:rgba(165,180,252,.16);
+  --pos-border:rgba(165,180,252,.45);
   --red:#dc2626;
   --red-text:#dc2626;
   --red-bg:rgba(220,38,38,.08);
@@ -217,10 +217,10 @@ nav.tabs button.active::after{content:none;}
     font-family:'Inter';font-weight:600;font-size:10.5px;
     transition:background .28s var(--ease-smooth), color .2s ease, transform .15s var(--ease-spring);
   }
-  .bottom-nav button.drag-hover{transform:scale(1.16);color:var(--blue);}
+  .bottom-nav button.drag-hover{transform:scale(1.16);color:var(--blue-text);}
   .bottom-nav.dragging button.active:not(.drag-hover){color:var(--text-dim);}
   .bottom-nav button svg.nav-icon{width:21px;height:21px;display:block;flex:none;}
-  .bottom-nav button.active{color:var(--blue);}
+  .bottom-nav button.active{color:var(--blue-text);}
   #app{padding-bottom:88px;}
 }
 .bottom-nav-lens{
@@ -371,7 +371,7 @@ nav.tabs.tabs-open{animation:tabsOpenIn .22s var(--ease-spring);}
 .cal-cell.has-data{cursor:pointer;}
 .cal-cell.has-data:hover{transform:translateY(-3px) scale(1.02);}
 .cal-cell.pos{background:var(--pos-bg-strong);border-color:var(--pos-border);}
-.cal-cell.pos:hover{box-shadow:0 6px 18px -6px rgba(79,70,229,.35);}
+.cal-cell.pos:hover{box-shadow:0 6px 18px -6px rgba(165,180,252,.4);}
 .cal-cell.neg{background:var(--red-bg-strong);border-color:rgba(248,86,79,.28);}
 .cal-cell.neg:hover{box-shadow:0 6px 18px -6px rgba(248,86,79,.35);}
 .cal-daynum{font-size:12px;color:var(--text-dim);font-weight:600;}
@@ -785,7 +785,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .mini-cal-day-selected{background:var(--blue);color:#fff;}
 .mini-cal-footer{margin-top:8px;text-align:center;}
 .mini-cal-today-link{
-  appearance:none;border:0;background:transparent;color:var(--blue);font-family:'Inter';
+  appearance:none;border:0;background:transparent;color:var(--blue-text);font-family:'Inter';
   font-weight:700;font-size:11px;cursor:pointer;padding:4px;
 }
 
@@ -2197,10 +2197,11 @@ function renderMonthlyChart(){
     const cx = padL + bandW*i + bandW/2;
     const h = Math.abs(d.profit) * scaleY;
     const y = d.profit>=0 ? zeroY - h : zeroY;
-    const color = d.profit>0 ? "var(--pos)" : (d.profit<0 ? "var(--red)" : "var(--text-faint)");
+    const barColor = d.profit>0 ? "var(--pos)" : (d.profit<0 ? "var(--red)" : "var(--text-faint)");
+    const textColor = d.profit>0 ? "var(--pos-text)" : (d.profit<0 ? "var(--red-text)" : "var(--text-faint)");
     const labelY = d.profit>=0 ? (zeroY - h - 8) : (zeroY + h + 16);
-    bars += `<rect x="${(cx-barW/2).toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(h,2).toFixed(1)}" rx="4" fill="${color}" opacity="0.9"><title>${escapeHtml(d.label)}: ${fmtBRL(d.profit)}</title></rect>`;
-    bars += `<text x="${cx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" class="chart-value-label" fill="${color}">${fmtBRL(d.profit)}</text>`;
+    bars += `<rect x="${(cx-barW/2).toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(h,2).toFixed(1)}" rx="4" fill="${barColor}" opacity="0.9"><title>${escapeHtml(d.label)}: ${fmtBRL(d.profit)}</title></rect>`;
+    bars += `<text x="${cx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" class="chart-value-label" fill="${textColor}">${fmtBRL(d.profit)}</text>`;
     labels += `<text x="${cx.toFixed(1)}" y="${H-8}" text-anchor="middle" class="chart-axis-label">${d.label}</text>`;
   });
 
