@@ -246,6 +246,10 @@ nav.tabs button.active::after{content:none;}
   stroke:var(--card) !important;fill:var(--card) !important;
 }
 .bottom-nav button svg.nav-icon .icon-noFill{fill:none !important;}
+.bottom-nav button.active svg.nav-icon .icon-knob,
+.bottom-nav button.drag-hover svg.nav-icon .icon-knob{
+  stroke:var(--card);stroke-width:1.5px;
+}
 
 /* ---------- generic ---------- */
 .view{display:none;margin-top:6px;}
@@ -1960,7 +1964,7 @@ function renderShell(){
         <span>Análises</span>
       </button>
       <button data-tab="config" type="button">
-        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 17H5"/><path d="M19 7h-9"/><circle cx="17" cy="17" r="3"/><circle cx="7" cy="7" r="3"/></svg></svg>
+        <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 17H5"/><path d="M19 7h-9"/><circle class="icon-knob" cx="17" cy="17" r="3"/><circle class="icon-knob" cx="7" cy="7" r="3"/></svg>
         <span>Ajustes</span>
       </button>
     </nav>
