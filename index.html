@@ -248,7 +248,7 @@ nav.tabs button.active::after{content:none;}
 .bottom-nav button svg.nav-icon .icon-noFill{fill:none !important;}
 .bottom-nav button.active svg.nav-icon .icon-knob,
 .bottom-nav button.drag-hover svg.nav-icon .icon-knob{
-  stroke:var(--card);stroke-width:2.5px;
+  fill:none;
 }
 
 /* ---------- generic ---------- */
@@ -2006,6 +2006,7 @@ function renderTabs(){
   if(currentTab==="entradas") renderEntradas();
   if(currentTab==="analises") renderAnalises();
   if(currentTab==="config") renderConfig();
+  if(window.__showLensOnActive) window.__showLensOnActive();
 }
 
 /* ================= DASHBOARD ================= */
@@ -3190,12 +3191,18 @@ function attachTabDrag(navEl){
 // dedo estiver EM MOVIMENTO, nenhuma aba fica azul (nem a que estava ativa,
 // nem a que o dedo está sobrevoando). Só quando o dedo PARA (sem se mover
 // por um instante) é que a aba embaixo dele ganha o destaque azul/zoom. Ao
-// soltar, abre a aba onde o dedo parou por último.
+// soltar, abre a aba onde o dedo parou por último. O contorno (lens) fica
+// sempre visível na aba selecionada, mesmo sem tocar, com largura fixa
+// (igual à largura de um botão) tanto parado quanto durante o arrasto.
 function attachSwipeNav(){
   let tracking=false, hoverBtn=null, stillTimer=null, lastX=0, lastY=0;
   const isMobile = ()=> window.matchMedia("(max-width:700px)").matches;
   function bar(){ return document.getElementById("bottom-nav"); }
   function lens(){ return document.getElementById("bottom-nav-lens"); }
+  function lensWidth(){
+    const first = document.querySelector("#bottom-nav button");
+    return first ? first.getBoundingClientRect().width : 62;
+  }
   function btnAt(x,y){
     const b = bar();
     if(!b) return null;
@@ -3207,12 +3214,27 @@ function attachSwipeNav(){
     const b = bar(), l = lens();
     if(!b || !l) return;
     const rect = b.getBoundingClientRect();
+    const w = lensWidth();
     const clampedX = Math.max(rect.left, Math.min(rect.right, x));
-    const left = clampedX - rect.left - (l.offsetWidth/2);
+    const left = clampedX - rect.left - (w/2);
+    l.style.width = w + "px";
     l.style.left = left + "px";
     l.classList.add("show");
   }
-  function hideLens(){ const l = lens(); if(l) l.classList.remove("show"); }
+  function positionLensAtButton(btn){
+    const b = bar(), l = lens();
+    if(!b || !l || !btn) return;
+    const rect = btn.getBoundingClientRect();
+    const barRect = b.getBoundingClientRect();
+    l.style.width = lensWidth() + "px";
+    l.style.left = (rect.left - barRect.left) + "px";
+    l.classList.add("show");
+  }
+  function showLensOnActive(){
+    if(!isMobile()) return;
+    const activeBtn = document.querySelector("#bottom-nav button.active");
+    if(activeBtn) positionLensAtButton(activeBtn);
+  }
   function setHover(btn){
     if(hoverBtn===btn) return;
     if(hoverBtn) hoverBtn.classList.remove("drag-hover");
@@ -3225,10 +3247,10 @@ function attachSwipeNav(){
     stillTimer = setTimeout(()=>{ if(tracking) setHover(btnAt(x,y)); }, 110);
   }
   document.addEventListener("touchstart", e=>{
-    tracking = false; clearStillTimer(); setHover(null); hideLens();
-    if(!isMobile() || e.touches.length!==1) return;
+    tracking = false; clearStillTimer(); setHover(null);
+    if(!isMobile() || e.touches.length!==1){ showLensOnActive(); return; }
     const b = bar();
-    if(!b || !b.contains(e.target)) return;
+    if(!b || !b.contains(e.target)){ showLensOnActive(); return; }
     tracking = true;
     b.classList.add("dragging");
     lastX = e.touches[0].clientX; lastY = e.touches[0].clientY;
@@ -3248,15 +3270,19 @@ function attachSwipeNav(){
     clearStillTimer();
     const b = bar();
     if(b) b.classList.remove("dragging");
-    hideLens();
     const btn = hoverBtn || btnAt(lastX, lastY);
     setHover(null);
     if(btn && btn.dataset.tab){ currentTab = btn.dataset.tab; renderTabs(); }
+    showLensOnActive();
   }
   document.addEventListener("touchend", finish, {passive:true});
   document.addEventListener("touchcancel", ()=>{
-    tracking=false; clearStillTimer(); const b=bar(); if(b) b.classList.remove("dragging"); hideLens(); setHover(null);
+    tracking=false; clearStillTimer(); const b=bar(); if(b) b.classList.remove("dragging"); setHover(null);
+    showLensOnActive();
   }, {passive:true});
+  window.addEventListener("resize", showLensOnActive);
+  window.__showLensOnActive = showLensOnActive;
+  showLensOnActive();
 }
 attachSwipeNav();
 
