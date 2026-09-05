@@ -48,12 +48,12 @@
   --text-faint:#5a5e66;
   --blue:#4f46e5;
   --blue-dim:rgba(79,70,229,.16);
-  --blue-text:#a5b4fc;
+  --blue-text:#6366f1;
   --pos:#4f46e5;
-  --pos-text:#a5b4fc;
+  --pos-text:#6366f1;
   --pos-bg:rgba(79,70,229,.14);
-  --pos-bg-strong:rgba(165,180,252,.16);
-  --pos-border:rgba(165,180,252,.4);
+  --pos-bg-strong:#191c3a;
+  --pos-border:rgba(79,70,229,.32);
   --red:#f8564f;
   --red-text:#f87171;
   --red-bg:rgba(248,86,79,.12);
@@ -89,12 +89,12 @@
   --text-faint:#9297a1;
   --blue:#4f46e5;
   --blue-dim:rgba(79,70,229,.1);
-  --blue-text:#a5b4fc;
+  --blue-text:#4338ca;
   --pos:#4f46e5;
-  --pos-text:#a5b4fc;
+  --pos-text:#4338ca;
   --pos-bg:rgba(79,70,229,.1);
-  --pos-bg-strong:rgba(165,180,252,.16);
-  --pos-border:rgba(165,180,252,.45);
+  --pos-bg-strong:#eceafc;
+  --pos-border:rgba(79,70,229,.3);
   --red:#dc2626;
   --red-text:#dc2626;
   --red-bg:rgba(220,38,38,.08);
@@ -371,7 +371,7 @@ nav.tabs.tabs-open{animation:tabsOpenIn .22s var(--ease-spring);}
 .cal-cell.has-data{cursor:pointer;}
 .cal-cell.has-data:hover{transform:translateY(-3px) scale(1.02);}
 .cal-cell.pos{background:var(--pos-bg-strong);border-color:var(--pos-border);}
-.cal-cell.pos:hover{box-shadow:0 6px 18px -6px rgba(165,180,252,.4);}
+.cal-cell.pos:hover{box-shadow:0 6px 18px -6px rgba(79,70,229,.35);}
 .cal-cell.neg{background:var(--red-bg-strong);border-color:rgba(248,86,79,.28);}
 .cal-cell.neg:hover{box-shadow:0 6px 18px -6px rgba(248,86,79,.35);}
 .cal-daynum{font-size:12px;color:var(--text-dim);font-weight:600;}
@@ -2198,7 +2198,7 @@ function renderMonthlyChart(){
     const h = Math.abs(d.profit) * scaleY;
     const y = d.profit>=0 ? zeroY - h : zeroY;
     const barColor = d.profit>0 ? "var(--pos)" : (d.profit<0 ? "var(--red)" : "var(--text-faint)");
-    const textColor = d.profit>0 ? "var(--pos-text)" : (d.profit<0 ? "var(--red-text)" : "var(--text-faint)");
+    const textColor = barColor;
     const labelY = d.profit>=0 ? (zeroY - h - 8) : (zeroY + h + 16);
     bars += `<rect x="${(cx-barW/2).toFixed(1)}" y="${y.toFixed(1)}" width="${barW.toFixed(1)}" height="${Math.max(h,2).toFixed(1)}" rx="4" fill="${barColor}" opacity="0.9"><title>${escapeHtml(d.label)}: ${fmtBRL(d.profit)}</title></rect>`;
     bars += `<text x="${cx.toFixed(1)}" y="${labelY.toFixed(1)}" text-anchor="middle" class="chart-value-label" fill="${textColor}">${fmtBRL(d.profit)}</text>`;
