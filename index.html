@@ -46,9 +46,9 @@
   --text:#f2f3f5;
   --text-dim:#9297a1;
   --text-faint:#5a5e66;
-  --blue:#3b82f6;
-  --blue-dim:rgba(59,130,246,.14);
-  --blue-text:#7fb0ff;
+  --blue:#a78bfa;
+  --blue-dim:rgba(167,139,250,.14);
+  --blue-text:#c4b5fd;
   --pos:#a78bfa;
   --pos-text:#c4b5fd;
   --pos-bg:rgba(167,139,250,.13);
@@ -87,9 +87,9 @@
   --text:#14161a;
   --text-dim:#5b6169;
   --text-faint:#9297a1;
-  --blue:#2f6fed;
-  --blue-dim:rgba(47,111,237,.1);
-  --blue-text:#2f6fed;
+  --blue:#7c3aed;
+  --blue-dim:rgba(124,58,237,.1);
+  --blue-text:#6d28d9;
   --pos:#7c3aed;
   --pos-text:#6d28d9;
   --pos-bg:rgba(124,58,237,.1);
@@ -173,7 +173,7 @@ nav.tabs button::after{
   pointer-events:none;
 }
 nav.tabs button:hover:not(.active)::after{transform:scaleX(1);}
-nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -4px rgba(59,130,246,.55);animation:tabPop .32s var(--ease-spring);}
+nav.tabs button.active{background:var(--blue);color:#fff;box-shadow:0 4px 12px -4px rgba(167,139,250,.55);animation:tabPop .32s var(--ease-spring);}
 nav.tabs button.active::after{content:none;}
 @keyframes tabPop{0%{transform:scale(.94);}60%{transform:scale(1.02);}100%{transform:scale(1);}}
 
@@ -207,9 +207,8 @@ nav.tabs button.active::after{content:none;}
     position:fixed;left:12px;right:12px;
     bottom:calc(12px + env(safe-area-inset-bottom));
     z-index:40;padding:6px;border-radius:999px;
-    background:var(--card);border:1.5px solid var(--nav-outline, var(--border));
+    background:var(--card);border:none;
     box-shadow:0 14px 32px -12px var(--shadow-color);
-    backdrop-filter:blur(10px);
   }
   .bottom-nav button{
     appearance:none;border:none;background:transparent;color:var(--text-dim);
@@ -224,14 +223,9 @@ nav.tabs button.active::after{content:none;}
   .bottom-nav button.active{color:var(--blue);}
   #app{padding-bottom:88px;}
 }
-:root{--nav-outline:rgba(255,255,255,.14);}
-:root[data-theme="light"]{--nav-outline:rgba(15,23,42,.10);}
 .bottom-nav-lens{
   position:absolute;top:4px;bottom:4px;width:62px;border-radius:999px;pointer-events:none;
-  background:linear-gradient(180deg, rgba(255,255,255,.16), rgba(255,255,255,.04));
-  backdrop-filter:blur(7px) saturate(160%);-webkit-backdrop-filter:blur(7px) saturate(160%);
-  border:1px solid rgba(255,255,255,.28);
-  box-shadow:0 6px 18px -4px rgba(0,0,0,.35), inset 0 1px 1px rgba(255,255,255,.55), inset 0 -1px 2px rgba(0,0,0,.15);
+  background:var(--card-2);
   opacity:0;transform:scale(.85);
   transition:opacity .18s ease, transform .18s var(--ease-spring);
   z-index:1;will-change:left, opacity, transform;
@@ -465,8 +459,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 }
 .btn:hover{transform:translateY(-1px);}
 .btn:active{transform:scale(.96) translateY(0);transition-duration:.1s;}
-.btn-primary{background:var(--blue);color:#fff;box-shadow:0 6px 16px -6px rgba(59,130,246,.6);}
-.btn-primary:hover{opacity:.94;box-shadow:0 10px 22px -8px rgba(59,130,246,.7);}
+.btn-primary{background:var(--blue);color:#fff;box-shadow:0 6px 16px -6px rgba(167,139,250,.6);}
+.btn-primary:hover{opacity:.94;box-shadow:0 10px 22px -8px rgba(167,139,250,.7);}
 .btn-ghost{background:var(--card-2);color:var(--text-dim);border:1px solid var(--border);}
 .btn-ghost:hover{color:var(--text);border-color:var(--hover-border);box-shadow:0 6px 16px -10px var(--shadow-color);}
 .btn-sm{padding:7px 13px;font-size:12px;}
@@ -608,9 +602,9 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
   transition:all .2s var(--ease-smooth);
 }
 .send-btn svg{transform:scaleX(-1);transition:transform .15s ease;}
-.send-btn:hover{background:var(--blue-dim);color:var(--blue);border-color:rgba(70,130,255,.35);}
+.send-btn:hover{background:var(--blue-dim);color:var(--blue);border-color:rgba(167,139,250,.35);}
 .send-btn:hover svg{transform:scaleX(-1) translate(-1px,-1px);}
-.send-btn.sent{background:var(--blue-dim);color:var(--blue);border-color:rgba(70,130,255,.35);}
+.send-btn.sent{background:var(--blue-dim);color:var(--blue);border-color:rgba(167,139,250,.35);}
 
 .icon-add-btn{
   appearance:none;border:none;background:transparent;color:var(--text-faint);
