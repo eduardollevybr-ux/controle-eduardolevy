@@ -13,7 +13,19 @@
   }catch(e){}
 })();
 </script>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script>
+// Bloqueia zoom por pinça/gesto no Safari iOS (ignora user-scalable=no) e duplo-toque.
+document.addEventListener("gesturestart", e => e.preventDefault());
+document.addEventListener("gesturechange", e => e.preventDefault());
+document.addEventListener("touchmove", e => { if(e.touches.length > 1) e.preventDefault(); }, {passive:false});
+let lastTouchEnd = 0;
+document.addEventListener("touchend", e => {
+  const now = Date.now();
+  if(now - lastTouchEnd <= 300) e.preventDefault();
+  lastTouchEnd = now;
+}, {passive:false});
+</script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="description" content="Controle — painel pessoal de gestão de banca e resultados.">
 <meta name="robots" content="noindex, nofollow">
 <title>Controle | Eduardo Levy</title>
@@ -107,7 +119,7 @@
   --input-focus-bg:#f5f8ff;
 }
 *{box-sizing:border-box;}
-html,body{margin:0;padding:0;color-scheme:var(--cs, dark);}
+html,body{margin:0;padding:0;color-scheme:var(--cs, dark);touch-action:manipulation;}
 @media (max-width:700px){
   /* evita que uma barra em branco apareça à direita ao fazer o gesto de pinça (zoom out) no celular */
   html,body{overflow-x:hidden;max-width:100vw;}
