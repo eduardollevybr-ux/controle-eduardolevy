@@ -1143,7 +1143,7 @@ const DEFAULT_CHAMPIONSHIPS = ["Brasileirão Betano","Premier League","LaLiga","
 const DEFAULT_CLUBS = ["1. FC Köln","1. FC Union Berlin","1. FSV Mainz 05","AC Milan","AS Monaco","AS Roma","Angers","Arsenal","Aston Villa","Atalanta","Athletic Club","Athletico","Atlético Madrid","Atlético Mineiro","Auxerre","Bahia","Bayer 04 Leverkusen","Bologna","Borussia Dortmund","Borussia M'gladbach","Botafogo","Bournemouth","Brentford","Brighton & Hove Albion","Cagliari","Celta Vigo","Chapecoense","Chelsea","Como","Corinthians","Coritiba","Coventry City","Cruzeiro","Crystal Palace","Deportivo Alavés","Deportivo de A Coruña","Eintracht Frankfurt","Elche","Espanyol","Everton","FC Augsburg","FC Barcelona","FC Bayern München","FC Schalke 04","Fiorentina","Flamengo","Fluminense","Frosinone","Fulham","Genoa","Getafe","Grêmio","Hamburger SV","Hull City","Inter","Internacional","Ipswich Town","Juventus","Lazio","Le Havre","Le Mans","Lecce","Leeds United","Levante UD","Lille","Liverpool FC","Lorient","Manchester City","Manchester United","Mirassol","Monza","Málaga CF","Newcastle United","Nice","Nottingham Forest","Olympique Lyonnais","Olympique de Marseille","Osasuna","Palmeiras","Paris FC","Paris Saint-Germain","Parma","RB Leipzig","RC Lens","RC Strasbourg","Rayo Vallecano","Real Betis","Real Madrid","Real Racing Club","Real Sociedad","Red Bull Bragantino","Remo","SC Freiburg","SC Paderborn 07","SSC Napoli","SV 07 Elversberg","SV Werder Bremen","Santos","Sassuolo","Sevilla","Stade Brestois","Stade Rennais","Sunderland","São Paulo","TSG Hoffenheim","Torino","Tottenham Hotspur","Toulouse","Troyes","Udinese","Valencia","Vasco da Gama","Venezia","VfB Stuttgart","Villarreal","Vitória"];
 
 const SUPERIORIDADE_OPTIONS = ["Live!","Mandante HT","Mandante FT","Mandante HT / FT","Visitante HT","Visitante FT","Visitante HT / FT","Mandante HT / Visitante FT","Visitante HT / Mandante FT"];
-const APOSTA_OPTIONS = ["Back Mandante","Lay Mandante","Back Visitante","Lay Visitante","Back Mandante - 1º Tempo","Back Visitante - 1º Tempo"];
+const APOSTA_OPTIONS = ["Mandante | AH 0.0","Visitante | AH 0.0","Mandante | AH -0.5","Visitante | AH -0.5", "Mandante | AH +0.5 ", "Visitante | AH +0.5", "Mandante | AH 0.0 (1º Tempo)", "Visitante | AH 0.0 (1º Tempo)", "Mandante | AH -0.5 (1º Tempo)", "Visitante | AH -0.5 (1º Tempo)", "Mandante | AH +0.5 (1º Tempo)", "Visitante | AH +0.5 (1º Tempo)"];
 const PLACAR_OPTIONS = ["0 x 0","1 x 0","0 x 1","2 x 0","0 x 2","1 x 1","2 x 1","1 x 2","2 x 2"];
 const LEITURA_OPTIONS = ["Leitura pró favorito","Favorito sob risco","Leitura dinâmica"];
 const LEITURA_TAG_CLASS = {"Leitura pró favorito":"tag-blue","Favorito sob risco":"tag-red","Leitura dinâmica":"tag-yellow"};
@@ -1823,9 +1823,13 @@ function apostaLabel(optionValue, home, away){
 }
 function apostaOptionsHtml(selected, home, away){
   const blank = `<option value="" ${!selected?"selected":""}>Selecione</option>`;
-  return blank + APOSTA_OPTIONS.map(o=>{
+  // Divisória visual entre os 6 primeiros e os 6 últimos: um <option> desabilitado
+  // com um tracejado, que não pode ser selecionado (só separa os blocos no menu).
+  const divisor = `<option disabled>──────────</option>`;
+  return blank + APOSTA_OPTIONS.map((o,i)=>{
     const label = apostaLabel(o, home, away);
-    return `<option value="${escapeHtml(o)}" ${o===selected?"selected":""}>${escapeHtml(label)}</option>`;
+    const opt = `<option value="${escapeHtml(o)}" ${o===selected?"selected":""}>${escapeHtml(label)}</option>`;
+    return i===6 ? divisor+opt : opt;
   }).join("");
 }
 function refreshApostaSelect(selectEl, home, away){
@@ -2299,8 +2303,8 @@ function renderEntradas(){
     <div class="table-wrap card${entradasFilterDate?' filters-active':''}">
       <table id="entradas-table">
         <colgroup>
-          <col style="width:74px"><col style="width:230px"><col style="width:220px"><col style="width:220px">
-          <col style="width:90px"><col style="width:300px"><col style="width:82px"><col style="width:86px"><col style="width:56px">
+          <col style="width:74px"><col style="width:230px"><col style="width:210px"><col style="width:210px">
+          <col style="width:90px"><col style="width:320px"><col style="width:82px"><col style="width:86px"><col style="width:56px">
           <col style="width:56px">
         </colgroup>
         <thead><tr>
