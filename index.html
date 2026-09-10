@@ -1504,14 +1504,14 @@ function fmtOdd(n){
 }
 function betCalc(b){
   const stake = Number(b.stake)||0;
-  // Campo "retorno" agora representa o LUCRO informado diretamente (não mais o retorno bruto).
-  const lucro = Number(b.retorno)||0;
+  // Campo "retorno" representa o RETORNO TOTAL da aposta (stake + lucro/prejuízo).
+  const retornoTotal = Number(b.retorno)||0;
+  const profit = stake>0 ? (retornoTotal - stake) : 0;
   // Regra: só calcula a odd automaticamente quando há lucro positivo (aposta ganha).
-  const autoOdd = stake>0 && lucro>0;
+  const autoOdd = stake>0 && profit>0;
   let odd = null;
-  if(autoOdd) odd = (stake+lucro)/stake;
+  if(autoOdd) odd = retornoTotal/stake;
   else if(b.oddManual!==undefined && b.oddManual!==null && b.oddManual!=="") odd = Number(b.oddManual);
-  const profit = stake>0 ? lucro : 0;
   const profitUnits = (stake>0 && state.stakeUnit>0) ? profit/state.stakeUnit : 0;
   return {odd, autoOdd, profit, profitUnits};
 }
@@ -2309,7 +2309,7 @@ function renderEntradas(){
         </colgroup>
         <thead><tr>
           <th>Data</th><th>Campeonato</th><th>Mandante</th><th>Visitante</th><th>Placar</th><th>Aposta</th>
-          <th>Stake</th><th>L/P</th><th>Odd</th><th></th>
+          <th>Stake</th><th>Retorno</th><th>Odd</th><th></th>
         </tr></thead>
         <tbody id="bets-tbody">
           <tr class="add-row-form" id="add-row-entrada">
@@ -2320,7 +2320,7 @@ function renderEntradas(){
             <td data-label="Placar"><select id="new-placar" class="placar-select">${placarOptionsHtml("")}</select></td>
             <td data-label="Aposta"><select id="new-pick">${apostaOptionsHtml("", "", "")}</select></td>
             <td data-label="Stake"><input type="text" inputmode="decimal" class="calc bare-input" id="new-stake" value="${fmtBRL(state.stakeUnit)}"></td>
-            <td data-label="L/P"><input type="text" inputmode="decimal" class="calc bare-input" id="new-retorno" placeholder="${fmtBRL(0)}"></td>
+            <td data-label="Retorno"><input type="text" inputmode="decimal" class="calc bare-input" id="new-retorno" placeholder="${fmtBRL(0)}"></td>
             <td data-label=""></td>
             <td data-label=""><button class="icon-add-btn" id="add-bet" title="Adicionar">+</button></td>
           </tr>
@@ -2350,7 +2350,7 @@ function renderEntradas(){
         <td data-label="Placar"><select data-field="placar" class="placar-select">${placarOptionsHtml(b.placar)}</select></td>
         <td data-label="Aposta"><select data-field="pick" title="${escapeHtml(b.pick?apostaLabel(b.pick,b.home,b.away):'')}">${apostaOptionsHtml(b.pick, b.home, b.away)}</select></td>
         <td data-label="Stake"><input type="text" inputmode="decimal" class="calc bare-input" data-field="stake" value="${fmtBRL(b.stake)}"></td>
-        <td data-label="L/P"><input type="text" inputmode="decimal" class="calc bare-input ${c.profit>0?'pos':(c.profit<0?'neg':'')}" data-field="retorno" value="${fmtBRL(b.retorno)}"></td>
+        <td data-label="Retorno"><input type="text" inputmode="decimal" class="calc bare-input ${c.profit>0?'pos':(c.profit<0?'neg':'')}" data-field="retorno" value="${fmtBRL(b.retorno)}"></td>
         <td data-label="Odd">${oddCell}</td>
         <td data-label=""><button class="del-btn" data-del="${b.id}" title="Excluir">&#10005;</button></td>
       </tr>`;
@@ -2488,7 +2488,7 @@ function renderEntradas(){
       renderEntradas();
       return;
     }
-    // Os demais campos (placar, aposta, stake, L/P, odd) não mudam a ordem da lista nem
+    // Os demais campos (placar, aposta, stake, retorno, odd) não mudam a ordem da lista nem
     // nada fora desta linha — só precisam recalcular a própria linha (cor pos/neg e a
     // odd calculada). Re-renderizar a tabela inteira aqui era o que causava a piscada ao
     // preencher/selecionar algo em Entradas. Agora só essa linha é atualizada.
