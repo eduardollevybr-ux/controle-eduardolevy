@@ -602,7 +602,16 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
   appearance:none;-webkit-appearance:none;-moz-appearance:textfield;
   background:transparent;border:none;padding:0;width:100%;text-align:center;
 }
-.calc.bare-input:focus{background:transparent;border:none;}
+/* outline:none!important e box-shadow:none!important pra matar o contorno roxo
+   que aparece ao selecionar essas células de Stake/Retorno — tanto no PC quanto
+   no mobile. Cobre :focus e :focus-visible (inputs de texto recebem o anel de
+   foco padrão do navegador em :focus-visible mesmo em clique/toque, não só via
+   teclado, por isso a regra genérica input:focus-visible mais abaixo também
+   pegava essas células; aqui sobrescrevemos com maior especificidade). Mesmo
+   problema já resolvido em .odd-input.calc logo abaixo, replicado aqui pelas
+   mesmas colunas "calc bare-input". */
+.calc.bare-input:focus,
+.calc.bare-input:focus-visible{background:transparent!important;border:none!important;outline:none!important;box-shadow:none!important;}
 .calc.bare-input::-webkit-outer-spin-button,.calc.bare-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
 .odd-input{max-width:80px;}
 .odd-input.calc,
@@ -1492,29 +1501,6 @@ function traduzErroAuth(msg){
 async function signOut(){
   await supabase.auth.signOut();
 }
-function exportBackup(){
-  try{
-    const payload = {
-      app: "Controle | Eduardo Levy",
-      exportedAt: new Date().toISOString(),
-      version: 1,
-      data: state
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `controle-backup-${todayIso()}.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    setTimeout(()=>URL.revokeObjectURL(url), 1000);
-    showToast("Backup baixado com sucesso");
-  }catch(e){
-    console.error("Falha ao exportar backup:", e);
-    showToast("Erro ao gerar o backup");
-  }
-}
 function showSavePill(){
   const el = document.getElementById("save-pill");
   if(!el) return;
@@ -2159,9 +2145,6 @@ function renderShell(){
           <svg class="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
           <svg class="icon-compress" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v3a2 2 0 0 1-2 2H4M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
         </button>
-        <button class="theme-toggle" id="export-backup-btn-top" title="Exportar backup dos dados" type="button">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>
-        </button>
         <button class="logout-btn" id="logout-btn">Sair</button>
       </div>
     </div>
@@ -2198,7 +2181,6 @@ function renderShell(){
   });
   document.getElementById("logout-btn").addEventListener("click", signOut);
   document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
-  document.getElementById("export-backup-btn-top").addEventListener("click", exportBackup);
   const fsBtn = document.getElementById("fullscreen-toggle");
   fsBtn.addEventListener("click", toggleFullscreen);
   if(isMobileDevice()) fsBtn.style.display = "none";
@@ -3215,10 +3197,6 @@ function renderConfig(){
             <svg class="icon-sun" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
             <span>Tema</span>
           </button>
-          <button class="logout-btn" id="config-export-btn" type="button" title="Exportar backup dos dados">
-            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>
-            <span>Backup</span>
-          </button>
           <button class="logout-btn" id="config-logout-btn" type="button">Sair</button>
         </div>
       </div>
@@ -3250,7 +3228,6 @@ function renderConfig(){
   `;
   renderChampChips();
   renderClubChips();
-  document.getElementById("config-export-btn").addEventListener("click", exportBackup);
 
   if(focusedId==="add-champ-input" || focusedId==="add-club-input" || focusedId==="champ-search" || focusedId==="club-search"){
     const toFocus = document.getElementById(focusedId);
