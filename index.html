@@ -303,6 +303,7 @@ nav.tabs.tabs-open{animation:tabsOpenIn .22s var(--ease-spring);}
   transition:background .22s var(--ease-smooth), transform .22s var(--ease-smooth), box-shadow .22s var(--ease-smooth);
   animation:fadeUp .45s var(--ease-out) both;
 }
+.stat-block:hover{transform:translateY(-2px);box-shadow:0 10px 22px -12px var(--shadow-color);}
 .stat-block:nth-of-type(1){animation-delay:.02s;}
 .stat-block:nth-of-type(2){animation-delay:.06s;}
 .stat-block:nth-of-type(3){animation-delay:.1s;}
@@ -452,9 +453,24 @@ input[type=number],input[type=date],input[type=time],input[type=text],input[type
   outline:none;transition:border-color .15s ease, background .15s ease;
   width:100%;color-scheme:var(--cs);
 }
+/* Mesmo raciocínio do select logo abaixo: um campo de texto mais estreito que o
+   conteúdo digitado (nome de clube/campeonato longo, coluna comprimida) trunca com
+   reticências em vez de cortar o texto sem aviso nenhum. Enquanto o campo está em
+   edição o navegador rola o texto pra acompanhar o cursor normalmente; reticências
+   só aparecem com o campo sem foco. Os campos de Campeonato/Mandante/Visitante
+   recebem um atributo title com o valor completo (ver JS), igual já acontece nos
+   selects de Aposta/Superioridade/Leitura de mercado. */
+input[type=text]{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 input:focus,select:focus{border-color:var(--blue);background:var(--input-focus-bg);}
 input::placeholder{color:var(--text-faint);}
 select{appearance:none;background-image:url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%239297a1' stroke-width='2'%3e%3cpath d='M6 9l6 6 6-6'/%3e%3c/svg%3e");background-repeat:no-repeat;background-position:right 8px center;background-size:15px;padding-right:28px;}
+/* appearance:none troca o widget nativo do select por uma caixa genérica que, sem essas
+   três regras, deixa o texto selecionado quebrar em duas linhas quando a coluna aperta
+   (em vez de truncar como um <select> nativo faria). Como cada select já recebe um
+   atributo title com o texto completo, truncar com reticências não perde informação —
+   só evita a quebra de linha, que é o comportamento que queremos em qualquer largura. */
+select{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+select option{white-space:normal;}
 /* Spinners nativos (setinhas de incremento/decremento) dos inputs numéricos removidos:
    o controle nativo pinta um fundo cinza próprio do navegador que não é controlável só com
    background/opacity em CSS, então escondemos com -webkit-appearance:none. Sem ícone nenhum
@@ -504,8 +520,8 @@ input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-
 .table-wrap::-webkit-scrollbar{display:none;}
 .table-wrap.dragging{cursor:grabbing;}
 table{width:100%;border-collapse:collapse;table-layout:fixed;}
-#entradas-table{width:100%;min-width:1486px;}
-#analises-table{width:100%;min-width:1510px;}
+#entradas-table{width:100%;min-width:1150px;}
+#analises-table{width:100%;min-width:1130px;}
 thead th{
   text-align:left;font-size:10.2px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-faint);
   padding:12px 10px;font-weight:700;border-bottom:1px solid var(--border-soft);white-space:nowrap;
@@ -633,12 +649,17 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
 .add-row-form td{background:var(--bg-soft);padding-top:12px;padding-bottom:12px;}
 .add-row-form{position:relative;}
 
-/* ---------- tabelas em cards no mobile (entradas & análises) ---------- */
-/* No desktop a tabela rola na horizontal; no mobile isso força colunas
-   estreitas (ex.: Campeonato/Data) a se sobreporem/comprimirem de forma
-   ilegível. Abaixo de 720px cada linha vira um card com campo empilhado
-   sobre campo, na mesma ordem do cabeçalho (Data sempre antes de Campeonato). */
-@media (max-width:720px){
+/* ---------- tabelas em cards em telas estreitas (entradas & análises) ---------- */
+/* Antes, essa troca só acontecia no breakpoint de celular (700-720px), bem abaixo da
+   largura mínima da tabela (~1486px/1510px). Isso deixava uma faixa enorme (721px até
+   ~1500px) — ex.: a janela do navegador redimensionada num note/desktop — onde a tabela
+   continuava no modo "linha única com scroll horizontal", forçando rolar pro lado pra ver
+   colunas que ficavam cortadas. O breakpoint abaixo agora casa com a largura mínima real
+   da tabela (colunas foram enxutas em paralelo): assim que a janela fica estreita demais
+   pro modo tabela, a visualização já troca pra cards empilhados (mesma lógica do Ranking
+   de equipes: lado a lado quando cabe, empilhado quando não cabe), sem nunca precisar de
+   scroll horizontal — em qualquer largura, celular ou janela de desktop redimensionada. */
+@media (max-width:1180px){
   .table-wrap{overflow-x:visible;cursor:default;background:transparent;box-shadow:none;border:none;border-radius:0;}
   #entradas-table,#analises-table{width:100%;min-width:0;table-layout:auto;}
   #entradas-table colgroup,#analises-table colgroup{display:none;}
@@ -839,8 +860,14 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
      à esquerda e fica invisível. Só limita a largura para não estourar
      a borda direita em telas bem estreitas. */
   .mini-cal-popover{left:0;right:auto;width:min(246px, calc(100vw - 32px));}
-  /* No mobile a tabela vira cards empilhados (linha ocupa a largura toda), então
-     não há "lado" pra abrir — volta a abrir embaixo, ancorado à esquerda. */
+}
+/* Este trecho acompanha o mesmo breakpoint da tabela em cards (acima), e não o de
+   celular: enquanto a tabela estiver em modo linha única (scroll horizontal), o
+   popover abre ao lado da célula; assim que ela vira cards empilhados — o que agora
+   também acontece numa janela de desktop redimensionada, não só no celular — a
+   célula ocupa a largura toda e não há mais "lado" pra abrir, então volta a abrir
+   embaixo, ancorado à esquerda. */
+@media (max-width:1180px){
   .date-cell-wrap .mini-cal-popover{top:calc(100% + 6px);left:0;}
 }
 .today-btn{
@@ -858,7 +885,7 @@ td input[type=date],td input[type=time]{padding:6px 4px;font-size:13px;min-width
   padding:11px 16px;border-radius:var(--radius-md);font-size:13px;font-weight:600;margin-bottom:16px;
 }
 .filter-banner button{background:none;border:none;color:var(--text);text-decoration:underline;cursor:pointer;font-size:12.5px;font-weight:600;}
-@media (max-width:720px){
+@media (max-width:1180px){
   .table-wrap.filters-active #entradas-table tbody tr.add-row-form,
   .table-wrap.filters-active #analises-table tbody tr.add-row-form{display:none !important;}
 }
@@ -952,6 +979,7 @@ button:focus-visible,.date-cell-btn:focus-visible,input:focus-visible,select:foc
 .auth-logo{font-family:'Manrope';font-weight:800;font-size:18px;text-align:center;margin-bottom:4px;}
 .auth-card .btn-primary{width:100%;padding:11px 18px;margin-top:4px;}
 .auth-error{font-size:12px;color:var(--red-text);min-height:15px;}
+.auth-subtitle{font-size:12.5px;color:var(--text-faint);text-align:center;line-height:1.5;margin:-2px 0 8px;}
 .auth-switch{font-size:12.5px;color:var(--text-faint);text-align:center;margin-top:6px;}
 .auth-switch button{
   appearance:none;border:none;background:transparent;color:var(--blue-text);font-weight:700;cursor:pointer;font-size:12.5px;
@@ -995,12 +1023,17 @@ html.is-fullscreen .fullscreen-toggle .icon-compress{display:block;}
   <div class="auth-card card">
     <div class="auth-logo">Controle | Eduardo Levy</div>
     <div class="section-title" id="auth-title" style="text-align:center;margin-bottom:2px;">Entrar</div>
+    <p class="auth-subtitle" id="auth-subtitle" style="display:none;"></p>
     <form id="auth-form" autocomplete="on">
       <input type="email" id="auth-email" name="email" placeholder="Email" autocomplete="username" required>
       <input type="password" id="auth-password" name="password" placeholder="Senha" autocomplete="current-password" required>
+      <input type="password" id="auth-password-confirm" name="password-confirm" placeholder="Confirme a nova senha" autocomplete="new-password" style="display:none;">
       <div class="auth-error" id="auth-error"></div>
       <button class="btn btn-primary" type="submit" id="auth-submit">Entrar</button>
     </form>
+    <div class="auth-switch" id="auth-forgot-wrap">
+      <button type="button" id="auth-forgot-btn">Esqueci minha senha</button>
+    </div>
     <div class="auth-switch">
       <span id="auth-switch-text">Não tem conta?</span><button type="button" id="auth-switch-btn">Criar conta</button>
     </div>
@@ -1103,6 +1136,19 @@ const ACTIVITY_EVENTS = ["mousedown","keydown","scroll","touchstart"];
 let inactivityInterval = null;
 let inactivityLogoutPending = false;
 
+// Link de "esqueci minha senha": o Supabase autentica a sessão de recuperação assim que
+// a página abre (via #access_token=...&type=recovery na URL) e dispara o evento
+// PASSWORD_RECOVERY. Detectamos isso já na primeira carga para não deixar o boot() ou o
+// listener de auth liberarem o app direto, sem antes pedir a nova senha.
+function isPasswordRecoveryUrl(){
+  try{
+    const hash = window.location.hash || "";
+    const search = window.location.search || "";
+    return /type=recovery/.test(hash) || /type=recovery/.test(search);
+  }catch(e){ return false; }
+}
+let passwordRecoveryPending = isPasswordRecoveryUrl();
+
 function markActivity(){
   try{ window.localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now())); }catch(e){}
 }
@@ -1147,6 +1193,10 @@ const APOSTA_OPTIONS = ["Mandante | AH 0.0","Visitante | AH 0.0","Mandante | AH 
 const PLACAR_OPTIONS = ["0 x 0","1 x 0","0 x 1","2 x 0","0 x 2","1 x 1","2 x 1","1 x 2","2 x 2"];
 const LEITURA_OPTIONS = ["Leitura pró favorito","Favorito sob risco","Leitura dinâmica"];
 const LEITURA_TAG_CLASS = {"Leitura pró favorito":"tag-blue","Favorito sob risco":"tag-red","Leitura dinâmica":"tag-yellow"};
+function leituraOptionsHtml(selected){
+  const blank = `<option value="" ${!selected?"selected":""}>Selecione</option>`;
+  return blank + LEITURA_OPTIONS.map(o=>`<option value="${escapeHtml(o)}" ${o===selected?"selected":""}>${escapeHtml(o)}</option>`).join("");
+}
 
 const DOW = ["Seg","Ter","Qua","Qui","Sex","Sáb","Dom"];
 const MONTHS = ["janeiro","fevereiro","março","abril","maio","junho","julho","agosto","setembro","outubro","novembro","dezembro"];
@@ -1284,11 +1334,60 @@ function hideAuthScreen(){
   document.getElementById("app").style.display = "";
 }
 let authMode = "login";
+// 'login' | 'signup' | 'forgot' (pedir link por email) | 'reset' (definir nova senha,
+// depois de abrir o link de recuperação recebido por email).
 function setAuthMode(mode){
   authMode = mode;
   document.getElementById("auth-error").textContent = "";
-  document.getElementById("auth-title").textContent = mode==="login" ? "Entrar" : "Criar conta";
-  document.getElementById("auth-submit").textContent = mode==="login" ? "Entrar" : "Criar conta";
+  document.getElementById("auth-error").style.color = "";
+
+  const emailInp = document.getElementById("auth-email");
+  const passInp = document.getElementById("auth-password");
+  const passConfirmInp = document.getElementById("auth-password-confirm");
+  const subtitleEl = document.getElementById("auth-subtitle");
+  const forgotWrap = document.getElementById("auth-forgot-wrap");
+  const forgotBtn = document.getElementById("auth-forgot-btn");
+  const switchWrap = document.getElementById("auth-switch-text").closest(".auth-switch");
+
+  // estado-base: campos visíveis normalmente, depois cada modo ajusta o que precisa
+  emailInp.style.display = "";
+  emailInp.required = true;
+  passInp.style.display = "";
+  passInp.required = true;
+  passInp.placeholder = "Senha";
+  passConfirmInp.style.display = "none";
+  passConfirmInp.required = false;
+  passConfirmInp.value = "";
+  subtitleEl.style.display = "none";
+  forgotWrap.style.display = mode==="signup" ? "none" : "";
+  forgotBtn.textContent = mode==="login" ? "Esqueci minha senha" : "Voltar para o login";
+  switchWrap.style.display = (mode==="forgot"||mode==="reset") ? "none" : "";
+
+  if(mode==="login"){
+    document.getElementById("auth-title").textContent = "Entrar";
+    document.getElementById("auth-submit").textContent = "Entrar";
+  } else if(mode==="signup"){
+    document.getElementById("auth-title").textContent = "Criar conta";
+    document.getElementById("auth-submit").textContent = "Criar conta";
+  } else if(mode==="forgot"){
+    document.getElementById("auth-title").textContent = "Recuperar senha";
+    document.getElementById("auth-submit").textContent = "Enviar link de recuperação";
+    passInp.style.display = "none";
+    passInp.required = false;
+    subtitleEl.style.display = "";
+    subtitleEl.textContent = "Informe seu email cadastrado. Enviaremos um link para você criar uma nova senha.";
+  } else if(mode==="reset"){
+    document.getElementById("auth-title").textContent = "Nova senha";
+    document.getElementById("auth-submit").textContent = "Salvar nova senha";
+    emailInp.style.display = "none";
+    emailInp.required = false;
+    passInp.placeholder = "Nova senha";
+    passConfirmInp.style.display = "";
+    passConfirmInp.required = true;
+    subtitleEl.style.display = "";
+    subtitleEl.textContent = "Escolha uma nova senha para a sua conta.";
+  }
+
   document.getElementById("auth-switch-text").textContent = mode==="login" ? "Não tem conta?" : "Já tem conta?";
   document.getElementById("auth-switch-btn").textContent = mode==="login" ? "Criar conta" : "Entrar";
 }
@@ -1296,10 +1395,57 @@ const AUTH_RETRY_EMAIL_KEY = "controle_apostas_auth_retry_email";
 async function handleAuthSubmit(){
   const email = document.getElementById("auth-email").value.trim();
   const password = document.getElementById("auth-password").value;
+  const passwordConfirm = document.getElementById("auth-password-confirm").value;
   const errEl = document.getElementById("auth-error");
   errEl.textContent = "";
-  if(!email || !password){ errEl.textContent = "Preencha email e senha."; return; }
+  errEl.style.color = "";
   const btn = document.getElementById("auth-submit");
+
+  if(authMode==="forgot"){
+    if(!email){ errEl.textContent = "Informe seu email."; return; }
+    btn.disabled = true;
+    try{
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + window.location.pathname
+      });
+      if(error) throw error;
+      errEl.style.color = "var(--pos-text)";
+      errEl.textContent = "Se esse email tiver uma conta cadastrada, enviamos um link de recuperação. Verifique sua caixa de entrada (e o spam).";
+    }catch(e){
+      errEl.textContent = traduzErroAuth(e.message);
+    }finally{
+      btn.disabled = false;
+    }
+    return;
+  }
+
+  if(authMode==="reset"){
+    if(!password || password.length<6){ errEl.textContent = "A nova senha precisa ter pelo menos 6 caracteres."; return; }
+    if(password!==passwordConfirm){ errEl.textContent = "As senhas não coincidem."; return; }
+    btn.disabled = true;
+    try{
+      const { error } = await supabase.auth.updateUser({ password });
+      if(error) throw error;
+      passwordRecoveryPending = false;
+      try{ history.replaceState(null, "", window.location.pathname); }catch(e){}
+      const { data: userData } = await supabase.auth.getUser();
+      currentUser = userData && userData.user;
+      document.getElementById("auth-password").value = "";
+      document.getElementById("auth-password-confirm").value = "";
+      hideAuthScreen();
+      showToast("Senha atualizada com sucesso");
+      startActivityTracking();
+      state = await loadState();
+      renderShell();
+      subscribeRealtime();
+    }catch(e){
+      errEl.textContent = traduzErroAuth(e.message);
+      btn.disabled = false;
+    }
+    return;
+  }
+
+  if(!email || !password){ errEl.textContent = "Preencha email e senha."; return; }
   btn.disabled = true;
   errEl.style.color = "";
   // Watchdog: se a chamada travar (bug conhecido do cliente Supabase depois de um
@@ -1339,10 +1485,35 @@ function traduzErroAuth(msg){
   if(/email not confirmed/i.test(msg)) return "Você ainda não confirmou seu email. Verifique sua caixa de entrada (e o spam) e clique no link de confirmação antes de entrar.";
   if(/already registered|already exists/i.test(msg)) return "Este email já tem uma conta.";
   if(/password.*least/i.test(msg)) return "A senha precisa ter pelo menos 6 caracteres.";
+  if(/same.*password|different from the old/i.test(msg)) return "A nova senha precisa ser diferente da atual.";
+  if(/token.*expired|invalid.*token|otp.*expired/i.test(msg)) return "Esse link de recuperação expirou ou já foi usado. Solicite um novo.";
   return msg;
 }
 async function signOut(){
   await supabase.auth.signOut();
+}
+function exportBackup(){
+  try{
+    const payload = {
+      app: "Controle | Eduardo Levy",
+      exportedAt: new Date().toISOString(),
+      version: 1,
+      data: state
+    };
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {type:"application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `controle-backup-${todayIso()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url), 1000);
+    showToast("Backup baixado com sucesso");
+  }catch(e){
+    console.error("Falha ao exportar backup:", e);
+    showToast("Erro ao gerar o backup");
+  }
 }
 function showSavePill(){
   const el = document.getElementById("save-pill");
@@ -1361,7 +1532,7 @@ function showToast(msg){
 }
 
 /* ================= CONFIRMAÇÃO (modal genérico) ================= */
-function showConfirmModal({title, message, confirmLabel="Confirmar", onConfirm}){
+function showConfirmModal({title, message, confirmLabel="Confirmar", confirmClass="btn-danger", onConfirm, onCancel}){
   const existing = document.getElementById("confirm-overlay");
   if(existing) existing.remove();
 
@@ -1374,7 +1545,7 @@ function showConfirmModal({title, message, confirmLabel="Confirmar", onConfirm})
       <div class="confirm-msg">${escapeHtml(message)}</div>
       <div class="confirm-actions">
         <button class="btn btn-ghost btn-sm" id="confirm-cancel-btn">Cancelar</button>
-        <button class="btn btn-danger btn-sm" id="confirm-ok-btn">${escapeHtml(confirmLabel)}</button>
+        <button class="btn ${confirmClass} btn-sm" id="confirm-ok-btn">${escapeHtml(confirmLabel)}</button>
       </div>
     </div>
   `;
@@ -1386,11 +1557,12 @@ function showConfirmModal({title, message, confirmLabel="Confirmar", onConfirm})
     setTimeout(()=>overlay.remove(), 150);
     document.removeEventListener("keydown", onKeydown);
   };
-  const onKeydown = (e)=>{ if(e.key==="Escape") close(); };
+  const dismiss = ()=>{ close(); if(onCancel) onCancel(); };
+  const onKeydown = (e)=>{ if(e.key==="Escape") dismiss(); };
   document.addEventListener("keydown", onKeydown);
 
-  overlay.addEventListener("click", (e)=>{ if(e.target===overlay) close(); });
-  overlay.querySelector("#confirm-cancel-btn").addEventListener("click", close);
+  overlay.addEventListener("click", (e)=>{ if(e.target===overlay) dismiss(); });
+  overlay.querySelector("#confirm-cancel-btn").addEventListener("click", dismiss);
   overlay.querySelector("#confirm-ok-btn").addEventListener("click", ()=>{
     close();
     onConfirm();
@@ -1902,8 +2074,8 @@ function attachRestrictedTeamInput(inputEl, getList, label){
   // análise): a digitação continua livre (o datalist list="dl-..." já sugere
   // conforme o usuário digita). A validação só roda ao sair do campo (blur) ou
   // apertar Enter (que também dispara blur): se o texto não corresponder a um
-  // item cadastrado, mostra o aviso e limpa a célula; se corresponder, normaliza
-  // para o nome exatamente como está cadastrado.
+  // item cadastrado, oferece cadastrá-lo ali mesmo (ver offerRegisterUnlisted);
+  // se corresponder, normaliza para o nome exatamente como está cadastrado.
   if(!inputEl || inputEl.dataset.restrictedBound) return;
   inputEl.dataset.restrictedBound = "1";
   inputEl.addEventListener("keydown", e=>{ if(e.key==="Enter") inputEl.blur(); });
@@ -1913,8 +2085,16 @@ function attachRestrictedTeamInput(inputEl, getList, label){
     const list = getList();
     const matched = resolveRegistered(list, raw);
     if(matched===null){
-      showToast(`Esse ${label||"item"} não está cadastrado.`);
-      inputEl.value = "";
+      offerRegisterUnlisted(raw, list, label, (confirmed, normalized)=>{
+        if(confirmed){
+          inputEl.value = normalized;
+          inputEl.title = normalized;
+          inputEl.dispatchEvent(new Event("input", {bubbles:true}));
+        } else {
+          inputEl.value = "";
+          inputEl.focus();
+        }
+      });
     } else {
       inputEl.value = matched;
     }
@@ -1929,6 +2109,31 @@ function ensureListed(list, value){
   if(exists) return false;
   list.push(v); list.sort((a,b)=>a.localeCompare(b,'pt-BR'));
   return true;
+}
+
+// Em vez de rejeitar de cara um campeonato/clube ainda não cadastrado (aviso + campo
+// limpo), oferece cadastrá-lo ali mesmo, sem sair de Entradas/Análises: um modal de
+// confirmação (mesmo componente usado para excluir, mas em azul — cadastrar não é uma
+// ação destrutiva) pergunta se quer cadastrar o nome digitado. Confirmando, o nome
+// entra na lista (Ajustes > Campeonatos/Clubes) e o campo já fica preenchido com ele;
+// cancelando, o campo é limpo como antes. `onDecision(confirmed, normalizedValue)` é
+// chamado depois do modal fechar, pra quem chamou decidir o que fazer com o campo.
+function offerRegisterUnlisted(rawValue, list, kind, onDecision){
+  const label = kind==="campeonato" ? "campeonato" : "clube";
+  const artigo = kind==="campeonato" ? "o campeonato" : "o clube";
+  showConfirmModal({
+    title: `Cadastrar novo ${label}?`,
+    message: `"${rawValue}" ainda não está cadastrado. Deseja cadastrar ${artigo} agora e usar neste lançamento?`,
+    confirmLabel: "Cadastrar",
+    confirmClass: "btn-primary",
+    onConfirm: ()=>{
+      ensureListed(list, rawValue);
+      const normalized = rawValue.trim();
+      showToast(`"${normalized}" cadastrado.`);
+      onDecision(true, normalized);
+    },
+    onCancel: ()=> onDecision(false, null)
+  });
 }
 
 /* ================= RENDER: SHELL ================= */
@@ -1953,6 +2158,9 @@ function renderShell(){
         <button class="theme-toggle fullscreen-toggle" id="fullscreen-toggle" title="Tela cheia" type="button">
           <svg class="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
           <svg class="icon-compress" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 3v3a2 2 0 0 1-2 2H4M21 8h-3a2 2 0 0 1-2-2V3M3 16h3a2 2 0 0 1 2 2v3M16 21v-3a2 2 0 0 1 2-2h3"/></svg>
+        </button>
+        <button class="theme-toggle" id="export-backup-btn-top" title="Exportar backup dos dados" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>
         </button>
         <button class="logout-btn" id="logout-btn">Sair</button>
       </div>
@@ -1990,6 +2198,7 @@ function renderShell(){
   });
   document.getElementById("logout-btn").addEventListener("click", signOut);
   document.getElementById("theme-toggle").addEventListener("click", toggleTheme);
+  document.getElementById("export-backup-btn-top").addEventListener("click", exportBackup);
   const fsBtn = document.getElementById("fullscreen-toggle");
   fsBtn.addEventListener("click", toggleFullscreen);
   if(isMobileDevice()) fsBtn.style.display = "none";
@@ -2080,6 +2289,7 @@ function renderDashboard(){
         </div>
       </div>
     </div>
+
   `;
   document.getElementById("cal-prev").onclick = ()=>{ calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth()-1, 1); renderCalendar(); renderRanking(); };
   document.getElementById("cal-next").onclick = ()=>{ calMonth = new Date(calMonth.getFullYear(), calMonth.getMonth()+1, 1); renderCalendar(); renderRanking(); };
@@ -2303,8 +2513,8 @@ function renderEntradas(){
     <div class="table-wrap card${entradasFilterDate?' filters-active':''}">
       <table id="entradas-table">
         <colgroup>
-          <col style="width:74px"><col style="width:230px"><col style="width:210px"><col style="width:210px">
-          <col style="width:90px"><col style="width:320px"><col style="width:82px"><col style="width:86px"><col style="width:56px">
+          <col style="width:74px"><col style="width:170px"><col style="width:150px"><col style="width:150px">
+          <col style="width:80px"><col style="width:230px"><col style="width:74px"><col style="width:78px"><col style="width:56px">
           <col style="width:56px">
         </colgroup>
         <thead><tr>
@@ -2448,23 +2658,25 @@ function renderEntradas(){
     const field = e.target.dataset.field;
     if(field==="champ" || field==="home" || field==="away"){
       const list = field==="champ" ? state.championships : state.clubs;
+      const kind = field==="champ" ? "campeonato" : "clube";
       const raw = e.target.value.trim();
       if(raw===""){
         bet[field] = "";
-      } else {
-        const matched = resolveRegistered(list, raw);
-        if(matched===null){
-          const label = field==="champ" ? "campeonato" : "clube";
-          showToast(`Esse ${label} não está cadastrado.`);
-          bet[field] = "";
-          e.target.value = "";
+        persist();
+        renderEntradas();
+        return;
+      }
+      const matched = resolveRegistered(list, raw);
+      if(matched===null){
+        offerRegisterUnlisted(raw, list, kind, (confirmed, normalized)=>{
+          bet[field] = confirmed ? normalized : "";
           persist();
           renderEntradas();
-          return;
-        }
-        bet[field] = matched;
-        e.target.value = matched;
+        });
+        return;
       }
+      bet[field] = matched;
+      e.target.value = matched;
       persist();
       renderEntradas();
       return;
@@ -2587,6 +2799,15 @@ function renderEntradas(){
 
   wireRowDatePickers("entradas", renderEntradas);
 
+  // Campeonato/Mandante/Visitante agora truncam com reticências quando o nome não
+  // cabe na coluna (colunas ficaram mais estreitas pra tabela não precisar de scroll
+  // horizontal em janelas menores). O atributo title mantém o nome completo visível
+  // ao passar o mouse, atualizado em tempo real conforme o usuário digita.
+  el.querySelectorAll('input[data-field="champ"],input[data-field="home"],input[data-field="away"],#new-champ,#new-home,#new-away').forEach(inp=>{
+    inp.title = inp.value;
+    inp.addEventListener("input", ()=>{ inp.title = inp.value; });
+  });
+
   attachDragScroll(el.querySelector(".table-wrap"));
 }
 
@@ -2629,13 +2850,13 @@ function renderAnalises(){
     <div class="table-wrap card${analisesFilterDate?' filters-active':''}">
       <table id="analises-table">
         <colgroup>
-          <col style="width:74px"><col style="width:74px"><col style="width:230px">
-          <col style="width:220px"><col style="width:220px"><col style="width:414px">
-          <col style="width:100px">
+          <col style="width:64px"><col style="width:70px"><col style="width:170px">
+          <col style="width:150px"><col style="width:150px"><col style="width:210px">
+          <col style="width:170px"><col style="width:90px">
         </colgroup>
         <thead><tr>
           <th>Hora</th><th>Data</th><th>Campeonato</th><th>Mandante</th><th>Visitante</th>
-          <th>Superioridade no jogo</th><th></th>
+          <th>Superioridade no jogo</th><th>Leitura de mercado</th><th></th>
         </tr></thead>
         <tbody id="an-tbody">
           <tr class="add-row-form" id="add-row-analise">
@@ -2646,6 +2867,9 @@ function renderAnalises(){
             <td data-label="Visitante"><input type="text" id="an-away" list="dl-clubs2" placeholder="Visitante"></td>
             <td data-label="Superioridade no jogo">
               <select id="an-sup">${superioridadeOptionsHtml("", "", "")}</select>
+            </td>
+            <td data-label="Leitura de mercado">
+              <select id="an-leitura">${leituraOptionsHtml("")}</select>
             </td>
             <td data-label=""><button class="icon-add-btn" id="add-an" title="Adicionar">+</button></td>
           </tr>
@@ -2660,7 +2884,7 @@ function renderAnalises(){
   const tbody = document.getElementById("an-tbody");
   if(rows.length===0){
     const msg = (analisesTeamSearch||analisesMandante||analisesVisitante||analisesFilterDate) ? "Nenhuma análise encontrada para essa busca." : "Nenhuma análise cadastrada ainda.";
-    tbody.insertAdjacentHTML("beforeend", `<tr><td colspan="7"><div class="empty-state">${msg}</div></td></tr>`);
+    tbody.insertAdjacentHTML("beforeend", `<tr><td colspan="8"><div class="empty-state">${msg}</div></td></tr>`);
   } else {
     tbody.insertAdjacentHTML("beforeend", rows.map(r=>`
       <tr data-id="${r.id}">
@@ -2670,6 +2894,7 @@ function renderAnalises(){
         <td data-label="Mandante"><input type="text" data-field="home" list="dl-clubs2" value="${escapeHtml(r.home||'')}"></td>
         <td data-label="Visitante"><input type="text" data-field="away" list="dl-clubs2" value="${escapeHtml(r.away||'')}"></td>
         <td data-label="Superioridade"><select data-field="sup" title="${escapeHtml(r.sup?superioridadeLabel(r.sup,r.home,r.away):'')}">${superioridadeOptionsHtml(r.sup, r.home, r.away)}</select></td>
+        <td data-label="Leitura de mercado"><select data-field="leitura" title="${escapeHtml(r.leitura||'')}">${leituraOptionsHtml(r.leitura)}</select></td>
         <td data-label="">
           <div class="row-actions">
             <button class="send-btn ${r.linkedBetId?'sent':''}" data-send="${r.id}" title="${r.linkedBetId?'Enviado para Entradas — clique para desfazer':'Enviar para Entradas'}">
@@ -2809,23 +3034,25 @@ function renderAnalises(){
       const field = e.target.dataset.field;
       if(field==="champ" || field==="home" || field==="away"){
         const list = field==="champ" ? state.championships : state.clubs;
+        const kind = field==="champ" ? "campeonato" : "clube";
         const raw = e.target.value.trim();
         if(raw===""){
           item[field] = "";
-        } else {
-          const matched = resolveRegistered(list, raw);
-          if(matched===null){
-            const label = field==="champ" ? "campeonato" : "clube";
-            showToast(`Esse ${label} não está cadastrado.`);
-            item[field] = "";
-            e.target.value = "";
+          persist();
+          renderAnalises();
+          return;
+        }
+        const matched = resolveRegistered(list, raw);
+        if(matched===null){
+          offerRegisterUnlisted(raw, list, kind, (confirmed, normalized)=>{
+            item[field] = confirmed ? normalized : "";
             persist();
             renderAnalises();
-            return;
-          }
-          item[field] = matched;
-          e.target.value = matched;
+          });
+          return;
         }
+        item[field] = matched;
+        e.target.value = matched;
         persist();
         renderAnalises();
         return;
@@ -2846,6 +3073,9 @@ function renderAnalises(){
       // opção. Agora só salva e atualiza o tooltip da Superioridade, sem redesenhar nada.
       if(field==="sup"){
         e.target.title = item.sup ? superioridadeLabel(item.sup, item.home, item.away) : "";
+      }
+      if(field==="leitura"){
+        e.target.title = item.leitura || "";
       }
       persist();
     });
@@ -2901,7 +3131,7 @@ function renderAnalises(){
       home: document.getElementById("an-home").value.trim(),
       away: document.getElementById("an-away").value.trim(),
       sup: document.getElementById("an-sup").value,
-      leitura: ""
+      leitura: document.getElementById("an-leitura").value
     };
   }
   let submittingAn = false;
@@ -2949,6 +3179,14 @@ function renderAnalises(){
 
   wireRowDatePickers("analises", renderAnalises);
 
+  // Mesmo raciocínio de Entradas: Campeonato/Mandante/Visitante truncam com reticências
+  // quando o nome não cabe na coluna, e o title mantém o nome completo disponível ao
+  // passar o mouse, atualizado em tempo real conforme o usuário digita.
+  el.querySelectorAll('input[data-field="champ"],input[data-field="home"],input[data-field="away"],#an-champ,#an-home,#an-away').forEach(inp=>{
+    inp.title = inp.value;
+    inp.addEventListener("input", ()=>{ inp.title = inp.value; });
+  });
+
   attachDragScroll(el.querySelector(".table-wrap"));
 }
 
@@ -2976,6 +3214,10 @@ function renderConfig(){
             <svg class="icon-moon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
             <svg class="icon-sun" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
             <span>Tema</span>
+          </button>
+          <button class="logout-btn" id="config-export-btn" type="button" title="Exportar backup dos dados">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12"/><path d="m7 10 5 5 5-5"/><path d="M4 21h16"/></svg>
+            <span>Backup</span>
           </button>
           <button class="logout-btn" id="config-logout-btn" type="button">Sair</button>
         </div>
@@ -3008,6 +3250,7 @@ function renderConfig(){
   `;
   renderChampChips();
   renderClubChips();
+  document.getElementById("config-export-btn").addEventListener("click", exportBackup);
 
   if(focusedId==="add-champ-input" || focusedId==="add-club-input" || focusedId==="champ-search" || focusedId==="club-search"){
     const toFocus = document.getElementById(focusedId);
@@ -3398,9 +3641,26 @@ document.getElementById("auth-form").addEventListener("submit", e=>{
   handleAuthSubmit();
 });
 document.getElementById("auth-switch-btn").addEventListener("click", ()=> setAuthMode(authMode==="login" ? "signup" : "login"));
+document.getElementById("auth-forgot-btn").addEventListener("click", async ()=>{
+  if(authMode==="reset"){
+    // Sai da sessão de recuperação em vez de deixá-la pendurada: melhor voltar pro
+    // login normal do que ficar num meio-termo autenticado sem senha nova definida.
+    passwordRecoveryPending = false;
+    try{ await supabase.auth.signOut(); }catch(e){}
+    try{ history.replaceState(null, "", window.location.pathname); }catch(e){}
+  }
+  setAuthMode(authMode==="login" ? "forgot" : "login");
+});
 
 async function boot(){
   const { data: { session } } = await supabase.auth.getSession();
+  if(passwordRecoveryPending){
+    // Veio de um link de "esqueci minha senha": já existe uma sessão válida, mas o
+    // usuário só deve entrar no app depois de escolher uma nova senha.
+    currentUser = session && session.user || null;
+    showAuthScreen("reset");
+    return;
+  }
   if(session && session.user){
     if(Date.now() - getLastActivity() >= INACTIVITY_LIMIT_MS){
       // sessão salva, mas passou de 12h sem uso: desloga antes de mostrar o app
@@ -3429,7 +3689,15 @@ async function boot(){
 }
 
 supabase.auth.onAuthStateChange((event, session) => {
-  if(event === "SIGNED_IN" && (!currentUser || currentUser.id !== session.user.id)){
+  if(event === "PASSWORD_RECOVERY"){
+    passwordRecoveryPending = true;
+    currentUser = session && session.user || currentUser;
+    document.getElementById("auth-email").value = "";
+    document.getElementById("auth-password").value = "";
+    showAuthScreen("reset");
+    return;
+  }
+  if(event === "SIGNED_IN" && !passwordRecoveryPending && (!currentUser || currentUser.id !== session.user.id)){
     currentUser = session.user;
     hideAuthScreen();
     document.getElementById("auth-email").value = "";
