@@ -1644,6 +1644,184 @@ input[type=number],input[type=date],input[type=time],input[type=text],input[type
 .tag{border-radius:6px;}
 .cal-month-summary{border-radius:12px;}
 @media (max-width:700px){ .cal-month-summary{border-radius:var(--ctl-r);} }
+
+/* ===== v6: padronização geral (tamanhos, textos, ícones) =====
+   Sistema de tamanhos (como os "control sizes" da Apple):
+   - médio 36px: campos, botões, filtros, seletores, botões de ícone
+   - compacto 32px: campos dentro da tabela no computador
+   - pequeno 28px: ações de linha da tabela no computador (36px no toque)
+   - grande 44px: login
+   Tipografia: rótulos em maiúsculas 11px/600; texto de botões 13px/600. */
+:root{--h-md:36px;--h-cp:32px;--h-sm:28px;}
+
+/* botões e filtros com a mesma altura e o mesmo texto */
+.btn,.search-toggle,.today-btn,.logout-btn{
+  height:var(--h-md);padding:0 16px;display:inline-flex;align-items:center;justify-content:center;gap:6px;
+  font-size:13px;font-weight:600;line-height:1;box-sizing:border-box;
+}
+.btn-sm{padding:0 16px;font-size:13px;}
+.theme-toggle,.date-filter-icon-btn,.clear-all-btn{width:var(--h-md);height:var(--h-md);min-width:var(--h-md);}
+.auth-card .btn-primary{height:44px;}
+.auth-card input{height:44px;}
+
+/* seletores (segmentados) todos do mesmo tamanho */
+.toggle-group{height:var(--h-md);padding:3px;box-sizing:border-box;align-items:stretch;}
+.toggle-group button,#ranking-toggle button,#config-theme-seg button{
+  height:auto;padding:0 16px;font-size:13px;font-weight:600;
+}
+.cal-arrow{width:32px;height:32px;}
+
+/* campos: altura fixa em todo lugar */
+input[type=number],input[type=date],input[type=time],input[type=text],input[type=email],input[type=password],select,.date-cell-btn{
+  height:var(--h-md);box-sizing:border-box;
+}
+.calc.bare-input,.odd-input.calc{height:auto !important;}
+@media (min-width:1181px){
+  td input:not(.bare-input):not(.odd-input),td select,td .date-cell-btn{height:var(--h-cp);font-size:13px;}
+  .del-btn,.send-btn,.icon-add-btn{width:var(--h-sm);height:var(--h-sm);}
+}
+
+/* rótulos em maiúsculas: um só estilo */
+.stat-label,thead th,.field label,.ranking-subtitle,.cal-dow,.cal-month-summary .stat-label{
+  font-size:11px;font-weight:600;letter-spacing:.6px;text-transform:uppercase;
+}
+@media (max-width:1180px){
+  #entradas-table td[data-label]:not([data-label=""])::before,
+  #analises-table td[data-label]:not([data-label=""])::before{font-size:11px;font-weight:600;letter-spacing:.6px;}
+}
+.ranking-subtitle.pos{color:var(--pos-text);}
+.ranking-subtitle.neg{color:var(--red-text);}
+
+/* cantos: containers do mesmo nível com o mesmo raio */
+.search-bar{border-radius:var(--radius-lg);}
+@media (max-width:1180px){
+  #entradas-table tbody tr[data-id],#entradas-table tbody tr.add-row-form,
+  #analises-table tbody tr[data-id],#analises-table tbody tr.add-row-form{border-radius:var(--radius-lg);}
+}
+
+/* "Setembro de 2026": só a primeira letra maiúscula (padrão pt-BR e Apple) */
+.cal-title,.mini-cal-label{text-transform:none;display:inline-block;}
+.cal-title::first-letter,.mini-cal-label::first-letter{text-transform:uppercase;}
+.cal-title{display:block;}
+
+/* campos lado a lado alinhados pela base quando um rótulo quebra em 2 linhas */
+.field{justify-content:flex-end;}
+
+/* ícones desenhados (mesmo traço dos demais) no lugar de caracteres ✕ ‹ › + */
+.ui-ic{width:14px;height:14px;display:block;flex:none;}
+.cal-arrow .ui-ic,.mini-cal-nav .ui-ic{width:16px;height:16px;}
+.icon-add-btn .ui-ic{width:16px;height:16px;}
+.chip button .ui-ic{width:10px;height:10px;}
+
+/* toque (celular/tablet): alvos maiores, como pede a Apple (mín. ~44px) */
+@media (pointer:coarse){
+  .del-btn,.send-btn,.icon-add-btn{width:36px;height:36px;}
+  .cal-arrow{width:36px;height:36px;}
+  .chip{padding-top:4px;padding-bottom:4px;min-height:var(--h-md);box-sizing:border-box;}
+  .chip button{width:26px;height:26px;}
+}
+
+/* ===== v7: formas atuais da Apple (Liquid Glass, iOS 26 em diante) =====
+   1) Todo controle é cápsula: botões, campos, listas de escolha, filtros,
+      seletores, chips e etiquetas. Botões só de ícone são círculos.
+   2) Cantos concêntricos: o canto de cada caixa = canto do que está dentro
+      + o espaço interno. Por isso os cards ficam mais arredondados.
+   3) Selecionado = índigo, em todo lugar (abas, seletores, filtros, dias).
+   4) Sem brilho colorido nos botões: sombras neutras e discretas. */
+:root{--ctl-r:999px;--ctl-r-sm:999px;--radius-lg:26px;--radius-md:18px;--radius-sm:999px;}
+
+.btn,.btn-sm,.btn-primary,.btn-ghost,.btn-danger,.search-toggle,.today-btn,.logout-btn,
+input[type=number],input[type=date],input[type=time],input[type=text],input[type=email],input[type=password],select,
+.date-cell-btn,.auth-card input,.auth-card .btn-primary,
+.toggle-group,.toggle-group button,.chip,.tag,.save-pill,.toast{border-radius:999px;}
+.theme-toggle,.date-filter-icon-btn,.clear-all-btn,.cal-arrow,.mini-cal-nav,
+.del-btn,.send-btn,.icon-add-btn,.chip button{border-radius:50%;}
+/* campos: um pouco mais de respiro nas laterais, já que a ponta é redonda */
+input[type=number],input[type=text],input[type=email],input[type=password],input[type=date],input[type=time]{padding-left:14px;padding-right:14px;}
+select{padding-left:14px;}
+.search-bar input[type=text]{padding-left:34px;}
+.search-bar .search-input-wrap svg{left:13px;}
+@media (min-width:1181px){
+  td input:not(.bare-input):not(.odd-input),td select{padding-left:11px;padding-right:11px;}
+  td select{padding-right:26px;}
+  #analises-table td input[data-field="hora"],#analises-table td #an-hora{padding-left:2px;padding-right:2px;}
+}
+
+/* caixas: cantos concêntricos */
+.card,.table-wrap,.confirm-card{border-radius:var(--radius-lg);}
+.stat-block{border-radius:20px;}
+.search-bar{border-radius:30px;}
+.filter-banner{border-radius:var(--radius-md);}
+.cal-month-summary{border-radius:16px;}
+.mini-cal-popover{border-radius:22px;}
+.confirm-card{border-radius:30px;}
+.auth-card{border-radius:34px;}
+.cal-cell{border-radius:14px;}
+@media (max-width:640px){ .cal-cell{border-radius:11px;} }
+@media (max-width:480px){ .cal-cell{border-radius:9px;} }
+@media (max-width:700px){ .cal-month-summary{border-radius:999px;} }
+@media (max-width:1180px){
+  #entradas-table tbody tr[data-id],#entradas-table tbody tr.add-row-form,
+  #analises-table tbody tr[data-id],#analises-table tbody tr.add-row-form{border-radius:var(--radius-lg);}
+}
+
+/* selecionado = índigo em todo lugar (inclusive nos seletores) */
+.toggle-group button.active,#config-theme-seg button.active{
+  background:var(--blue);color:#fff;box-shadow:0 1px 2px rgba(0,0,0,.18);
+}
+
+/* sem brilho colorido */
+.btn-primary,.btn-primary:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.18);filter:none;}
+.btn-primary:hover{background:linear-gradient(180deg, rgba(255,255,255,.22), rgba(255,255,255,0) 55%), var(--blue);}
+.tabs-indicator{box-shadow:inset 0 1px 0 rgba(255,255,255,.2), 0 1px 3px rgba(0,0,0,.2);}
+.search-toggle.active,.today-btn.active{box-shadow:none;}
+.cal-cell.pos:hover{box-shadow:inset 0 0 0 1px var(--pos-border), 0 8px 18px -10px rgba(0,0,0,.45);}
+.cal-cell.neg:hover{box-shadow:inset 0 0 0 1px rgba(255,69,58,.3), 0 8px 18px -10px rgba(0,0,0,.45);}
+.auth-logo::before{box-shadow:none;}
+
+/* "Sair" em vermelho, como em Ajustes do iPhone */
+.logout-btn,#config-logout-btn{color:var(--red-text);}
+.logout-btn:hover{color:var(--red-text);background:var(--red-bg);}
+
+/* títulos de Ajustes alinhados à esquerda, como no resto do app */
+#view-config .top-row{justify-content:space-between !important;}
+#view-config .mobile-only-prefs > div[style]{justify-content:flex-start !important;}
+
+/* "Clique" no computador, "Toque" no celular */
+.t-tap{display:none;}
+@media (pointer:coarse){ .t-click{display:none;} .t-tap{display:inline;} }
+
+/* ===== v8: campos dentro das tabelas (Entradas e Análises) =====
+   A cápsula é para controles soltos (busca, filtros, botões). Dentro de uma
+   grade densa de dados a Apple usa campos retangulares de canto suave, como
+   nas células do Numbers e nas listas do Ajustes. Também damos mais respiro
+   entre linhas e entre campos para a tabela não parecer espremida. */
+#entradas-table td input:not(.bare-input):not(.odd-input),#entradas-table td select,
+#analises-table td input,#analises-table td select,
+#entradas-table td .date-cell-btn,#analises-table td .date-cell-btn{border-radius:10px;}
+@media (min-width:1181px){
+  td input:not(.bare-input):not(.odd-input),td select,td .date-cell-btn{height:34px;}
+  #entradas-table tbody td{padding-top:11px;padding-bottom:11px;}
+  #analises-table tbody td{padding-top:11px;padding-bottom:11px;}
+  thead th{padding-top:14px;padding-bottom:14px;}
+  td input:not(.bare-input):not(.odd-input),td select{padding-left:10px;padding-right:10px;}
+  td select{padding-right:26px;}
+  #analises-table td input[data-field="hora"],#analises-table td #an-hora{padding-left:2px;padding-right:2px;}
+}
+@media (max-width:1180px){
+  /* cartão de cada linha: sem linhas divisórias entre campos (os campos já têm
+     fundo próprio) e com mais espaço entre eles */
+  #entradas-table td,#analises-table td,
+  #entradas-table tbody td,#analises-table tbody td{border-bottom:none;padding-top:8px;padding-bottom:8px;gap:6px;}
+  #entradas-table tbody tr[data-id],#entradas-table tbody tr.add-row-form,
+  #analises-table tbody tr[data-id],#analises-table tbody tr.add-row-form{
+    padding:14px 18px 10px;margin-bottom:14px;border-radius:24px;
+  }
+  #entradas-table td.calc,#analises-table td.calc{padding-top:10px;padding-bottom:10px;border-top:1px solid var(--border-soft);}
+  #entradas-table td input:not(.bare-input):not(.odd-input),#entradas-table td select,
+  #analises-table td input,#analises-table td select,
+  #entradas-table td .date-cell-btn,#analises-table td .date-cell-btn{height:40px;padding-left:12px;}
+}
 </style>
 </head>
 <body>
@@ -2456,9 +2634,9 @@ function renderMiniCalendarHtml(idPrefix, viewY, viewM, selectedIso){
   return `
     <div class="mini-cal-popover" id="${idPrefix}-popover">
       <div class="mini-cal-header">
-        <button type="button" class="mini-cal-nav" id="${idPrefix}-prev" title="Mês anterior">&#8249;</button>
+        <button type="button" class="mini-cal-nav" id="${idPrefix}-prev" title="Mês anterior"><svg class="ui-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
         <span class="mini-cal-label">${MONTHS[viewM]} de ${viewY}</span>
-        <button type="button" class="mini-cal-nav" id="${idPrefix}-next" title="Próximo mês">&#8250;</button>
+        <button type="button" class="mini-cal-nav" id="${idPrefix}-next" title="Próximo mês"><svg class="ui-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
       </div>
       <div class="mini-cal-grid">${dowRow}${dayCells}</div>
       <div class="mini-cal-footer"><button type="button" class="mini-cal-today-link" id="${idPrefix}-today">Ir para hoje</button></div>
@@ -2937,9 +3115,9 @@ function renderDashboard(){
         <div class="section-title">Calendário de resultados</div>
         <div class="cal-month-summary" id="cal-month-summary"></div>
         <div class="cal-nav">
-          <button class="cal-arrow" id="cal-prev">&#8249;</button>
+          <button class="cal-arrow" id="cal-prev" title="Mês anterior"><svg class="ui-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 6-6 6 6 6"/></svg></button>
           <div class="cal-title" id="cal-title"></div>
-          <button class="cal-arrow" id="cal-next">&#8250;</button>
+          <button class="cal-arrow" id="cal-next" title="Próximo mês"><svg class="ui-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m9 6 6 6-6 6"/></svg></button>
         </div>
         <div class="cal-toggle">
           <div class="toggle-group">
@@ -2948,7 +3126,7 @@ function renderDashboard(){
           </div>
         </div>
         <div id="cal-grid"></div>
-        <p class="hint" style="text-align:center;margin-top:12px;">Clique em um dia com apostas para ver os lançamentos em Entradas.</p>
+        <p class="hint" style="text-align:center;margin-top:12px;"><span class="t-click">Clique</span><span class="t-tap">Toque</span> em um dia com apostas para ver os lançamentos em Entradas.</p>
       </div>
     </div>
 
@@ -3219,7 +3397,7 @@ function renderEntradas(){
             <td data-label="Stake"><input type="text" inputmode="decimal" class="calc bare-input" id="new-stake" value="${fmtBRL(state.stakeUnit)}"></td>
             <td data-label="Retorno"><input type="text" inputmode="decimal" class="calc bare-input" id="new-retorno" placeholder="${fmtBRL(0)}"></td>
             <td data-label=""></td>
-            <td data-label=""><button class="icon-add-btn" id="add-bet" title="Adicionar">+</button></td>
+            <td data-label=""><button class="icon-add-btn" id="add-bet" title="Adicionar"><svg class="ui-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button></td>
           </tr>
         </tbody>
       </table>
@@ -3249,7 +3427,7 @@ function renderEntradas(){
         <td data-label="Stake"><input type="text" inputmode="decimal" class="calc bare-input" data-field="stake" value="${fmtBRL(b.stake)}"></td>
         <td data-label="Retorno"><input type="text" inputmode="decimal" class="calc bare-input ${c.profit>0?'pos':(c.profit<0?'neg':'')}" data-field="retorno" value="${fmtBRL(b.retorno)}"></td>
         <td data-label="Odd">${oddCell}</td>
-        <td data-label=""><button class="del-btn" data-del="${b.id}" title="Excluir">&#10005;</button></td>
+        <td data-label=""><button class="del-btn" data-del="${b.id}" title="Excluir"><svg class="ui-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></td>
       </tr>`;
     }).join(""));
   }
@@ -3558,7 +3736,7 @@ function renderAnalises(){
             <td data-label="Leitura de mercado">
               <select id="an-leitura">${leituraOptionsHtml("")}</select>
             </td>
-            <td data-label=""><button class="icon-add-btn" id="add-an" title="Adicionar">+</button></td>
+            <td data-label=""><button class="icon-add-btn" id="add-an" title="Adicionar"><svg class="ui-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></button></td>
           </tr>
         </tbody>
       </table>
@@ -3587,7 +3765,7 @@ function renderAnalises(){
             <button class="send-btn ${r.linkedBetId?'sent':''}" data-send="${r.id}" title="${r.linkedBetId?'Enviado para Entradas — clique para desfazer':'Enviar para Entradas'}">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 2 11 13"/><path d="M22 2 15 22 11 13 2 9z"/></svg>
             </button>
-            <button class="del-btn" data-del="${r.id}" title="Excluir">&#10005;</button>
+            <button class="del-btn" data-del="${r.id}" title="Excluir"><svg class="ui-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
           </div>
         </td>
       </tr>
@@ -4012,7 +4190,7 @@ function broomIconSvg(){
 function renderChampChips(){
   const list = state.championships.filter(c=>c.toLowerCase().includes(champSearch.toLowerCase()));
   const box = document.getElementById("champ-list");
-  box.innerHTML = list.length ? list.map(c=>`<div class="chip">${escapeHtml(c)}<button data-remove="${escapeHtml(c)}">&#10005;</button></div>`).join("") : `<div class="empty-state">Nenhum resultado.</div>`;
+  box.innerHTML = list.length ? list.map(c=>`<div class="chip">${escapeHtml(c)}<button data-remove="${escapeHtml(c)}" title="Remover"><svg class="ui-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`).join("") : `<div class="empty-state">Nenhum resultado.</div>`;
   box.querySelectorAll("[data-remove]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const nome = btn.dataset.remove;
@@ -4033,7 +4211,7 @@ function renderChampChips(){
 function renderClubChips(){
   const list = state.clubs.filter(c=>c.toLowerCase().includes(clubSearch.toLowerCase()));
   const box = document.getElementById("club-list");
-  box.innerHTML = list.length ? list.map(c=>`<div class="chip">${escapeHtml(c)}<button data-remove="${escapeHtml(c)}">&#10005;</button></div>`).join("") : `<div class="empty-state">Nenhum resultado.</div>`;
+  box.innerHTML = list.length ? list.map(c=>`<div class="chip">${escapeHtml(c)}<button data-remove="${escapeHtml(c)}" title="Remover"><svg class="ui-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>`).join("") : `<div class="empty-state">Nenhum resultado.</div>`;
   box.querySelectorAll("[data-remove]").forEach(btn=>{
     btn.addEventListener("click", ()=>{
       const nome = btn.dataset.remove;
