@@ -1625,6 +1625,25 @@ html.auth-open body{position:fixed;inset:0;width:100%;}
 :root[data-theme-mode="system"] .theme-toggle .icon-sun{display:none;}
 :root[data-theme-mode="system"] .theme-toggle .icon-auto{display:block;}
 #config-theme-seg button{padding:8px 14px;}
+
+/* ===== v5: padronização de formas =====
+   Regra única: navegação (barra de abas do topo, barra de baixo do celular) e
+   avisos passageiros (toast, "Salvo") continuam em cápsula. Todo o resto
+   (botões, campos, filtros, seletores, chips, botões de ícone) usa o mesmo
+   retângulo arredondado. */
+:root{--ctl-r:10px;--ctl-r-sm:8px;}
+.btn,.btn-sm,.btn-primary,.btn-ghost,.btn-danger,
+.search-toggle,.today-btn,.logout-btn,
+.date-filter-icon-btn,.clear-all-btn,.theme-toggle,
+input[type=number],input[type=date],input[type=time],input[type=text],input[type=email],input[type=password],select,
+.date-cell-btn,.auth-card input,.auth-card .btn-primary{border-radius:var(--ctl-r);}
+.toggle-group{border-radius:var(--ctl-r);}
+.toggle-group button{border-radius:var(--ctl-r-sm);}
+.cal-arrow,.mini-cal-nav,.del-btn,.send-btn,.icon-add-btn{border-radius:var(--ctl-r-sm);}
+.chip{border-radius:var(--ctl-r-sm);}
+.tag{border-radius:6px;}
+.cal-month-summary{border-radius:12px;}
+@media (max-width:700px){ .cal-month-summary{border-radius:var(--ctl-r);} }
 </style>
 </head>
 <body>
