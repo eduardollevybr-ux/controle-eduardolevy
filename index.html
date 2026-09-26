@@ -3,14 +3,30 @@
 <head>
 <meta charset="UTF-8">
 <script>
+// Tema: "system" (segue o aparelho), "light" ou "dark". Fica salvo só neste
+// aparelho (localStorage), então o celular segue o tema do celular e o
+// computador segue o do computador. Não depende do Supabase.
 (function(){
-  try{
-    var t = localStorage.getItem("theme");
-    if(t!=="light" && t!=="dark"){
-      t = window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches ? "light" : "dark";
-    }
-    if(t==="light") document.documentElement.setAttribute("data-theme","light");
-  }catch(e){}
+  var mq = window.matchMedia ? window.matchMedia("(prefers-color-scheme: light)") : null;
+  function mode(){ try{ var t = localStorage.getItem("theme"); return (t==="light"||t==="dark") ? t : "system"; }catch(e){ return "system"; } }
+  function apply(){
+    var m = mode(), light = m==="light" || (m==="system" && !!(mq && mq.matches)), r = document.documentElement;
+    if(light) r.setAttribute("data-theme","light"); else r.removeAttribute("data-theme");
+    r.setAttribute("data-theme-mode", m);
+    var meta = document.querySelector('meta[name="theme-color"]');
+    if(meta) meta.setAttribute("content", light ? "#f5f5f7" : "#000000");
+  }
+  window.__themeMode = mode;
+  window.__setThemeMode = function(m){
+    try{ if(m==="system") localStorage.removeItem("theme"); else localStorage.setItem("theme", m); }catch(e){}
+    apply();
+  };
+  apply();
+  if(mq){
+    var onChange = function(){ if(mode()==="system") apply(); };
+    if(mq.addEventListener) mq.addEventListener("change", onChange); else if(mq.addListener) mq.addListener(onChange);
+  }
+  document.addEventListener("DOMContentLoaded", apply);
 })();
 </script>
 <script>
@@ -1586,6 +1602,29 @@ tbody td{border-bottom-color:var(--border-soft);}
 /* ajustes finos */
 :root:not([data-theme="light"]) .auth-card{background:rgba(30,30,34,.42);border-color:rgba(255,255,255,.1);}
 :root[data-theme="light"] .auth-card{background:rgba(255,255,255,.55);}
+
+
+/* ===== v4: celular, fundo e tema ===== */
+/* Fundo do app: preto puro no escuro e cinza-claro no claro (padrão dos apps da
+   Apple). A atmosfera colorida fica só no login. Assim, ao puxar a tela para
+   atualizar, o que aparece por trás é a mesma cor do fundo. */
+body::before,body::after{content:none;display:none;}
+html,body{background-color:var(--bg);}
+
+/* Login estático: não rola, não "quica" e não puxa para atualizar */
+html.auth-open,html.auth-open body{overflow:hidden;height:100%;overscroll-behavior:none;}
+html.auth-open body{position:fixed;inset:0;width:100%;}
+.auth-screen{
+  position:fixed;inset:0;min-height:0;height:100%;overflow:hidden;overscroll-behavior:none;
+  padding:max(20px, env(safe-area-inset-top)) 20px max(20px, env(safe-area-inset-bottom));
+}
+
+/* Tema "Sistema": ícone próprio no botão do topo */
+.theme-toggle .icon-auto{display:none;width:16px;height:16px;}
+:root[data-theme-mode="system"] .theme-toggle .icon-moon,
+:root[data-theme-mode="system"] .theme-toggle .icon-sun{display:none;}
+:root[data-theme-mode="system"] .theme-toggle .icon-auto{display:block;}
+#config-theme-seg button{padding:8px 14px;}
 </style>
 </head>
 <body>
@@ -1637,12 +1676,20 @@ tbody td{border-bottom-color:var(--border-soft);}
 
 /* ================= TEMA (claro/escuro) ================= */
 function toggleTheme(){
-  const isLight = document.documentElement.getAttribute("data-theme")==="light";
-  const next = isLight ? "dark" : "light";
-  if(next==="light") document.documentElement.setAttribute("data-theme","light");
-  else document.documentElement.removeAttribute("data-theme");
-  try{ localStorage.setItem("theme", next); }catch(e){}
+  var order = ["system","light","dark"];
+  var cur = window.__themeMode ? window.__themeMode() : "system";
+  var next = order[(order.indexOf(cur)+1) % order.length];
+  setThemeMode(next);
+  showToast("Tema: " + ({system:"Sistema", light:"Claro", dark:"Escuro"})[next]);
+}
+function setThemeMode(m){
+  if(window.__setThemeMode) window.__setThemeMode(m);
   updateThemeColor();
+  syncThemeSeg();
+}
+function syncThemeSeg(){
+  var cur = window.__themeMode ? window.__themeMode() : "system";
+  document.querySelectorAll("#config-theme-seg button").forEach(function(b){ b.classList.toggle("active", b.dataset.mode===cur); });
 }
 function updateThemeColor(){
   var m=document.querySelector('meta[name="theme-color"]');
@@ -1901,12 +1948,14 @@ function subscribeRealtime(){
 /* ================= AUTH ================= */
 function showAuthScreen(mode, message){
   document.getElementById("auth-screen").style.display = "flex";
+  document.documentElement.classList.add("auth-open"); window.scrollTo(0,0);
   document.getElementById("app").style.display = "none";
   setAuthMode(mode || "login");
   if(message) document.getElementById("auth-error").textContent = message;
 }
 function hideAuthScreen(){
   document.getElementById("auth-screen").style.display = "none";
+  document.documentElement.classList.remove("auth-open");
   document.getElementById("app").style.display = "";
 }
 let authMode = "login";
@@ -2704,9 +2753,10 @@ function renderShell(){
       </div>
       <div class="topbar-right">
         <div class="save-pill" id="save-pill"><span class="save-dot"></span>Salvo</div>
-        <button class="theme-toggle" id="theme-toggle" title="Alternar tema" type="button">
+        <button class="theme-toggle" id="theme-toggle" title="Tema: Sistema, Claro ou Escuro" type="button">
           <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
           <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          <svg class="icon-auto" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 3a9 9 0 0 1 0 18z" fill="currentColor"/></svg>
         </button>
         <button class="theme-toggle fullscreen-toggle" id="fullscreen-toggle" title="Tela cheia" type="button">
           <svg class="icon-expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M8 3H5a2 2 0 0 0-2 2v3M16 3h3a2 2 0 0 1 2 2v3M8 21H5a2 2 0 0 1-2-2v-3M16 21h3a2 2 0 0 0 2-2v-3"/></svg>
@@ -2802,6 +2852,11 @@ function renderTabs(){
       .observe(app, {childList:true, subtree:true});
   }
 })();
+
+// Na tela de login, nenhum arrasto move a página (sem "quique" do iOS).
+document.addEventListener("touchmove", function(e){
+  if(document.documentElement.classList.contains("auth-open") && e.cancelable) e.preventDefault();
+}, {passive:false});
 
 function setupTabIndicator(){
   const nav = document.getElementById("tabs");
@@ -3823,11 +3878,7 @@ function renderConfig(){
           <div class="section-title" style="margin-bottom:0;">Preferências</div>
         </div>
         <div style="display:flex;gap:10px;justify-content:center;padding:4px 0 2px;">
-          <button class="logout-btn" id="config-theme-toggle" type="button">
-            <svg class="icon-moon" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-            <svg class="icon-sun" width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-            <span>Tema</span>
-          </button>
+          <div class="toggle-group" id="config-theme-seg"><button type="button" data-mode="system">Sistema</button><button type="button" data-mode="light">Claro</button><button type="button" data-mode="dark">Escuro</button></div>
           <button class="logout-btn" id="config-logout-btn" type="button">Sair</button>
         </div>
       </div>
@@ -3885,7 +3936,8 @@ function renderConfig(){
     if(!added){ showToast(`O clube "${v}" já está cadastrado.`); return; }
     inp.value=""; persist(); renderClubChips();
   };
-  document.getElementById("config-theme-toggle").addEventListener("click", toggleTheme);
+  document.querySelectorAll("#config-theme-seg button").forEach(function(b){ b.addEventListener("click", function(){ setThemeMode(b.dataset.mode); }); });
+  syncThemeSeg();
   document.getElementById("config-logout-btn").addEventListener("click", signOut);
   document.getElementById("add-champ-btn").addEventListener("click", addChamp);
   document.getElementById("add-club-btn").addEventListener("click", addClub);
@@ -4353,6 +4405,7 @@ window.scrollTo(0,0);
   }
 
   window.addEventListener("touchstart", function(e){
+    if(document.documentElement.classList.contains("auth-open")){ pulling = false; return; }
     if(e.touches.length !== 1){ pulling = false; return; }
     pulling = atTop();
     triggered = false;
