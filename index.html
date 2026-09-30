@@ -1981,7 +1981,7 @@ async function checkInactivity(){
   if(!currentUser) return;
   if(Date.now() - getLastActivity() >= INACTIVITY_LIMIT_MS){
     inactivityLogoutPending = true;
-    await supabase.auth.signOut();
+    await supabase.auth.signOut({ scope: "local" });
   }
 }
 function startActivityTracking(){
@@ -2312,7 +2312,7 @@ function traduzErroAuth(msg){
   return msg;
 }
 async function signOut(){
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: "local" });
 }
 function showSavePill(){
   const el = document.getElementById("save-pill");
@@ -4503,7 +4503,7 @@ document.getElementById("auth-forgot-btn").addEventListener("click", async ()=>{
     // Sai da sessão de recuperação em vez de deixá-la pendurada: melhor voltar pro
     // login normal do que ficar num meio-termo autenticado sem senha nova definida.
     passwordRecoveryPending = false;
-    try{ await supabase.auth.signOut(); }catch(e){}
+    try{ await supabase.auth.signOut({ scope: "local" }); }catch(e){}
     try{ history.replaceState(null, "", window.location.pathname); }catch(e){}
   }
   setAuthMode(authMode==="login" ? "forgot" : "login");
@@ -4522,7 +4522,7 @@ async function boot(){
     if(Date.now() - getLastActivity() >= INACTIVITY_LIMIT_MS){
       // sessão salva, mas passou de 12h sem uso: desloga antes de mostrar o app
       inactivityLogoutPending = true;
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({ scope: "local" });
       return;
     }
     currentUser = session.user;
