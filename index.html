@@ -1952,7 +1952,7 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 /* A lib do Supabase usa por padrão a Web Locks API do navegador (navigator.locks) para
    evitar chamadas de auth concorrentes. Esse "cadeado" tem um bug conhecido: às vezes fica
-   preso (ex: depois de um signOut automático por inatividade) e nunca é liberado, fazendo
+   preso (ex: depois de um signOut) e nunca é liberado, fazendo
    qualquer signInWithPassword() seguinte travar para sempre, mesmo clicando em "Entrar" -
    só um reload completo da página resolve. Como este app roda numa única aba por vez,
    substituímos por uma fila simples em memória, que nunca fica presa. */
@@ -1979,12 +1979,8 @@ let realtimeChannel = null;
 let sessionReady = false;   // true quando a sessão do Supabase foi confirmada (com internet)
 let manualSignOut = false;  // true quando o próprio usuário clicou em "Sair"
 
-/* ================= INATIVIDADE (logout automático) ================= */
-const INACTIVITY_LIMIT_MS = 12 * 60 * 60 * 1000; // 12 horas
-const LAST_ACTIVITY_KEY = "controle_apostas_last_activity";
-const ACTIVITY_EVENTS = ["mousedown","keydown","scroll","touchstart"];
-let inactivityInterval = null;
-let inactivityLogoutPending = false;
+// Logout por inatividade removido: a sessão só termina ao clicar em "Sair".
+try{ window.localStorage.removeItem("controle_apostas_last_activity"); }catch(e){}
 
 // Link de "esqueci minha senha": o Supabase autentica a sessão de recuperação assim que
 // a página abre (via #access_token=...&type=recovery na URL) e dispara o evento
@@ -1998,45 +1994,6 @@ function isPasswordRecoveryUrl(){
   }catch(e){ return false; }
 }
 let passwordRecoveryPending = isPasswordRecoveryUrl();
-
-function markActivity(){
-  try{ window.localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now())); }catch(e){}
-}
-function getLastActivity(){
-  const v = window.localStorage.getItem(LAST_ACTIVITY_KEY);
-  const n = v ? parseInt(v,10) : NaN;
-  return Number.isFinite(n) ? n : Date.now();
-}
-async function checkInactivity(){
-  if(!currentUser) return;
-  if(Date.now() - getLastActivity() >= INACTIVITY_LIMIT_MS){
-    // com lançamento pendente, só desloga depois de conseguir enviar (para não perder nada)
-    if(cacheIsDirty()){
-      const ok = await pushCache();
-      if(!ok) return;
-    }
-    inactivityLogoutPending = true;
-    clearCache();
-    if(supabase){ try{ await supabase.auth.signOut({ scope: "local" }); }catch(e){} }
-    if(currentUser) handleSignedOut();
-  }
-}
-function startActivityTracking(){
-  markActivity();
-  ACTIVITY_EVENTS.forEach(evt => document.addEventListener(evt, markActivity, { passive:true }));
-  document.addEventListener("visibilitychange", onVisibilityChangeCheck);
-  clearInterval(inactivityInterval);
-  inactivityInterval = setInterval(checkInactivity, 30000); // confere a cada 30s
-}
-function stopActivityTracking(){
-  ACTIVITY_EVENTS.forEach(evt => document.removeEventListener(evt, markActivity));
-  document.removeEventListener("visibilitychange", onVisibilityChangeCheck);
-  clearInterval(inactivityInterval);
-  inactivityInterval = null;
-}
-function onVisibilityChangeCheck(){
-  if(document.visibilityState === "visible") checkInactivity();
-}
 
 /* ================= CONSTANTS ================= */
 const STORAGE_KEY = "controle_apostas_state_v2";
@@ -2474,7 +2431,6 @@ async function handleAuthSubmit(){
       document.getElementById("auth-password-confirm").value = "";
       hideAuthScreen();
       showToast("Senha atualizada com sucesso");
-      startActivityTracking();
       await syncAfterLogin();
       renderShell();
       subscribeRealtime();
@@ -2489,7 +2445,7 @@ async function handleAuthSubmit(){
   btn.disabled = true;
   errEl.style.color = "";
   // Watchdog: se a chamada travar (bug conhecido do cliente Supabase depois de um
-  // signOut automático por inatividade), não deixamos o botão travado para sempre.
+  // signOut), não deixamos o botão travado para sempre.
   // Depois de alguns segundos sem resposta, recarregamos a página sozinhos (mesmo
   // efeito de dar F5 manualmente) e reabrimos o login já com o email preenchido.
   let settled = false;
@@ -2546,7 +2502,6 @@ function requireLogin(message){
   sessionReady = false;
   currentUser = null;
   if(realtimeChannel && supabase){ supabase.removeChannel(realtimeChannel); realtimeChannel = null; }
-  stopActivityTracking();
   const c = readCache();
   if(c && !c.dirty) clearCache();
   showAuthScreen("login", message);
@@ -2557,15 +2512,9 @@ function handleSignedOut(){
   sessionReady = false;
   currentUser = null;
   if(realtimeChannel && supabase){ supabase.removeChannel(realtimeChannel); realtimeChannel = null; }
-  stopActivityTracking();
   const c = readCache();
   if(c && !c.dirty) clearCache();
-  if(inactivityLogoutPending){
-    inactivityLogoutPending = false;
-    showAuthScreen("login", "Sessão encerrada após 12h de inatividade. Entre novamente.");
-  } else {
-    showAuthScreen("login");
-  }
+  showAuthScreen("login");
   updateNetBanner();
 }
 function showSavePill(){
@@ -4769,17 +4718,11 @@ async function boot(){
   let showedCache = false;
   const cache = readCache();
   if(cache && !passwordRecoveryPending){
-    const expired = Date.now() - getLastActivity() >= INACTIVITY_LIMIT_MS;
-    if(expired && !cache.dirty){
-      clearCache(); // passou de 12h sem uso e não há nada pendente: pede login como antes
-    } else {
-      currentUser = { id: cache.userId, email: cache.email };
-      state = stateFromCache(cache);
-      hideAuthScreen();
-      renderShell();
-      startActivityTracking();
-      showedCache = true;
-    }
+    currentUser = { id: cache.userId, email: cache.email };
+    state = stateFromCache(cache);
+    hideAuthScreen();
+    renderShell();
+    showedCache = true;
   }
 
   // 2) Biblioteca do Supabase não carregou (sem internet): segue com a cópia; recarrega quando a internet voltar
@@ -4806,14 +4749,6 @@ async function boot(){
 
   if(session && session.user){
     const sameAsShown = showedCache && currentUser && currentUser.id === session.user.id;
-    if(Date.now() - getLastActivity() >= INACTIVITY_LIMIT_MS && !(sameAsShown && cacheIsDirty())){
-      // sessão salva, mas passou de 12h sem uso: desloga antes de mostrar o app
-      inactivityLogoutPending = true;
-      clearCache();
-      await supabase.auth.signOut({ scope: "local" });
-      if(currentUser) handleSignedOut();
-      return;
-    }
     if(showedCache && !sameAsShown) clearCache(); // cópia era de outro usuário
     currentUser = session.user;
     const before = JSON.stringify(state);
@@ -4823,7 +4758,6 @@ async function boot(){
     } else {
       hideAuthScreen();
       renderShell();
-      startActivityTracking();
     }
     subscribeRealtime();
     updateNetBanner();
@@ -4866,7 +4800,6 @@ if(supabase) supabase.auth.onAuthStateChange((event, session) => {
     hideAuthScreen();
     document.getElementById("auth-email").value = "";
     document.getElementById("auth-password").value = "";
-    startActivityTracking();
     (async ()=>{
       await syncAfterLogin();
       renderShell();
@@ -4881,11 +4814,11 @@ if(supabase) supabase.auth.onAuthStateChange((event, session) => {
     if(cacheIsDirty()) pushCache(); else pullLatest();
   } else if(event === "SIGNED_OUT"){
     // sem internet e sem ter clicado em "Sair": não manda para o login, segue com a cópia
-    if(!manualSignOut && !inactivityLogoutPending && !isOnline() && readCache()){
+    if(!manualSignOut && !isOnline() && readCache()){
       sessionReady = false;
       return;
     }
-    if(currentUser || manualSignOut || inactivityLogoutPending) handleSignedOut();
+    if(currentUser || manualSignOut) handleSignedOut();
     else showAuthScreen("login");
   }
 });
