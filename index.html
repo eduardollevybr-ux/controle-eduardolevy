@@ -1847,6 +1847,24 @@ select{padding-left:14px;}
   .net-banner{left:20px;top:28px;transform:translateY(-6px);}
   .net-banner.show{transform:none;}
 }
+
+/* ---------- calendário sempre por cima ----------
+   Os blocos de vidro (barra de busca, tabela, cards de linha) usam desfoque de fundo,
+   e cada um vira uma "camada" própria: o calendário ficava preso dentro da barra de
+   busca e a tabela logo abaixo era desenhada por cima dele. Enquanto um calendário
+   estiver aberto, o bloco que o contém sobe para a frente dos demais. O painel fica
+   com fundo sólido, porque o desfoque não alcança o que está fora do bloco. */
+.search-bar:has(.mini-cal-popover),
+.filter-banner:has(.mini-cal-popover),
+.card:has(.mini-cal-popover),
+.table-wrap:has(.mini-cal-popover),
+.date-filter-wrap:has(.mini-cal-popover),
+.date-cell-wrap:has(.mini-cal-popover),
+tbody tr:has(.mini-cal-popover),
+.search-bar.cal-open,
+.table-wrap.rowcal-open{position:relative;z-index:60;}
+.mini-cal-popover,
+:root:not([data-theme="light"]) .mini-cal-popover{background:var(--card-solid);z-index:70;}
 </style>
 </head>
 <body>
@@ -3561,7 +3579,7 @@ function renderEntradas(){
     </div>
 
     ${entradasFilterDate ? `<div class="filter-banner"><span>Entradas de ${entradasFilterDate.split('-').reverse().join('/')}</span><button id="clear-filter">Limpar filtro</button></div>` : ""}
-    <div class="search-bar">
+    <div class="search-bar${entradasCalendarOpen?' cal-open':''}">
       <div class="date-filter-wrap" id="entradas-date-filter-wrap">
         <button class="date-filter-icon-btn ${entradasFilterDate?'active':''}" id="entradas-date-btn" type="button" title="Filtrar por data">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
@@ -3898,7 +3916,7 @@ function renderAnalises(){
 
   el.innerHTML = `
     ${analisesFilterDate ? `<div class="filter-banner"><span>Análises de ${analisesFilterDate.split('-').reverse().join('/')}</span><button id="clear-filter-analises">Limpar filtro</button></div>` : ""}
-    <div class="search-bar">
+    <div class="search-bar${analisesCalendarOpen?' cal-open':''}">
       <div class="date-filter-wrap" id="analises-date-filter-wrap">
         <button class="date-filter-icon-btn ${analisesFilterDate?'active':''}" id="analises-date-btn" type="button" title="Filtrar por data">
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/></svg>
