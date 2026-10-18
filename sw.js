@@ -4,7 +4,7 @@
    - Biblioteca do Supabase, fonte e ícones: usa a cópia guardada e atualiza por trás.
    - Chamadas para *.supabase.co nunca são guardadas nem interceptadas. */
 
-const CACHE = "controle-v1";
+const CACHE = "controle-v2";
 const SUPABASE_LIB = "https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2";
 const FONT_CSS = "https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap";
 const PRECACHE = [
@@ -13,6 +13,8 @@ const PRECACHE = [
   "./manifest.json",
   "./icon-192.png",
   "./icon-512.png",
+  "./icon-rounded-192.png",
+  "./icon-rounded-512.png",
   SUPABASE_LIB,
   FONT_CSS
 ];
@@ -103,7 +105,7 @@ self.addEventListener("fetch", (event) => {
   const sameOrigin = url.origin === self.location.origin;
   const isLib = url.hostname === "cdn.jsdelivr.net" && url.pathname.indexOf("/npm/@supabase/") === 0;
   const isFont = url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com";
-  const isOwnAsset = sameOrigin && /\/(manifest\.json|icon-192\.png|icon-512\.png|index\.html)$/.test(url.pathname);
+  const isOwnAsset = sameOrigin && /\/(manifest\.json|icon-192\.png|icon-512\.png|icon-rounded-192\.png|icon-rounded-512\.png|index\.html)$/.test(url.pathname);
 
   if(isLib || isFont || isOwnAsset){
     event.respondWith(staleWhileRevalidate(event));
