@@ -1898,12 +1898,15 @@ tbody tr:has(.mini-cal-popover),
 :root{--nav-pill:#25244F;--nav-ic:#8E8CFF;--nav-bar:#0C0C0E;--nav-line:rgba(255,255,255,.07);--nav-shadow:0 10px 34px rgba(0,0,0,.75);}
 :root[data-theme="light"]{--nav-pill:#E9E8FB;--nav-ic:#5856D6;--nav-bar:#FFFFFF;--nav-line:rgba(29,31,35,.08);--nav-shadow:0 10px 30px rgba(29,31,35,.16);}
 .bottom-nav-fade{display:none;}
+/* distância da barra até o pé da tela: sempre acima da linha de voltar para a tela inicial do iPhone */
+:root{--nav-bottom:calc(env(safe-area-inset-bottom,0px) + 10px);}
+@media (display-mode:standalone){:root{--nav-bottom:max(calc(env(safe-area-inset-bottom,0px) + 10px),36px);}}
 @media (max-width:700px){
   :root .bottom-nav,
   :root:not([data-theme="light"]) .bottom-nav{
     left:50%;right:auto;transform:translateX(-50%);
     width:min(calc(100% - 24px),350px);
-    bottom:max(8px,calc(env(safe-area-inset-bottom,0px) - 14px));
+    bottom:var(--nav-bottom);
     gap:2px;padding:5px;border-radius:999px;
     background:var(--nav-bar);border:1px solid var(--nav-line);
     box-shadow:var(--nav-shadow);
@@ -1930,11 +1933,12 @@ tbody tr:has(.mini-cal-popover),
   .bottom-nav.dragging .bottom-nav-lens{transition:opacity .2s ease;transform:none;}
   .bottom-nav-fade{
     display:block;position:fixed;z-index:39;left:0;right:0;bottom:0;
-    height:calc(70px + env(safe-area-inset-bottom,0px));
+    height:calc(var(--nav-bottom) + 62px);
     background:linear-gradient(to bottom,transparent,var(--bg) 75%);
     pointer-events:none;
   }
-  #app{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px));}
+  #app{padding-bottom:calc(var(--nav-bottom) + 96px);}
+  .toast{bottom:calc(var(--nav-bottom) + 78px);}
 }
 @media (prefers-reduced-motion:reduce){ .bottom-nav-lens{transition:none !important;} }
 </style>
