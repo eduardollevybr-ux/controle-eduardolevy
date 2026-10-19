@@ -1900,7 +1900,7 @@ tbody tr:has(.mini-cal-popover),
 .bottom-nav-fade{display:none;}
 /* distância da barra até o pé da tela: sempre acima da linha de voltar para a tela inicial do iPhone */
 :root{--nav-bottom:calc(env(safe-area-inset-bottom,0px) + 10px);}
-@media (display-mode:standalone){:root{--nav-bottom:max(calc(env(safe-area-inset-bottom,0px) + 10px),36px);}}
+@media (display-mode:standalone){:root{--nav-bottom:max(calc(env(safe-area-inset-bottom,0px) - 4px),22px);}}
 @media (max-width:700px){
   :root .bottom-nav,
   :root:not([data-theme="light"]) .bottom-nav{
