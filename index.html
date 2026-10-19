@@ -1941,6 +1941,38 @@ tbody tr:has(.mini-cal-popover),
   .toast{bottom:calc(var(--nav-bottom) + 78px);}
 }
 @media (prefers-reduced-motion:reduce){ .bottom-nav-lens{transition:none !important;} }
+
+/* ---------- barra de baixo, opção B: o título aparece só na aba ativa, ao lado do ícone ----------
+   a aba tocada se alarga com efeito de mola, ganha a bolha colorida e o título entra deslizando;
+   ao arrastar o dedo pela barra, a aba sob o dedo já mostra como vai ficar */
+@media (max-width:700px){
+  .bottom-nav-lens{display:none !important;}
+  .bottom-nav button{
+    flex:1 1 0;height:52px;flex-direction:row;gap:0;
+    background:transparent;color:var(--text-dim);
+    transition:flex-grow .5s cubic-bezier(.34,1.25,.5,1), background-color .3s ease, color .25s ease;
+  }
+  .bottom-nav button>span{
+    display:inline-block;max-width:0;opacity:0;overflow:hidden;white-space:nowrap;margin-left:0;
+    font-family:var(--font-text);font-weight:600;font-size:13px;letter-spacing:0;
+    transform:translateX(-6px);
+    transition:max-width .5s cubic-bezier(.34,1.25,.5,1), margin-left .5s cubic-bezier(.34,1.25,.5,1), opacity .2s ease, transform .4s cubic-bezier(.34,1.25,.5,1);
+  }
+  .bottom-nav button svg.nav-icon{width:23px;height:23px;}
+  .bottom-nav button.active,
+  .bottom-nav button.drag-hover{flex-grow:2.4;background:var(--nav-pill);color:var(--nav-ic);transform:none;}
+  .bottom-nav button.active>span,
+  .bottom-nav button.drag-hover>span{max-width:90px;margin-left:7px;opacity:1;transform:none;transition-delay:0s,0s,.08s,0s;}
+  .bottom-nav button.active svg.nav-icon{animation:navIconPop .5s cubic-bezier(.34,1.4,.5,1);}
+  .bottom-nav.dragging button.active:not(.drag-hover){flex-grow:1;background:transparent;color:var(--text-dim);}
+  .bottom-nav.dragging button.active:not(.drag-hover)>span{max-width:0;margin-left:0;opacity:0;}
+  .bottom-nav button:active{transform:scale(.96);}
+}
+@keyframes navIconPop{0%{transform:scale(.8) rotate(-8deg);}55%{transform:scale(1.12) rotate(3deg);}100%{transform:scale(1) rotate(0);}}
+@media (prefers-reduced-motion:reduce){
+  .bottom-nav button,.bottom-nav button>span{transition:none !important;}
+  .bottom-nav button.active svg.nav-icon{animation:none !important;}
+}
 </style>
 </head>
 <body>
