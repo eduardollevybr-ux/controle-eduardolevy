@@ -1891,6 +1891,52 @@ tbody tr:has(.mini-cal-popover),
 }
 .toast-action:hover{background:var(--overlay);}
 .toast-action:active{transform:scale(.95);}
+
+/* ---------- barra de baixo no estilo do Flux (celular) ----------
+   cápsula flutuante centralizada, só com ícones, logo acima da linha do iPhone;
+   a aba ativa fica numa bolha colorida que desliza até a aba tocada */
+:root{--nav-pill:#25244F;--nav-ic:#8E8CFF;--nav-bar:#0C0C0E;--nav-line:rgba(255,255,255,.07);--nav-shadow:0 10px 34px rgba(0,0,0,.75);}
+:root[data-theme="light"]{--nav-pill:#E9E8FB;--nav-ic:#5856D6;--nav-bar:#FFFFFF;--nav-line:rgba(29,31,35,.08);--nav-shadow:0 10px 30px rgba(29,31,35,.16);}
+.bottom-nav-fade{display:none;}
+@media (max-width:700px){
+  :root .bottom-nav,
+  :root:not([data-theme="light"]) .bottom-nav{
+    left:50%;right:auto;transform:translateX(-50%);
+    width:min(calc(100% - 24px),350px);
+    bottom:max(8px,calc(env(safe-area-inset-bottom,0px) - 14px));
+    gap:2px;padding:5px;border-radius:999px;
+    background:var(--nav-bar);border:1px solid var(--nav-line);
+    box-shadow:var(--nav-shadow);
+    -webkit-backdrop-filter:none;backdrop-filter:none;
+  }
+  .bottom-nav button{flex:1 1 0;min-width:0;height:54px;padding:0;justify-content:center;gap:0;color:var(--text-dim);transition:color .25s ease;}
+  .bottom-nav button>span{display:none;}
+  .bottom-nav button svg.nav-icon{width:25px;height:25px;}
+  .bottom-nav button.active,
+  .bottom-nav button.active svg.nav-icon,
+  .bottom-nav button.drag-hover{color:var(--nav-ic);transform:none;}
+  .bottom-nav button svg.nav-icon *,
+  .bottom-nav button.active svg.nav-icon *,
+  .bottom-nav button.drag-hover svg.nav-icon *,
+  .bottom-nav button.active svg.nav-icon .icon-static,
+  .bottom-nav button.drag-hover svg.nav-icon .icon-static{fill:none !important;stroke:currentColor !important;}
+  .bottom-nav-lens,
+  :root[data-theme="light"] .bottom-nav-lens{
+    top:5px;bottom:5px;background:var(--nav-pill);box-shadow:none;
+    transition:left .4s cubic-bezier(.3,1.3,.5,1), width .4s cubic-bezier(.3,1.3,.5,1), opacity .2s ease;
+    transform:none;
+  }
+  .bottom-nav-lens.show{transform:none;}
+  .bottom-nav.dragging .bottom-nav-lens{transition:opacity .2s ease;transform:none;}
+  .bottom-nav-fade{
+    display:block;position:fixed;z-index:39;left:0;right:0;bottom:0;
+    height:calc(70px + env(safe-area-inset-bottom,0px));
+    background:linear-gradient(to bottom,transparent,var(--bg) 75%);
+    pointer-events:none;
+  }
+  #app{padding-bottom:calc(96px + env(safe-area-inset-bottom,0px));}
+}
+@media (prefers-reduced-motion:reduce){ .bottom-nav-lens{transition:none !important;} }
 </style>
 </head>
 <body>
@@ -3234,21 +3280,22 @@ function renderShell(){
     <div id="view-entradas" class="view"></div>
     <div id="view-analises" class="view"></div>
     <div id="view-config" class="view"></div>
-    <nav class="bottom-nav" id="bottom-nav">
+    <div class="bottom-nav-fade" aria-hidden="true"></div>
+    <nav class="bottom-nav" id="bottom-nav" aria-label="navegação principal">
       <div class="bottom-nav-lens" id="bottom-nav-lens"></div>
-      <button data-tab="dashboard" type="button">
+      <button data-tab="dashboard" type="button" aria-label="Painel">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5 10v9a1 1 0 0 0 1 1h4v-6h4v6h4a1 1 0 0 0 1-1v-9"/></svg>
         <span>Painel</span>
       </button>
-      <button data-tab="entradas" type="button">
+      <button data-tab="entradas" type="button" aria-label="Entradas">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
         <span>Entradas</span>
       </button>
-      <button data-tab="analises" type="button">
+      <button data-tab="analises" type="button" aria-label="Análises">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Z"/><path class="icon-noFill" d="M4 22a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2"/><path class="icon-static" d="M18 14h-8"/><path class="icon-static" d="M15 18h-5"/><path class="icon-static" d="M10 6h8v4h-8V6Z"/></svg>
         <span>Análises</span>
       </button>
-      <button data-tab="config" type="button">
+      <button data-tab="config" type="button" aria-label="Ajustes">
         <svg class="nav-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 17H5"/><path d="M19 7h-9"/><circle class="icon-knob" cx="17" cy="17" r="3"/><circle class="icon-knob" cx="7" cy="7" r="3"/></svg>
         <span>Ajustes</span>
       </button>
